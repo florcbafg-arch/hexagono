@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Login - Hexagono</title>
+<link rel="stylesheet" href="styles.css">
+
+
+
+</head>
+
+<body>
+
+<div class="auth-container">
+<div class="auth-card">
+
+<div class="logo">HEXAGONO</div>
+<div class="subtitulo">Control de producción</div>
+
+<form id="loginForm">
+
+<input type="text" id="usuario" placeholder="Email o usuario" required>
+
+<input type="password" id="password" placeholder="Contraseña" required>
+
+<button type="submit">Ingresar</button>
+
+</form>
+
+<div class="link">
+¿No tienes cuenta? <a href="registro.html">Crear cuenta</a>
+</div>
+
+</div>
+
+
+<script>
+
+document
+.getElementById("loginForm")
+.addEventListener("submit", async (e)=>{
+
+e.preventDefault()
+
+const usuario = document.getElementById("usuario").value
+const password = document.getElementById("password").value
+
+const res = await fetch("/login",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body: JSON.stringify({
+usuario,
+password
+})
+
+})
+
+const data = await res.json()
+
+console.log(data)
+
+if(data.ok && data.usuario){
+
+localStorage.setItem("hexagono_user", JSON.stringify(data.usuario))
+
+localStorage.setItem("usuario", data.usuario.nombre)
+localStorage.setItem("puesto_id", data.usuario.puesto_id)
+localStorage.setItem("rol", data.usuario.rol)
+
+if(data.usuario.rol === "admin"){
+window.location.href = "admin.html"
+}else{
+window.location.href = "operario.html"
+}
+
+}else{
+
+alert("Usuario o contraseña incorrectos")
+
+}
+})
+
+</script>
+
+</div>
+</div>
+</body>
+</html>

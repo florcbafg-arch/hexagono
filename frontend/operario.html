@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Panel Operario - Hexagono</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<script src="auth.js"></script>
+
+</head>
+
+<body>
+
+<div class="auth-container">
+<div class="auth-card">
+
+<div class="logo">HEXAGONO</div>
+<div class="subtitulo">Panel Operario</div>
+
+<button class="boton-principal" onclick="irProduccion()">
+Registrar Producción
+</button>
+
+<button class="boton-secundario" onclick="irFichas()">
+Ver Ficha Técnica
+</button>
+
+<button class="boton-salir" onclick="logout()">
+Salir
+</button>
+
+</div>
+</div>
+
+<script>
+
+function irProduccion(){
+
+window.location.href = "produccion.html"
+
+}
+
+function irFichas(){
+
+window.location.href = "fichas_operario.html"
+
+}
+
+function logout(){
+
+localStorage.removeItem("hexagono_user")
+window.location.href = "login.html"
+
+}
+
+</script>
+
+</body>
+</html>

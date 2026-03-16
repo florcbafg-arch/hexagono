@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Crear Orden</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<header>
+
+<a href="admin.html">← Panel</a>
+
+<h2>HEXÁGONO 2</h2>
+
+<button onclick="logout()">Cerrar sesión</button>
+
+</header>
+
+
+<h1>Crear Orden de Producción</h1>
+
+
+<form id="formTarea" onsubmit="return false;">
+
+
+<label>Número de tarea</label>
+<input type="text" id="numero_tarea" required>
+
+
+<label>Modelo</label>
+<select id="modelo"></select>
+
+
+<h3>Plan de talles</h3>
+
+<div id="talles">
+
+<input type="number" placeholder="39" data-talle="39">
+<input type="number" placeholder="40" data-talle="40">
+<input type="number" placeholder="41" data-talle="41">
+<input type="number" placeholder="42" data-talle="42">
+<input type="number" placeholder="43" data-talle="43">
+<input type="number" placeholder="44" data-talle="44">
+
+</div>
+
+<div class="total-pares">
+Total pares: <span id="total">0</span>
+</div>
+
+
+<button type="submit">
+Crear Orden
+</button>
+
+<button type="button" id="imprimirOrden">
+Imprimir Orden
+</button>
+
+
+</form>
+
+<div id="ordenPrint" style="display:none">
+
+<h2>HEXÁGONO 2</h2>
+
+<h3>ORDEN DE PRODUCCIÓN</h3>
+
+<p><b>Tarea:</b> <span id="printTarea"></span></p>
+
+<p><b>Modelo:</b> <span id="printModelo"></span></p>
+
+<h4>Plan de talles</h4>
+
+<table class="tabla-print">
+
+<thead>
+<tr>
+<th>Talle</th>
+<th>Pares</th>
+</tr>
+</thead>
+
+<tbody id="printTalles"></tbody>
+
+</table>
+
+<p><b>Total:</b> <span id="printTotal"></span> pares</p>
+
+</div>
+
+
+<script src="tareas.js"></script>
+
+</body>
+
+</html>

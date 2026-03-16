@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<script src="auth.js"></script>
+
+<meta charset="UTF-8">
+<title>Carga de Producción</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body class="pagina-produccion">
+
+  <div class="barra-superior">
+
+<button class="btn-secundario" onclick="volverMenu()">
+← Menú principal
+</button>
+
+<div class="titulo-header">
+HEXÁGONO 2.0
+</div>
+
+<button class="btn-salir" onclick="logout()">
+Cerrar sesión
+</button>
+
+</div>
+
+<h1>Carga de Producción</h1>
+
+<div class="container-produccion">
+
+<label>Número de tarea</label>
+
+<input id="tarea">
+
+<button onclick="buscarTarea()">Buscar</button>
+
+<div id="info"></div>
+
+<div id="tabla"></div>
+
+</div>
+
+<script>
+
+const usuarioActivo = localStorage.getItem("usuario")
+const puestoActivo = localStorage.getItem("puesto_id")
+
+// 🛡️ BLINDAJE SESION
+if(!usuarioActivo || !puestoActivo){
+alert("Sesión inválida")
+window.location.href="login.html"
+}
+
+console.log("Usuario:", usuarioActivo)
+console.log("Puesto:", puestoActivo)
+
+
+let sectorNombre = ""
+let tareaActual = null
+
+async function obtenerSector(){
+
+const res = await fetch("http://localhost:3000/api/puestos")
+
+const puestos = await res.json()
+
+const puesto = puestos.find(p => p.id == puestoActivo)
+
+if(puesto){
+sectorNombre = puesto.nombre
+}
+
+}
+
+async function buscarTarea(){
+
+const numero = document.getElementById("tarea").value
+
+const res = await fetch("http://localhost:3000/tarea/"+numero)
+
+if(res.status!=200){
+
+document.getElementById("info").innerHTML=""
+document.getElementById("tabla").innerHTML=""
+
+return
+
+}
+
+const tarea = await res.json()
+
+tareaActual = tarea
+
+// verificar si ya existe producción registrada
+
+const check = await fetch(
+"http://localhost:3000/api/produccion/check/"+tarea.numero+
+"?puesto="+puestoActivo
+)
+const checkData = await check.json()
+
+if(checkData.registrado){
+
+document.getElementById("info").innerHTML = `
+<div class="alerta-produccion">
+
+<div class="alerta-icono">⚠</div>
+
+<div class="alerta-texto">
+
+<h2>Tarea ${tarea.numero}</h2>
+
+<p>Esta tarea ya tiene producción registrada en este sector.</p>
+
+<button class="btn-secundario" onclick="limpiarBusqueda()">
+Limpiar
+</button>
+
+</div>
+
+</div>
+`
+
+document.getElementById("tabla").innerHTML = ""
+
+return
+}
+
+document.getElementById("info").innerHTML=
+`
+<h2>Tarea ${tarea.numero}</h2>
+
+Marca: ${tarea.marca} |
+Modelo: ${tarea.modelo} |
+Cantidad: ${tarea.pares} pares
+
+<br><br>
+
+Sector: <b>${sectorNombre}</b>
+`
+
+let html=`
+
+<div class="panel-produccion">
+
+<div class="tabla-area">
+
+<table class="tabla-produccion">
+
+<tr>
+<th>Talle</th>
+<th>Plan</th>
+<th>Producido</th>
+</tr>
+`
+
+tarea.talles.forEach(t=>{
+
+html+=`
+<tr>
+<td>${t.talle}</td>
+<td>${t.plan}</td>
+<td>
+<input 
+type="number"
+inputmode="numeric"
+class="prod-input"
+oninput="sumar()"
+onkeydown="enterInput(event)">
+</td>
+</tr>
+`
+
+})
+
+html+=`</table>
+</div>
+
+<div class="lado-acciones">
+
+<div class="total-box">
+Total producido
+<div class="total-num" id="total">0</div>
+</div>
+
+<button class="btn-guardar" onclick="guardar()">
+Guardar 
+</button>
+
+</div>
+
+</div>
+`
+
+document.getElementById("tabla").innerHTML=html
+
+setTimeout(()=>{
+
+const primerInput = document.querySelector(".prod-input")
+
+if(primerInput){
+primerInput.focus()
+}
+
+},100)
+
+document.getElementById("total").innerText = 0
+
+}
+
+
+function sumar(){
+
+let inputs=document.querySelectorAll("table input")
+
+let total=0
+
+inputs.forEach(i=>{
+
+total+=Number(i.value)
+
+})
+
+document.getElementById("total").innerText=total
+
+}
+
+async function guardar(){
+
+if(!tareaActual){
+alert("Primero busque una tarea")
+return
+}
+
+  const numeroTarea = document.getElementById("tarea").value
+
+  let inputs = document.querySelectorAll("table input")
+
+  let total = 0
+
+  inputs.forEach(i=>{
+    total += Number(i.value)
+  })
+
+  if(total <= 0){
+alert("Ingrese producción antes de guardar")
+return
+}
+
+const datos = {
+  tarea_id: tareaActual.id,
+  puesto_id: Number(puestoActivo),
+  cantidad: total,
+  usuario: usuarioActivo
+}
+  const res = await fetch("http://localhost:3000/api/produccion",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify(datos)
+  })
+
+  const data = await res.json()
+
+ if(data.error){
+  alert(data.error)
+}else{
+  alert("Producción guardada en Supabase ✅")
+}
+
+  limpiarBusqueda()
+
+  console.log(data)
+
+}
+
+
+function enterInput(e){
+
+if(e.key !== "Enter") return
+
+e.preventDefault()
+
+const inputs = Array.from(document.querySelectorAll(".prod-input"))
+
+const index = inputs.indexOf(e.target)
+
+if(index < inputs.length - 1){
+
+inputs[index + 1].focus()
+
+}else{
+
+guardar()
+
+}
+
+}
+
+function limpiarBusqueda(){
+
+document.getElementById("tarea").value=""
+document.getElementById("info").innerHTML=""
+document.getElementById("tabla").innerHTML=""
+
+document.getElementById("tarea").focus()
+
+}
+
+document.getElementById("tarea").addEventListener("keydown", function(e){
+
+if(e.key === "Enter"){
+buscarTarea()
+}
+
+})
+
+function volverMenu(){
+
+window.location.href="operario.html"
+
+}
+
+function logout(){
+
+localStorage.removeItem("hexagono_user")
+
+window.location.href="login.html"
+
+}
+
+obtenerSector()
+
+</script>
+
+</body>
+</html>

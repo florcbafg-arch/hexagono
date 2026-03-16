@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<title>Usuarios - Hexágono 2.0</title>
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+
+<body class="pagina-usuarios">
+
+<h1>Administración de Usuarios</h1>
+
+<div class="container">
+
+
+
+<div class="usuarios-layout">
+
+
+<div class="usuarios-crear">
+
+<h2>Crear Usuario</h2>
+
+<div id="mensajeUsuario" style="
+margin-bottom:10px;
+font-size:14px;
+font-weight:bold;
+"></div>
+
+<div class="usuarios-form-grid">
+
+
+<div class="usuarios-group">
+<label>Nombre</label>
+<input type="text" id="nombre">
+</div>
+
+
+<div class="usuarios-group">
+<label>Usuario</label>
+<input type="text" id="username">
+</div>
+
+<div class="usuarios-group">
+<label>Contraseña</label>
+<input type="password" id="password">
+</div>
+
+<div class="usuarios-group">
+<label>Puesto</label>
+
+<select id="puesto">
+<option value="">Seleccionar puesto</option>
+</select>
+
+</div>
+
+</div>
+
+<button class="usuarios-btn" onclick="crearUsuario()">
+Crear Usuario
+</button>
+
+</div>
+
+<div class="section-divider"></div>
+
+<div class="usuarios-lista">
+
+<h2 style="margin-top:40px;">
+Lista de Usuarios (<span id="totalUsuarios">0</span>)
+</h2>
+
+
+<table class="tabla-produccion">
+
+
+
+<thead>
+
+<tr>
+<th>Nombre</th>
+<th>Usuario</th>
+<th>Puesto</th>
+<th>Acciones</th>
+</tr>
+
+</thead>
+
+
+<tbody id="tablaUsuarios">
+</tbody>
+
+
+</table>
+
+</div>
+
+   </div>
+</div>
+
+<script>
+
+
+const API = "/api/usuarios"
+
+
+
+async function cargarUsuarios(){
+
+const res = await fetch(API)
+const usuarios = await res.json()
+
+document.getElementById("totalUsuarios").textContent = usuarios.length
+
+const tabla = document.getElementById("tablaUsuarios")
+
+tabla.innerHTML = ""
+
+
+usuarios.forEach(u => {
+
+tabla.innerHTML += `
+
+<tr>
+
+<td>${u.nombre}</td>
+
+<td>${u.username}</td>
+
+
+<td>${u.puesto || "-"}</td>
+
+<td>
+
+<button class="action-btn" onclick="editarUsuario(${u.id})">
+Editar
+</button>
+
+<button class="delete-btn" onclick="eliminarUsuario(${u.id})">
+Eliminar
+</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
+}
+
+async function crearUsuario(){
+
+const nombre = document.getElementById("nombre").value
+const username = document.getElementById("username").value
+const password = document.getElementById("password").value
+const puesto_id = document.getElementById("puesto").value
+
+const mensaje = document.getElementById("mensajeUsuario")
+
+if(!nombre || !username || !password || !puesto_id){
+
+mensaje.style.color="red"
+mensaje.textContent="⚠ Complete todos los campos"
+
+return
+}
+
+try{
+
+const res = await fetch(API,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+nombre,
+username,
+password,
+puesto_id
+})
+
+})
+
+if(!res.ok){
+throw new Error("error")
+}
+
+mensaje.style.color = "green"
+mensaje.textContent = "✅ Usuario creado correctamente"
+
+limpiarFormulario()
+cargarUsuarios()
+
+}catch(err){
+
+mensaje.style.color = "red"
+mensaje.textContent = "❌ Error al crear usuario"
+
+}
+
+setTimeout(()=>{
+mensaje.textContent=""
+},3000)
+
+}
+
+
+async function cargarPuestos(){
+
+try{
+
+const res = await fetch("/api/puestos")
+const puestos = await res.json()
+
+const select = document.getElementById("puesto")
+
+select.innerHTML = "<option value=''>Seleccionar puesto</option>"
+
+puestos.forEach(p=>{
+
+const option = document.createElement("option")
+option.value = p.id
+option.textContent = p.nombre
+
+select.appendChild(option)
+
+})
+
+}catch(err){
+
+console.error("Error cargando puestos",err)
+
+}
+
+}
+
+
+
+function limpiarFormulario(){
+
+document.getElementById("nombre").value = ""
+document.getElementById("username").value = ""
+document.getElementById("password").value = ""
+document.getElementById("puesto").value = ""
+
+}
+
+
+
+async function eliminarUsuario(id){
+
+if(!confirm("Eliminar usuario?")) return
+
+await fetch(API + "/" + id,{
+method:"DELETE"
+})
+
+cargarUsuarios()
+
+}
+
+
+
+function editarUsuario(id){
+
+alert("Edición de usuario próximamente")
+
+}
+
+
+
+cargarUsuarios()
+cargarPuestos()

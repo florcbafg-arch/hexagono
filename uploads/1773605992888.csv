@@ -1,0 +1,7 @@
+column_name,data_type
+id,integer
+tarea_id,integer
+puesto_id,integer
+cantidad,integer
+fecha,timestamp without time zone
+usuario,text

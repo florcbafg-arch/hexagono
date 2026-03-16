@@ -1,0 +1,601 @@
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+
+<div>
+
+<h2>Estado de Producción</h2>
+
+
+<div id="infoTiempo"></div>
+
+<div>
+Hora Inicio: <b>07:15</b> | Hora Fin: <b>16:15</b>
+</div>
+
+</div>
+
+
+<div style="display:flex;gap:10px">
+
+<button onclick="editarObjetivos()">
+Editar Objetivos
+</button>
+
+<button onclick="guardarObjetivos()">
+Guardar Objetivos
+</button>
+
+<button onclick="window.open('/dashboard_tv.html','_blank')">
+Modo TV
+</button>
+
+</div>
+
+<div style="display:flex;gap:40px;margin-top:10px;font-size:18px">
+
+<div>
+<b>Total hoy</b><br>
+<span id="totalProduccion">0</span> pares
+</div>
+
+<div>
+<b>Ritmo/hora</b><br>
+<span id="ritmoProduccion">0</span> p/h
+</div>
+
+<div>
+<b>Sector lento</b><br>
+<span id="sectorLento">-</span>
+</div>
+
+</div>
+
+</div>
+
+<div class="dashboard-tv">
+
+<!-- PANEL  PRODUCCION -->
+
+<div class="panel">
+
+<h3>PARES</h3>
+
+<table class="tabla-produccion">
+
+<thead>
+<tr>
+<th>Sector</th>
+<th>Objetivo</th>
+<th>Producción</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>Ingreso de Línea</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Ingreso de Línea"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="linea_ingreso"></div></div></td>
+</tr>
+
+<tr>
+<td>Salida de Línea</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Salida de Línea"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="linea_salida"></div></div></td>
+</tr>
+
+<tr>
+<td>Empaque de Aparado</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Empaque de Aparado"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="linea_empaque_aparado"></div></div></td>
+</tr>
+
+<tr>
+<td>Strobel</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Strobel"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="linea_strobel"></div></div></td>
+</tr>
+
+<tr>
+<td>Ojalillado</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Ojalillado"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="linea_ojalillado"></div></div></td>
+</tr>
+
+<tr>
+<td>Cortado</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Cortado"
+style="width:70px">
+</td>
+<td>
+<div class="barra">
+<div class="barra-fill rojo" id="linea_cortado"></div>
+</div>
+</td>
+</tr>
+
+<tr>
+<td>Cerrado</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Cerrado"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="linea_cerrado"></div></div></td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- PANEL PRODUCCION -->
+
+<div class="panel">
+
+<h3>PARES</h3>
+
+<table class="tabla-produccion">
+
+<thead>
+<tr>
+<th>Sector</th>
+<th>Objetivo</th>
+<th>Producción</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Ingreso</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Ingreso"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_ingreso"></div></div></td>
+</tr>
+
+<tr>
+<td>Aparado 1</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Aparado 1"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_1"></div></div></td>
+</tr>
+
+<tr>
+<td>Lengua</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Lengua"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_lengua"></div></div></td>
+</tr>
+
+<tr>
+<td>Aparado 2</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Aparado 2"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_2"></div></div></td>
+</tr>
+
+<tr>
+<td>Ingreso 2</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Ingreso 2"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_ingreso2"></div></div></td>
+</tr>
+
+<tr>
+<td>Conteo y QC</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Conteo y QC"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_qc"></div></div></td>
+</tr>
+
+<tr>
+<td>Trafila</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Trafila"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_trafila"></div></div></td>
+</tr>
+
+<tr>
+<td>Pre Empaque</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Pre Empaque"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_preempaque"></div></div></td>
+</tr>
+
+<tr>
+<td>Empaque L1</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Empaque L1"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_empaque_l1"></div></div></td>
+</tr>
+
+<tr>
+<td>Embalado</td>
+<td>
+<input type="number"
+class="objetivo-input"
+data-sector="Embalado"
+style="width:70px">
+</td>
+<td><div class="barra"><div class="barra-fill rojo" id="aparado_embalado"></div></div></td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- PANEL FALTANTES -->
+
+<div class="panel">
+
+<h3>⚠ ALERTAS</h3>
+
+
+<div class="panel-alertas">
+
+<h3>⚠ ALERTAS</h3>
+
+<ul id="panelAlertas"></ul>
+
+</div>
+
+</div>
+
+<script>
+
+
+function actualizarTiempo(){
+
+const ahora = new Date()
+
+const fecha = ahora.toLocaleDateString()
+
+const hora = ahora.toLocaleTimeString()
+
+document.getElementById("infoTiempo").innerHTML =
+"Fecha: " + fecha + " | Hora actual: " + hora
+
+}
+
+setInterval(actualizarTiempo,1000)
+
+actualizarTiempo()
+
+</script>
+
+
+<script>
+
+function mostrarAlertas(data,faltantes){
+
+const panel = document.getElementById("panelAlertas")
+
+panel.innerHTML = ""
+
+data.forEach(sector=>{
+
+const prod = sector.produccion || 0
+const obj = sector.objetivo || 100
+
+if(prod === 0 && obj > 0){
+
+panel.innerHTML += `
+<li>⚠ ${sector.nombre} sin producción</li>
+`
+
+}
+
+if(prod > 0 && prod < obj*0.2){
+
+panel.innerHTML += `
+<li>⚠ ${sector.nombre} producción baja</li>
+`
+
+}
+
+})
+
+faltantes.forEach(f=>{
+
+if(f.cantidad > 5){
+
+panel.innerHTML += `
+<li>⚠ pérdida alta en ${f.proceso}</li>
+`
+
+}
+
+})
+
+}
+
+async function actualizarDashboard(){
+
+try{
+
+const res = await fetch("/api/dashboard")
+
+const data = await res.json()
+
+const panel = document.getElementById("panelAlertas")
+
+console.log("Datos dashboard:",data)
+
+const faltantes = []
+
+let cuello = null
+let maxFaltante = 0
+
+let peorPorcentaje = 100
+let sectorLento = "-"
+let total = 0
+
+for(let i=0;i<data.length;i++){
+
+const sector = data[i]
+
+let id = sector.nombre.toLowerCase()
+
+const mapa = { "corte":"linea_cortado", "preparación":"linea_strobel", "aparado":"aparado_aparado_1", "control":"aparado_qc", "linea produccion":"linea_ingreso", "base / goma":"aparado_trafila", "empaque":"aparado_embalado" }
+
+
+
+id = mapa[id]
+if(!id) continue
+
+const barra = document.getElementById(id)
+
+
+if(barra){
+
+const produccion = sector.produccion || 0
+const objetivo = sector.objetivo || 100
+
+total += produccion
+
+const porcentaje = objetivo > 0 ? Math.round((produccion/objetivo)*100) : 0
+
+if(objetivo > 0 && porcentaje < peorPorcentaje){
+peorPorcentaje = porcentaje
+sectorLento = sector.nombre
+}
+
+barra.style.width = Math.min(porcentaje,100) + "%"
+
+barra.innerText = produccion
+
+barra.classList.remove("rojo","amarillo","verde")
+
+if(porcentaje >= 70){
+
+barra.classList.add("verde")
+
+}else if(porcentaje >= 40){
+
+barra.classList.add("amarillo")
+
+}else{
+
+barra.classList.add("rojo")
+}
+}
+
+if(i>0){
+
+const anterior = data[i-1]
+
+const diferencia = (anterior.produccion||0)-(sector.produccion||0)
+
+if(diferencia>0){
+
+panel.innerHTML += `
+<li>⚠ Diferencia alta entre ${anterior.nombre} → ${sector.nombre}</li>
+`
+
+if(diferencia > maxFaltante){
+maxFaltante = diferencia
+cuello = sector.nombre
+}
+
+}
+
+}
+
+}
+
+
+mostrarAlertas(data,faltantes)
+
+if(cuello){
+
+const panel = document.getElementById("panelAlertas")
+
+panel.innerHTML += `
+<li style="color:red;font-weight:bold">
+🔥 CUELLO DE BOTELLA EN ${cuello}
+</li>
+`
+}
+
+}catch(err){
+
+console.error("Error dashboard",err)
+
+}
+
+const ahora = new Date()
+
+const horaInicio = 7
+const minutosInicio = 15
+
+const inicio = new Date()
+inicio.setHours(horaInicio,minutosInicio,0,0)
+
+let horas = (ahora - inicio) / 3600000
+
+if(horas < 1) horas = 1
+
+const ritmo = Math.round(total / horas)
+
+document.getElementById("ritmoProduccion").innerText = ritmo
+document.getElementById("totalProduccion").innerText = total
+document.getElementById("sectorLento").innerText = sectorLento
+}
+
+async function cargarObjetivos(){
+
+try{
+
+const res = await fetch("/api/objetivos")
+
+const data = await res.json()
+
+data.forEach(o=>{
+
+const input = document.querySelector(
+`input[data-sector="${o.nombre || o.sector || o.sector_nombre}"]`
+)
+if(input){
+
+input.value = o.objetivo
+input.disabled = true
+
+}
+
+})
+
+}catch(err){
+
+console.error("Error cargando objetivos",err)
+
+}
+
+}
+
+async function guardarObjetivos(){
+
+const inputs = document.querySelectorAll(".objetivo-input")
+
+for(let input of inputs){
+
+const sector = input.dataset.sector
+const objetivo = input.value
+
+await fetch("/api/sector/objetivo",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({sector,objetivo})
+})
+
+input.disabled = true
+
+}
+
+alert("Objetivos guardados")
+
+}
+
+function editarObjetivos(){
+
+const inputs = document.querySelectorAll(".objetivo-input")
+
+inputs.forEach(i=> i.disabled=false)
+
+}
+
+document.querySelectorAll(".objetivo-input").forEach((input,index,arr)=>{
+
+input.addEventListener("keydown",(e)=>{
+
+if(e.key==="Enter"){
+
+e.preventDefault()
+
+if(arr[index+1]){
+arr[index+1].focus()
+}
+
+}
+
+})
+
+})
+
+cargarObjetivos()
+setInterval(actualizarDashboard,3000)
+actualizarDashboard()
+
+
+</script>
+

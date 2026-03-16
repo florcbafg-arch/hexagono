@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<script src="auth.js"></script>
+
+<meta charset="UTF-8">
+<title>Ficha Técnica</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<div class="auth-container">
+<div class="auth-card">
+
+<div class="logo">HEXAGONO</div>
+<div class="subtitulo">Ficha Técnica</div>
+
+<input 
+type="text" 
+id="buscar" 
+placeholder="Marca o Modelo">
+
+<button class="boton-principal" onclick="buscarFicha()">
+Buscar
+</button>
+
+<div id="resultado"></div>
+
+<button class="boton-salir" onclick="volver()">
+Volver
+</button>
+
+</div>
+</div>
+
+<script>
+
+async function buscarFicha(){
+
+const texto = document.getElementById("buscar").value
+
+const res = await fetch("http://localhost:3000/api/fichas?buscar="+texto)
+
+const fichas = await res.json()
+
+let html=""
+
+fichas.forEach(f=>{
+
+html+=`
+<div class="ficha">
+
+<b>Marca:</b> ${f.marca} <br>
+<b>Modelo:</b> ${f.modelo} <br>
+<b>Color:</b> ${f.color} <br>
+<b>Plantilla:</b> ${f.plantilla} <br>
+<b>Suela:</b> ${f.suela} <br>
+<b>Material:</b> ${f.material}
+
+<hr>
+
+</div>
+`
+
+})
+
+document.getElementById("resultado").innerHTML = html
+
+}
+
+function volver(){
+
+window.location.href="operario.html"
+
+}
+
+</script>
+
+</body>
+</html>

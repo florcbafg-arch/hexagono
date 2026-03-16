@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<script src="auth.js"></script>
+
+<meta charset="UTF-8">
+<title>Producción Admin</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body class="pagina-produccion">
+
+<div class="barra-superior">
+
+<button class="btn-secundario" onclick="volverMenu()">
+← Menú principal
+</button>
+
+<div class="titulo-header">
+HEXÁGONO 2.0
+</div>
+
+<button class="btn-salir" onclick="logout()">
+Cerrar sesión
+</button>
+
+</div>
+
+<h1>Producción Admin</h1>
+
+<div class="container-produccion">
+
+<label>Número de tarea</label>
+
+<input id="tarea">
+
+<button onclick="buscarTarea()">Buscar</button>
+
+<div id="info"></div>
+
+<div id="tabla"></div>
+
+<div id="acciones"></div>
+
+</div>
+
+<script src="produccion_admin.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<script src="auth.js"></script>
+
+<script>
+
+const usuario = localStorage.getItem("hexagono_user")
+
+if(!usuario){
+
+window.location.href="login.html"
+
+}
+
+</script>
+
+<script>
+
+
+</script>
+
+<script>
+
+function cerrarSesion(){
+
+localStorage.removeItem("hexagono_user")
+
+window.location.href="login.html"
+
+}
+
+</script>
+
+
+<meta charset="UTF-8">
+<title>Panel Administrador</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<style>
+
+.container{
+display:flex;
+height:100vh;
+}
+
+.sidebar{
+width:220px;
+background:#1e1e1e;
+color:white;
+padding:20px;
+}
+
+.sidebar h2{
+margin-bottom:20px;
+}
+
+.sidebar ul{
+list-style:none;
+padding:0;
+}
+
+.sidebar li{
+padding:12px;
+cursor:pointer;
+border-radius:6px;
+}
+
+.sidebar li:hover{
+background:#333;
+}
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+.header{
+background:#f4f4f4;
+padding:15px;
+font-weight:bold;
+}
+
+#contenido{
+padding:30px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<h2>HEXAGONO2.0</h2>
+
+<ul>
+
+<li onclick="cargarModulo('dashboard')">Dashboard</li>
+
+<li onclick="cargarModulo('tareas')">Tareas</li>
+
+<li onclick="cargarModulo('produccion')">Producción</li>
+
+<li onclick="cargarModulo('usuarios')">Usuarios</li>
+
+<li onclick="cargarModulo('patrones')">Patrones</li>
+
+<li onclick="cargarModulo('fichas')">Fichas Técnicas</li>
+
+<li onclick="cerrarSesion()">Salir</li>
+
+</ul>
+
+</div>
+
+<!-- CONTENIDO -->
+
+<div class="main">
+
+<div class="header">
+
+Panel Administrador
+
+</div>
+
+<div id="contenido">
+
+<h1>Bienvenido al Panel</h1>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function cargarModulo(modulo){
+
+fetch(modulo + "_admin.html")
+.then(res => res.text())
+.then(html => {
+
+const contenedor = document.getElementById("contenido")
+
+contenedor.innerHTML = html
+
+// 🔥 ejecutar scripts del módulo
+const scripts = contenedor.querySelectorAll("script")
+
+scripts.forEach(oldScript => {
+
+const newScript = document.createElement("script")
+
+if(oldScript.src){
+newScript.src = oldScript.src
+}else{
+newScript.textContent = oldScript.textContent
+}
+
+document.body.appendChild(newScript)
+
+})
+
+})
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+
+cargarModulo("dashboard")
+
+})
+
+</script>
+
+<script>
+
+function iniciarDashboard(){
+
+function actualizarTiempo(){
+
+const ahora = new Date()
+
+const fecha = ahora.toLocaleDateString()
+
+const hora = ahora.toLocaleTimeString()
+
+const el = document.getElementById("infoTiempo")
+
+if(el){
+el.innerHTML = "Fecha: " + fecha + " | Hora actual: " + hora
+}
+
+}
+
+setInterval(actualizarTiempo,1000)
+
+actualizarTiempo()
+
+}
+
+const params = new URLSearchParams(window.location.search)
+
+if(params.get("tv")==="1"){
+
+document.body.classList.add("tv-mode")
+
+// cargar dashboard automaticamente
+cargarModulo("dashboard")
+
+}
+
+</script>
+
+</body>
+</html>
+
+

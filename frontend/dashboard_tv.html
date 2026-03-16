@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+<script src="auth.js"></script>
+
+<title>Producción</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<h1>Producción del día</h1>
+
+<div class="container" id="produccion"></div>
+
+<script>
+
+async function cargarProduccion(){
+
+try{
+
+const res = await fetch("/api/dashboard")
+
+const data = await res.json()
+
+console.log("Dashboard TV:",data)
+
+const contenedor = document.getElementById("produccion")
+
+contenedor.innerHTML = ""
+
+data.forEach(sector=>{
+
+const porcentaje = (sector.produccion / sector.objetivo) * 100
+
+contenedor.innerHTML += `
+
+<div style="margin-bottom:20px">
+
+<h3>${sector.nombre}</h3>
+
+<div style="background:#ddd;height:25px;border-radius:6px;overflow:hidden">
+
+<div style="
+width:${porcentaje}%;
+height:100%;
+background:${porcentaje>70?'green':porcentaje>40?'orange':'red'}
+"></div>
+
+</div>
+
+<p>${sector.produccion} / ${sector.objetivo}</p>
+
+</div>
+
+`
+
+})
+
+}catch(err){
+
+console.error("Error dashboard TV",err)
+
+}
+
+}
+
+setInterval(cargarProduccion,3000)
+
+cargarProduccion()
+
+</script>
+
+</body>
+
+</html>

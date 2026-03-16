@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Modelos - Hexágono</title>
+
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<header>
+
+<a href="admin.html">← Panel</a>
+
+<h2>HEXÁGONO 2</h2>
+
+<button onclick="logout()">Cerrar sesión</button>
+
+</header>
+
+
+<h1>Modelos</h1>
+
+
+<h2>Nuevo Modelo</h2>
+
+<form id="formModelo">
+
+<input type="text" id="marca" placeholder="Marca" required>
+
+<input type="text" id="codigo" placeholder="Código modelo" required>
+
+<input type="text" id="nombre" placeholder="Nombre modelo" required>
+
+<textarea id="descripcion" placeholder="Descripción"></textarea>
+
+<label>Ficha técnica PDF</label>
+<input type="file" id="ficha">
+
+<label>Imagen modelo</label>
+<input type="file" id="imagen">
+
+<button type="submit">
+Guardar Modelo
+</button>
+
+</form>
+
+
+<h2>Modelos registrados</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>Marca</th>
+<th>Codigo</th>
+<th>Nombre</th>
+<th>Ficha</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaModelos">
+
+</tbody>
+
+</table>
+
+
+<script src="modelos.js"></script>
+
+</body>
+
+</html>

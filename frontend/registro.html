@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Registro - Hexagono</title>
+<link rel="stylesheet" href="styles.css">
+
+
+</head>
+
+<body>
+
+<div class="auth-container">
+<div class="auth-card">
+
+<div class="logo">HEXAGONO</div>
+<div class="subtitulo">Control de producción</div>
+
+<form id="registroForm">
+
+<input type="text" id="nombre" placeholder="Nombre" required>
+
+<input type="email" id="email" placeholder="Email" required>
+
+<input type="password" id="password" placeholder="Contraseña" required>
+
+<button type="submit">Crear cuenta</button>
+
+</form>
+
+<div class="link">
+¿Ya tienes cuenta? <a href="login.html">Iniciar sesión</a>
+</div>
+
+</div>
+
+
+<script>
+
+document
+.getElementById("registroForm")
+.addEventListener("submit", async (e)=>{
+
+e.preventDefault()
+
+const nombre = document.getElementById("nombre").value
+const email = document.getElementById("email").value
+const password = document.getElementById("password").value
+
+const res = await fetch("/registro",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body: JSON.stringify({
+nombre,
+email,
+password
+})
+
+})
+
+const data = await res.json()
+
+alert(data.mensaje || data.error || "Usuario creado correctamente✅")
+
+window.location.href="login.html"
+
+})
+
+</script>
+
+</body>
+</div>
+</div>
+</html>
