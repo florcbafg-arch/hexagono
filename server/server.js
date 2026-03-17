@@ -111,9 +111,9 @@ probarConexion()
 
 
 // 🟢 RUTA PRINCIPAL
-app.get("/", (req, res) => {
-  res.send("Servidor Hexagono 2 funcionando 🚀");
-});
+app.get("/", (req,res)=>{
+res.sendFile(path.join(__dirname,"../frontend/index.html"))
+})
 
 
 // 📦 TAREAS DE EJEMPLO
@@ -468,9 +468,9 @@ res.status(500).json({
 
 })
 
-// ==========================
-// API DASHBOARD PRODUCCION
-// ==========================
+// ===============
+// API DASHBOARD 
+// ===============
 
 app.get("/api/dashboard", async (req,res)=>{
 
@@ -478,55 +478,86 @@ try{
 
 const hoy = new Date().toISOString().slice(0,10)
 
-// obtener sectores
-const {data:sectores,error:err1} = await supabase
-.from("sectores")
-.select("*")
-.eq("activo",true)
-.order("orden",{ascending:true})
-
-if(err1) throw err1
-
-// obtener produccion del dia
-const {data:produccion,error:err2} = await supabase
+// obtener produccion con sector
+const { data:produccion, error:errProd } = await supabase
 .from("produccion")
-.select("cantidad,puesto_id,fecha")
+.select(`
+cantidad,
+puestos(
+sector_id,
+sectores(nombre)
+)
+`)
 
-if(err2) throw err2
+if(errProd) throw errProd
 
-const resultado = await Promise.all(sectores.map(async (s) => {
-
-const prod = produccion
-.filter(p => p.puesto_id === s.id)
-.reduce((acc,p)=> acc + p.cantidad,0)
-
-// buscar objetivo del día
-const {data:obj} = await supabase
+// obtener objetivos del dia
+const { data:objetivos, error:errObj } = await supabase
 .from("objetivos_sector")
-.select("objetivo")
-.eq("sector_id", s.id)
-.eq("fecha", hoy)
-.single()
+.select(`
+objetivo,
+sectores(nombre)
+`)
+.eq("fecha",hoy)
 
-return {
-nombre: s.nombre,
-produccion: prod,
-objetivo: obj?.objetivo || 0
+if(errObj) throw errObj
+
+// agrupar produccion por sector
+const sectores = {}
+
+produccion.forEach(p=>{
+
+const nombre = p.puestos?.sectores?.nombre
+if(!nombre) return
+
+if(!sectores[nombre]){
+
+sectores[nombre] = {
+nombre,
+produccion:0,
+objetivo:0
 }
 
-}))
+}
 
-res.json(resultado)
+sectores[nombre].produccion += p.cantidad || 0
 
-}catch(err){
+})
 
-console.error(err)
-res.status(500).json({error:"error dashboard"})
+// agregar objetivos
+objetivos.forEach(o=>{
+
+const nombre = o.sectores.nombre
+
+if(!sectores[nombre]){
+
+sectores[nombre] = {
+nombre,
+produccion:0,
+objetivo:o.objetivo
+}
+
+}else{
+
+sectores[nombre].objetivo = o.objetivo
 
 }
 
 })
 
+res.json(Object.values(sectores))
+
+}catch(err){
+
+console.error("Error dashboard:",err)
+
+res.status(500).json({
+error:"error dashboard"
+})
+
+}
+
+})
 
 // =======================
 // LISTAR MODELOS
