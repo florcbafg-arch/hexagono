@@ -1085,3 +1085,27 @@ height:auto !important;
 body.tv-mode table{
 font-size:18px;
 }
+
+/* ===== MODO TV ===== */
+
+body.tv-mode .sidebar{
+display:none;
+}
+
+body.tv-mode .header{
+display:none;
+}
+
+body.tv-mode .container{
+display:block;
+}
+
+body.tv-mode .main{
+width:100%;
+}
+
+body.tv-mode #contenido{
+padding:20px;
+max-width:1400px;
+margin:auto;
+}
