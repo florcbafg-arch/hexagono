@@ -7,14 +7,6 @@
 
 <script>
 
-const usuario = localStorage.getItem("hexagono_user") || null
-
-
-if(!usuario){
-
-window.location.href="login.html"
-
-}
 
 </script>
 
@@ -25,7 +17,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 const params = new URLSearchParams(window.location.search)
 
-if(params.get("tv")==="1"){
+if(params.get("tv") === "1"){
 document.body.classList.add("tv-mode")
 }
 
