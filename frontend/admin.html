@@ -149,40 +149,39 @@ Panel Administrador
 
 function cargarModulo(modulo){
 
-fetch(modulo + "_admin.html")
-.then(res => res.text())
-.then(html => {
+  const contenedor = document.getElementById("contenido")
 
-const contenedor = document.getElementById("contenido")
+  // 🧹 LIMPIAR SCRIPTS ANTERIORES
+  const scriptsViejos = document.querySelectorAll(".modulo-script")
+  scriptsViejos.forEach(s => s.remove())
 
-contenedor.innerHTML = html
+  fetch(modulo + "_admin.html")
+  .then(res => res.text())
+  .then(html => {
 
-// 🔥 ejecutar scripts del módulo
-const scripts = contenedor.querySelectorAll("script")
+    contenedor.innerHTML = html
 
-scripts.forEach(oldScript => {
+    // 🔥 ejecutar scripts del módulo
+    const scripts = contenedor.querySelectorAll("script")
 
-const newScript = document.createElement("script")
+    scripts.forEach(oldScript => {
 
-if(oldScript.src){
-newScript.src = oldScript.src
-}else{
-newScript.textContent = oldScript.textContent
+      const newScript = document.createElement("script")
+
+      newScript.classList.add("modulo-script") // 🔥 clave
+
+      if(oldScript.src){
+        newScript.src = oldScript.src
+      }else{
+        newScript.textContent = oldScript.textContent
+      }
+
+      document.body.appendChild(newScript)
+
+    })
+
+  })
 }
-
-document.body.appendChild(newScript)
-
-})
-
-})
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-
-cargarModulo("dashboard")
-
-})
-
 </script>
 
 <script>
