@@ -424,7 +424,7 @@ const porcentaje = objetivo > 0 ? Math.round((produccion/objetivo)*100) : 0
 
 if(objetivo > 0 && porcentaje < peorPorcentaje){
 peorPorcentaje = porcentaje
-sectorLento = sector.nombre
+sectorLento = String(sector.nombre)
 }
 
 barra.style.width = Math.min(porcentaje,100) + "%"
@@ -506,10 +506,10 @@ const ritmo = Math.round(total / horas)
 
 document.getElementById("ritmoProduccion").innerText = ritmo
 document.getElementById("totalProduccion").innerText = total
-const elSector = document.getElementById("sectorLento")
+const el = document.getElementById("sectorLento")
 
-if(elSector){
-elSector.textContent = String(sectorLento)
+if(el){
+el.textContent = sectorLento || "-"
 }
 
 }
