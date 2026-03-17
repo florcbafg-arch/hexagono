@@ -1046,3 +1046,42 @@ display:flex;
 flex-direction:column;
 overflow:hidden;
 }
+
+/* =================================
+   DASHBOARD TV FIX FINAL
+================================= */
+
+.dashboard-tv{
+display:grid !important;
+grid-template-columns:1fr 1fr 1fr !important;
+gap:20px;
+height:auto !important;
+align-items:start !important;
+}
+
+.dashboard-tv .panel{
+display:block !important;
+height:auto !important;
+overflow:visible !important;
+}
+
+.panel table{
+width:100%;
+}
+
+.tabla-produccion{
+width:100%;
+font-size:14px;
+}
+
+.barra{
+height:24px;
+}
+
+body.tv-mode .dashboard-tv{
+height:auto !important;
+}
+
+body.tv-mode table{
+font-size:18px;
+}
