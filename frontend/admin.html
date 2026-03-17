@@ -19,6 +19,14 @@ window.location.href="login.html"
 
 <script>
 
+// ACTIVAR MODO TV
+const params = new URLSearchParams(window.location.search)
+
+if(params.get("tv")==="1"){
+
+document.body.classList.add("tv-mode")
+
+}
 
 </script>
 
@@ -209,16 +217,6 @@ actualizarTiempo()
 
 }
 
-const params = new URLSearchParams(window.location.search)
-
-if(params.get("tv")==="1"){
-
-document.body.classList.add("tv-mode")
-
-// cargar dashboard automaticamente
-cargarModulo("dashboard")
-
-}
 
 </script>
 
