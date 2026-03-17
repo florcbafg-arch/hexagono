@@ -295,6 +295,7 @@ height:100vh;
 /* BARRAS MAS GRANDES EN TV */
 
 body.tv-mode .barra{
+
 height:30px;
 }
 
@@ -912,3 +913,39 @@ font-weight:bold;
 color:white;
 }
 
+/* =========================
+   MODO TV LIMPIO
+========================= */
+
+body.tv-mode .sidebar{
+display:none;
+}
+
+body.tv-mode .header{
+display:none;
+}
+
+body.tv-mode button{
+display:none;
+}
+
+body.tv-mode .container{
+display:block;
+height:100vh;
+}
+
+body.tv-mode .main{
+width:100%;
+margin:0;
+}
+
+body.tv-mode #contenido{
+padding:20px;
+height:100vh;
+box-sizing:border-box;
+overflow:hidden;
+}
+
+body.tv-mode .dashboard-tv{
+height:calc(100vh - 40px);
+}
