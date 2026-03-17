@@ -1,6 +1,6 @@
 // verificar sesión
 
-var usuario = JSON.parse(localStorage.getItem("hexagono_user"))
+const usuario = JSON.parse(localStorage.getItem("hexagono_user"))
 
 if(!usuario){
  window.location.href = "login.html"
