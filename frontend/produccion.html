@@ -66,7 +66,7 @@ let tareaActual = null
 
 async function obtenerSector(){
 
-const res = await fetch("http://localhost:3000/api/puestos")
+const res = await fetch("/api/puestos")
 
 const puestos = await res.json()
 
@@ -82,7 +82,7 @@ async function buscarTarea(){
 
 const numero = document.getElementById("tarea").value
 
-const res = await fetch("http://localhost:3000/tarea/"+numero)
+const res = await fetch("/tarea/"+numero)
 
 if(res.status!=200){
 
@@ -100,7 +100,7 @@ tareaActual = tarea
 // verificar si ya existe producción registrada
 
 const check = await fetch(
-"http://localhost:3000/api/produccion/check/"+tarea.numero+
+"/api/produccion/check/"+tarea.numero+
 "?puesto="+puestoActivo
 )
 const checkData = await check.json()
@@ -259,7 +259,7 @@ const datos = {
   cantidad: total,
   usuario: usuarioActivo
 }
-  const res = await fetch("http://localhost:3000/api/produccion",{
+  const res = await fetch("/api/produccion",{
     method:"POST",
     headers:{
       "Content-Type":"application/json"
