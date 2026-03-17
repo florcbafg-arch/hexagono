@@ -223,7 +223,7 @@ background:#43a047;
 display:grid;
 grid-template-columns:1fr 1fr 1fr;
 gap:20px;
-height:calc(100vh - 150px);
+height:calc(100vh - 120px);
 align-items:stretch;
 }
 /* PANEL */
@@ -287,10 +287,6 @@ height:100vh;
 box-sizing:border-box;
 }
 
-body.tv-mode .dashboard-tv{
-grid-template-columns:1fr 1fr 1fr;
-height:100vh;
-}
 
 /* BARRAS MAS GRANDES EN TV */
 
@@ -324,13 +320,6 @@ height:100vh;
 padding:20px;
 box-sizing:border-box;
 overflow:hidden;
-}
-
-.dashboard-tv{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:20px;
-height:calc(100vh - 140px);
 }
 
 .panel{
@@ -946,9 +935,6 @@ box-sizing:border-box;
 overflow:hidden;
 }
 
-body.tv-mode .dashboard-tv{
-height:calc(100vh - 40px);
-}
 
 /* =========================
    TV MODE REAL
@@ -986,10 +972,7 @@ overflow:hidden;
 
 /* FIX ALTURA TV */
 
-body.tv-mode .dashboard-tv{
-height:100vh;
-align-items:stretch;
-}
+
 
 body.tv-mode .panel{
 height:100%;
@@ -999,10 +982,6 @@ flex-direction:column;
 
 /* FIX PANTALLA TV */
 
-body.tv-mode .dashboard-tv{
-height:100vh;
-align-items:stretch;
-}
 
 body.tv-mode .panel{
 height:100%;
