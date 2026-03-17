@@ -378,7 +378,7 @@ panel.innerHTML += `
 }
 
 async function actualizarDashboard(){
-
+let total = 0
 try{
 
 const res = await fetch("/api/dashboard")
@@ -413,8 +413,8 @@ if(!id) continue
 
 const barra = document.getElementById(id)
 
-
-if(barra){
+if(!barra) continue
+{
 
 const produccion = sector.produccion || 0
 const objetivo = sector.objetivo || 100
