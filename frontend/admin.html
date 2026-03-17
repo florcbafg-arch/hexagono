@@ -7,7 +7,7 @@
 
 <script>
 
-let usuario = localStorage.getItem("hexagono_user")
+const usuario = localStorage.getItem("hexagono_user") || null
 
 
 if(!usuario){
@@ -21,14 +21,15 @@ window.location.href="login.html"
 <script>
 
 // ACTIVAR MODO TV
+window.addEventListener("DOMContentLoaded", () => {
+
 const params = new URLSearchParams(window.location.search)
 
 if(params.get("tv")==="1"){
-
 document.body.classList.add("tv-mode")
-
 }
 
+})
 </script>
 
 <script>
