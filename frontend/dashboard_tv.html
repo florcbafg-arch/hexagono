@@ -2,12 +2,47 @@
 <html>
 
 <head>
-    
-<script src="auth.js"></script>
 
-<title>Producción</title>
+<title>Producción del día</title>
 
 <link rel="stylesheet" href="styles.css">
+
+<style>
+
+body{
+margin:0;
+padding:40px;
+background:#111;
+color:white;
+font-family:Arial;
+}
+
+h1{
+font-size:42px;
+margin-bottom:30px;
+}
+
+.sector{
+margin-bottom:30px;
+}
+
+.barra{
+background:#444;
+height:40px;
+border-radius:8px;
+overflow:hidden;
+}
+
+.barra-fill{
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:18px;
+font-weight:bold;
+}
+
+</style>
 
 </head>
 
@@ -15,7 +50,7 @@
 
 <h1>Producción del día</h1>
 
-<div class="container" id="produccion"></div>
+<div id="produccion"></div>
 
 <script>
 
@@ -24,36 +59,39 @@ async function cargarProduccion(){
 try{
 
 const res = await fetch("/api/dashboard")
-
 const data = await res.json()
-
-console.log("Dashboard TV:",data)
 
 const contenedor = document.getElementById("produccion")
 
-contenedor.innerHTML = ""
+contenedor.innerHTML=""
 
 data.forEach(sector=>{
 
-const porcentaje = (sector.produccion / sector.objetivo) * 100
+const produccion = sector.produccion || 0
+const objetivo = sector.objetivo || 1
+
+const porcentaje = Math.min((produccion/objetivo)*100,100)
+
+let color="rojo"
+
+if(porcentaje>=70) color="verde"
+else if(porcentaje>=40) color="amarillo"
 
 contenedor.innerHTML += `
 
-<div style="margin-bottom:20px">
+<div class="sector">
 
-<h3>${sector.nombre}</h3>
+<h2>${sector.nombre}</h2>
 
-<div style="background:#ddd;height:25px;border-radius:6px;overflow:hidden">
+<div class="barra">
 
-<div style="
-width:${porcentaje}%;
-height:100%;
-background:${porcentaje>70?'green':porcentaje>40?'orange':'red'}
-"></div>
+<div class="barra-fill ${color}" style="width:${porcentaje}%">
+
+${produccion} / ${objetivo}
 
 </div>
 
-<p>${sector.produccion} / ${sector.objetivo}</p>
+</div>
 
 </div>
 
