@@ -397,7 +397,6 @@ let maxFaltante = 0
 let peorPorcentaje = 100
 let sectorLento = "-"
 
-
 for(let i=0;i<data.length;i++){
 
 const sector = data[i]
@@ -507,7 +506,12 @@ const ritmo = Math.round(total / horas)
 
 document.getElementById("ritmoProduccion").innerText = ritmo
 document.getElementById("totalProduccion").innerText = total
-document.getElementById("sectorLento").innerText = sectorLento
+const elSector = document.getElementById("sectorLento")
+
+if(elSector){
+elSector.textContent = String(sectorLento)
+}
+
 }
 
 async function cargarObjetivos(){
