@@ -1,10 +1,21 @@
 const API = "http://localhost:3000/api"
 
+const PIEZAS = [
+  "Capellada",
+  "Caña",
+  "Lengua",
+  "Cordonería",
+  "Talón",
+  "Forro",
+  "Plantilla",
+  "Suela"
+]
+
 // INIT
-window.onload = () => {
+document.addEventListener("DOMContentLoaded", () => {
   cargarModelos()
   agregarFila()
-}
+})
 
 // Cargar modelos
 async function cargarModelos() {
