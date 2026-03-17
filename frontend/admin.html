@@ -153,11 +153,7 @@ function cargarModulo(modulo){
 
   // 🧹 LIMPIAR SCRIPTS ANTERIORES
   // 🧹 LIMPIAR TODOS LOS SCRIPTS DINÁMICOS
-document.querySelectorAll("script").forEach(s => {
-  if (s.src && s.src.includes("_admin.js")) {
-    s.remove()
-  }
-})
+document.querySelectorAll(".modulo-script").forEach(s => s.remove())
 
   fetch(modulo + "_admin.html")
   .then(res => res.text())
