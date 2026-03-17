@@ -989,3 +989,60 @@ display:flex;
 flex-direction:column;
 overflow:hidden;
 }
+
+/* ===== FIX LAYOUT DASHBOARD ===== */
+
+.dashboard-tv{
+  display:grid;
+  grid-template-columns: 1fr 1fr 0.9fr; /* dos columnas grandes + alertas */
+  grid-template-rows: 1fr;
+  gap:20px;
+  height: calc(100vh - 120px);
+}
+
+.dashboard-tv .panel{
+  height:100%;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.panel table{
+  flex:1;
+}
+
+/* ===== TV MODE ===== */
+
+body.tv-mode .dashboard-tv{
+  height:100vh;
+}
+
+body.tv-mode table{
+  font-size:18px;
+}
+
+body.tv-mode .barra{
+  height:32px;
+}
+
+/* PANEL ALERTAS ALTURA COMPLETA */
+
+.panel-alertas{
+height:100%;
+}
+
+/* FIX GRID DASHBOARD */
+
+.dashboard-tv{
+display:grid;
+grid-template-columns:1fr 1fr 0.9fr;
+gap:20px;
+height:calc(100vh - 120px);
+}
+
+.dashboard-tv .panel{
+height:100%;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
