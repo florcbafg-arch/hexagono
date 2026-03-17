@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Hexágono 2.0 — Patrones</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f5f6fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .contenedor {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 5px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+
+    #resultado p {
+      background: #eafaf1;
+      padding: 8px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+  </style>
+
+  <!-- 🔐 Validación de sesión -->
+  <script>
+    let usuario = localStorage.getItem("hexagono_user")
+
+    if (!usuario) {
+      window.location.href = "login.html"
+    }
+  </script>
+
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h2>Patrones</h2>
+
+  <!-- Selector -->
+  <div style="margin-bottom: 20px;">
+    <label>Modelo:</label>
+    <select id="modeloSelect">
+      <option value="">Seleccionar modelo</option>
+    </select>
+
+    <button onclick="agregarFila()">+ Agregar fila</button>
+    <button onclick="guardarPatron()">💾 Guardar</button>
+  </div>
+
+  <!-- Tabla -->
+  <table border="1" width="100%" id="tablaPatrones">
+    <thead>
+      <tr>
+        <th>Pieza</th>
+        <th>Material</th>
+        <th>Unidad</th>
+        <th>Consumo por par</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Simulación -->
+  <div style="margin-top: 30px;">
+    <h3>Simular producción</h3>
+
+    <input type="number" id="cantidad" placeholder="Cantidad de pares">
+
+    <button onclick="calcular()">Calcular consumo</button>
+
+    <div id="resultado"></div>
+  </div>
+
+</div>
+
+<!-- 🔗 JS -->
+<script src="js/patrones_admin.js"></script>
+
+</body>
+</html>
