@@ -151,9 +151,11 @@ function cargarModulo(modulo){
 
   const contenedor = document.getElementById("contenido")
 
-  // 🧹 LIMPIAR SCRIPTS ANTERIORES
-  // 🧹 LIMPIAR TODOS LOS SCRIPTS DINÁMICOS
-document.querySelectorAll(".modulo-script").forEach(s => s.remove())
+  // limpiar contenido
+  contenedor.innerHTML = ""
+
+  // eliminar scripts anteriores
+  document.querySelectorAll(".modulo-script").forEach(s => s.remove())
 
   fetch(modulo + "_admin.html")
   .then(res => res.text())
@@ -161,27 +163,17 @@ document.querySelectorAll(".modulo-script").forEach(s => s.remove())
 
     contenedor.innerHTML = html
 
-    // 🔥 ejecutar scripts del módulo
-    const scripts = contenedor.querySelectorAll("script")
+    // 🔥 cargar JS del módulo (UNO SOLO)
+    const script = document.createElement("script")
+    script.src = "js/" + modulo + "_admin.js"
+    script.classList.add("modulo-script")
 
-    scripts.forEach(oldScript => {
-
-      const newScript = document.createElement("script")
-
-      newScript.classList.add("modulo-script") // 🔥 clave
-
-      if(oldScript.src){
-        newScript.src = oldScript.src
-      }else{
-        newScript.textContent = oldScript.textContent
-      }
-
-      document.body.appendChild(newScript)
-
-    })
+    document.body.appendChild(script)
 
   })
 }
+
+ 
 
 </script>
 
