@@ -111,8 +111,8 @@ probarConexion()
 
 
 // 🟢 RUTA PRINCIPAL
-app.get("/", (req,res)=>{
-res.sendFile(path.join(__dirname,"../frontend/login.html"))
+app.get("/", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "../frontend/login.html"))
 })
 
 // 📦 TAREAS DE EJEMPLO
