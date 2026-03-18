@@ -78,9 +78,13 @@ async function actualizarDashboard(){
 
   const ritmo = Math.round(total / horas)
 
-  document.getElementById("ritmoProduccion").innerText = ritmo
-  document.getElementById("totalProduccion").innerText = total
-  document.querySelector("#sectorLento").textContent = String(sectorLento)
+const ritmoEl = document.getElementById("ritmoProduccion")
+const totalEl = document.getElementById("totalProduccion")
+const sectorEl = document.getElementById("sectorLento")
+
+if(ritmoEl) ritmoEl.innerText = ritmo
+if(totalEl) totalEl.innerText = total
+if(sectorEl) sectorEl.textContent = String(sectorLento)
 }
 
 async function cargarObjetivos(){
