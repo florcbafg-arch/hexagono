@@ -80,7 +80,7 @@ cantidad
 })
 
 
-const res = await fetch("/api/tareas",{
+const res = await fetch("/api/ordenes",{
 
 method:"POST",
 

@@ -584,7 +584,7 @@ app.get("/api/modelos", async (req, res) => {
 // CREAR TAREA (ORDEN PRODUCCION)
 // ==========================
 
-app.post("/api/tareas", async (req,res)=>{
+app.post("/api/ordenes", async (req,res)=>{
 
 try{
 
