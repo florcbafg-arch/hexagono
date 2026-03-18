@@ -1,10 +1,10 @@
-var tareaActual = null
+var OrdenesActual = null
 
-async function buscarTarea(){
+async function buscarOrdenes(){
 
-const numero = document.getElementById("tarea").value
+const numero = document.getElementById("ordenes").value
 
-const res = await fetch("http://localhost:3000/tarea/"+numero)
+const res = await fetch("http://localhost:3000/ordenes/"+numero)
 
 if(res.status!=200){
 
@@ -14,17 +14,17 @@ return
 
 }
 
-const tarea = await res.json()
+const ordenes = await res.json()
 
-tareaActual = tarea
+OrdenesActual = ordenes
 
 document.getElementById("info").innerHTML=
 `
-<h2>Tarea ${tarea.numero}</h2>
+<h2>Ordenes ${ordenes.numero}</h2>
 
-Marca: ${tarea.marca} |
-Modelo: ${tarea.modelo} |
-Cantidad: ${tarea.pares} pares
+Marca: ${ordenes.marca} |
+Modelo: ${ordenes.modelo} |
+Cantidad: ${ordenes.pares} pares
 `
 
 cargarProduccion(numero)
@@ -33,7 +33,7 @@ cargarProduccion(numero)
 
 async function cargarProduccion(numero){
 
-const res = await fetch("http://localhost:3000/api/produccion/tarea/"+numero)
+const res = await fetch("http://localhost:3000/api/produccion/ordenes/"+numero)
 
 const data = await res.json()
 
@@ -82,12 +82,14 @@ value="0">
 })
 
 }else{
+    
+data.sort((a,b)=>a.puestos.orden - b.puestos.orden)
 
 data.forEach(p=>{
 
 html+=`
 <tr>
-<td>Sector ${p.puesto_id}</td>
+<td>${p.puestos.nombre}</td>
 <td>
 <input 
 type="number"
@@ -126,7 +128,7 @@ inputs.forEach(i=>{
 
 registros.push({
 id: i.dataset.id || null,
-tarea_id:tareaActual.id,
+ordenes_id:OrdenesActual.id,
 puesto_id:Number(i.dataset.puesto),
 cantidad:Number(i.value)
 })
@@ -146,14 +148,14 @@ body:JSON.stringify(registros)
 
 alert("Producción actualizada ✅")
 
-buscarTarea()
+buscarOrdenes()
 
 }
 
-document.getElementById("tarea").addEventListener("keydown",function(e){
+document.getElementById("ordenes").addEventListener("keydown",function(e){
 
 if(e.key==="Enter"){
-buscarTarea()
+buscarOrdenes()
 }
 
 })
