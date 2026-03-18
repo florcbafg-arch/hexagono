@@ -131,7 +131,7 @@ function editarObjetivos(){
 
 
 // 🚀 INIT CORRECTO
-document.addEventListener("DOMContentLoaded", ()=>{
+function initDashboard(){
 
   actualizarTiempo()
   setInterval(actualizarTiempo,1000)
@@ -151,4 +151,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
     })
   })
 
-})
+}

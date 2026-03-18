@@ -151,28 +151,33 @@ function cargarModulo(modulo){
 
   const contenedor = document.getElementById("contenido")
 
-  // limpiar contenido
   contenedor.innerHTML = ""
 
-  // eliminar scripts anteriores
   document.querySelectorAll(".modulo-script").forEach(s => s.remove())
 
   fetch(modulo + "_admin.html")
-  .then(res => res.text())
-  .then(html => {
+    .then(res => res.text())
+    .then(html => {
 
-    contenedor.innerHTML = html
+      contenedor.innerHTML = html
 
-    // 🔥 cargar JS del módulo (UNO SOLO)
-    const script = document.createElement("script")
-    script.src = "js/" + modulo + "_admin.js"
-    script.classList.add("modulo-script")
+      const script = document.createElement("script")
+      script.src = "js/" + modulo + "_admin.js"
+      script.classList.add("modulo-script")
 
-    document.body.appendChild(script)
+      document.body.appendChild(script)
 
-  })
+      // 🔥 CLAVE TOTAL
+      script.onload = () => {
+
+        if(modulo === "dashboard"){
+          initDashboard()
+        }
+
+      }
+
+    })
 }
-
  
 
 </script>
