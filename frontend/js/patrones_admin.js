@@ -45,30 +45,41 @@ function agregarFila() {
 
   const tr = document.createElement("tr")
 
-  tr.innerHTML = `
-    <td>
-      <select>
-        <option value="">Seleccionar</option>
-        ${opciones}
-      </select>
-    </td>
+tr.innerHTML = `
+  <td>
+    <select>
+      <option value="CORTE REFUERZO">CORTE REFUERZO</option>
+      <option value="CORTE FORRO">CORTE FORRO</option>
+      <option value="CORTE CAPELLADA">CORTE CAPELLADA</option>
+    </select>
+  </td>
 
-    <td><input placeholder="Ej: PU gamuzón"></td>
+  <td>
+    <select>
+      <option value="">Seleccionar</option>
+      ${opciones}
+    </select>
+  </td>
 
-    <td>
-      <select>
-        <option value="m">m</option>
-        <option value="m2">m2</option>
-        <option value="unidad">unidad</option>
-      </select>
-    </td>
+  <td><input placeholder="Material"></td>
 
-    <td><input type="number" step="0.01" placeholder="0.25"></td>
+  <td><input placeholder="Color"></td>
 
-    <td>
-      <button onclick="this.parentElement.parentElement.remove()">❌</button>
-    </td>
-  `
+  <td>
+    <select>
+      <option value="m">m</option>
+      <option value="m2">m2</option>
+      <option value="unidad">unidad</option>
+      <option value="plancha">plancha</option>
+    </select>
+  </td>
+
+  <td><input type="number" step="0.01"></td>
+
+  <td>
+    <button onclick="this.parentElement.parentElement.remove()">❌</button>
+  </td>
+`
 
   tbody.appendChild(tr)
 }
@@ -91,11 +102,13 @@ async function guardarPatron() {
     if (!inputs[0].value) return
 
     patrones.push({
-      pieza: inputs[0].value,
-      material: inputs[1].value,
-      unidad: inputs[2].value,
-      consumo: parseFloat(inputs[3].value)
-    })
+  bloque: inputs[0].value,
+  pieza: inputs[1].value,
+  material: inputs[2].value,
+  color: inputs[3].value,
+  unidad: inputs[4].value,
+  consumo: parseFloat(inputs[5].value)
+})
   })
 
   await fetch(API + "/patrones", {
@@ -133,9 +146,17 @@ if(!cantidad || cantidad <= 0){
   const div = document.getElementById("resultado")
   div.innerHTML = ""
 
-  data.forEach(m => {
+  data.forEach(b => {
+
+  const titulo = document.createElement("h4")
+  titulo.textContent = b.bloque
+  div.appendChild(titulo)
+
+  b.items.forEach(m => {
     const p = document.createElement("p")
-    p.textContent = `${m.material} → ${m.total} ${m.unidad}`
+    p.textContent = `${m.material} (${m.color}) → ${m.total} ${m.unidad}`
     div.appendChild(p)
   })
+
+})
 }

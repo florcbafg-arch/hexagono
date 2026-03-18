@@ -115,8 +115,8 @@ app.get("/", (req, res) => {
   res.sendFile(path.resolve(__dirname, "../frontend/login.html"))
 })
 
-// 📦 TAREAS DE EJEMPLO
-const tareas = [
+// 📦 ordenes DE EJEMPLO
+const ordenes= [
 
 {
 numero:"5556-1",
@@ -159,7 +159,7 @@ try{
 const numero=req.params.numero
 
 const {data,error}=await supabase
-.from("tareas")
+.from("ordenes")
 .select(`
 id,
 numero_tarea,
@@ -244,7 +244,7 @@ if(!puesto){
 
 // buscar id de tarea
 const {data:tarea,error:errTarea} = await supabase
-.from("tareas")
+.from("ordenes")
 .select("id")
 .eq("numero_tarea", numero)
 .single()
@@ -598,7 +598,7 @@ total += t.cantidad
 
 // guardar tarea
 const {data:tarea,error:errorTarea} = await supabase
-.from("tareas")
+.from("ordenes")
 .insert([
 {
 numero_tarea: numero,
@@ -658,7 +658,7 @@ try{
 
 // traer tarea
 const { data:tarea, error:errTarea } = await supabase
-.from("tareas")
+.from("ordenes")
 .select("*")
 .eq("numero_tarea", numero)
 .single()
@@ -910,6 +910,102 @@ res.status(500).json({error:"error objetivos"})
 
 }
 
+})
+
+app.post("/api/patrones", async (req, res) => {
+  try {
+
+    const { modelo_id, patrones } = req.body
+
+    if (!modelo_id || !patrones) {
+      return res.status(400).json({ error: "Datos incompletos" })
+    }
+
+    // borrar anteriores (opcional pero recomendado)
+    await supabase
+      .from("patrones")
+      .delete()
+      .eq("modelo_id", modelo_id)
+
+    const dataInsert = patrones.map(p => ({
+      modelo_id,
+      bloque: p.bloque || null,
+      pieza: p.pieza,
+      material: p.material,
+      color: p.color || null,
+      unidad: p.unidad,
+      consumo_por_par: p.consumo
+    }))
+
+    const { error } = await supabase
+      .from("patrones")
+      .insert(dataInsert)
+
+    if (error) throw error
+
+    res.json({ ok: true })
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ error: "Error guardando patrones" })
+  }
+})
+
+app.post("/api/patrones/calcular", async (req, res) => {
+  try {
+
+    const { modelo_id, cantidad } = req.body
+
+    const { data, error } = await supabase
+      .from("patrones")
+      .select("*")
+      .eq("modelo_id", modelo_id)
+
+    if (error) throw error
+
+    const resultado = {}
+
+    data.forEach(p => {
+
+      const bloque = p.bloque || "GENERAL"
+
+      if (!resultado[bloque]) {
+        resultado[bloque] = {}
+      }
+
+      const key = `${p.material}-${p.color}-${p.unidad}`
+
+      if (!resultado[bloque][key]) {
+        resultado[bloque][key] = {
+          material: p.material,
+          color: p.color,
+          unidad: p.unidad,
+          total: 0
+        }
+      }
+
+      resultado[bloque][key].total += p.consumo_por_par * cantidad
+
+    })
+
+    // convertir a array
+    const salida = []
+
+    Object.keys(resultado).forEach(bloque => {
+
+      salida.push({
+        bloque,
+        items: Object.values(resultado[bloque])
+      })
+
+    })
+
+    res.json(salida)
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json({ error: "Error calculando" })
+  }
 })
 
 // 🚀 INICIAR SERVIDOR

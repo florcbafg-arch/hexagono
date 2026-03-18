@@ -52,7 +52,7 @@
 
   <!-- 🔐 Validación de sesión -->
   <script>
-    let usuario = localStorage.getItem("hexagono_user")
+    var usuario = localStorage.getItem("hexagono_user")
 
     if (!usuario) {
       window.location.href = "login.html"
@@ -82,12 +82,14 @@
   <table border="1" width="100%" id="tablaPatrones">
     <thead>
       <tr>
-        <th>Pieza</th>
-        <th>Material</th>
-        <th>Unidad</th>
-        <th>Consumo por par</th>
-        <th></th>
-      </tr>
+  <th>Bloque</th>
+  <th>Pieza</th>
+  <th>Material</th>
+  <th>Color</th>
+  <th>Unidad</th>
+  <th>Consumo</th>
+  <th></th>
+</tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -106,7 +108,7 @@
 </div>
 
 <!-- 🔗 JS -->
-<script src="patrones_admin.js"></script>
+
 
 </body>
 </html>
