@@ -1,28 +1,42 @@
-<h2>Órdenes de Producción</h2>
+<h2>📋 Órdenes de Producción</h2>
 
-<div style="margin-bottom:15px;">
-  <input id="buscar" placeholder="Buscar tarea..." style="padding:5px;">
-  
-  <select id="filtroEstado">
+<div style="margin-bottom:20px; display:flex; justify-content:space-between; gap:10px;">
+
+  <input 
+    type="text" 
+    id="buscar" 
+    placeholder="Buscar por número de tarea..." 
+    style="padding:8px; width:250px;"
+  >
+
+  <select id="filtroEstado" style="padding:8px;">
     <option value="">Todos</option>
     <option value="pendiente">Pendiente</option>
     <option value="en_proceso">En proceso</option>
-    <option value="finalizada">Finalizada</option>
+    <option value="terminado">Terminado</option>
   </select>
 
-  <button onclick="cargarOrdenes()">🔄</button>
+  <button onclick="cargarModulo('ordenes_crear')">
+    ➕ Crear Orden
+  </button>
+
 </div>
 
-<table border="1" width="100%">
+<table border="1" width="100%" style="border-collapse:collapse;">
+
   <thead>
     <tr>
-      <th>Tarea</th>
+      <th>N° Tarea</th>
       <th>Modelo</th>
-      <th>Pares</th>
+      <th>Total Pares</th>
       <th>Fecha</th>
       <th>Estado</th>
       <th>Prioridad</th>
+      <th>Acciones</th>
     </tr>
   </thead>
-  <tbody id="tablaOrdenes"></tbody>
+
+  <tbody id="tablaOrdenes">
+  </tbody>
+
 </table>

@@ -1,0 +1,28 @@
+<h2>Órdenes de Producción</h2>
+
+<div style="margin-bottom:15px;">
+  <input id="buscar" placeholder="Buscar tarea..." style="padding:5px;">
+  
+  <select id="filtroEstado">
+    <option value="">Todos</option>
+    <option value="pendiente">Pendiente</option>
+    <option value="en_proceso">En proceso</option>
+    <option value="finalizada">Finalizada</option>
+  </select>
+
+  <button onclick="cargarOrdenes()">🔄</button>
+</div>
+
+<table border="1" width="100%">
+  <thead>
+    <tr>
+      <th>Tarea</th>
+      <th>Modelo</th>
+      <th>Pares</th>
+      <th>Fecha</th>
+      <th>Estado</th>
+      <th>Prioridad</th>
+    </tr>
+  </thead>
+  <tbody id="tablaOrdenes"></tbody>
+</table>
