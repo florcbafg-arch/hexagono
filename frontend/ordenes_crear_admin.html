@@ -1,28 +1,28 @@
-<h2>Órdenes de Producción</h2>
+<h1>Crear Orden de Producción</h1>
 
-<div style="margin-bottom:15px;">
-  <input id="buscar" placeholder="Buscar tarea..." style="padding:5px;">
-  
-  <select id="filtroEstado">
-    <option value="">Todos</option>
-    <option value="pendiente">Pendiente</option>
-    <option value="en_proceso">En proceso</option>
-    <option value="finalizada">Finalizada</option>
-  </select>
+<form id="formTarea" onsubmit="return false;">
 
-  <button onclick="cargarOrdenes()">🔄</button>
+<label>Número de tarea</label>
+<input type="text" id="numero_tarea" required>
+
+<label>Modelo</label>
+<select id="modelo"></select>
+
+<h3>Plan de talles</h3>
+
+<div id="talles">
+<input type="number" placeholder="39" data-talle="39">
+<input type="number" placeholder="40" data-talle="40">
+<input type="number" placeholder="41" data-talle="41">
+<input type="number" placeholder="42" data-talle="42">
+<input type="number" placeholder="43" data-talle="43">
+<input type="number" placeholder="44" data-talle="44">
 </div>
 
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>Tarea</th>
-      <th>Modelo</th>
-      <th>Pares</th>
-      <th>Fecha</th>
-      <th>Estado</th>
-      <th>Prioridad</th>
-    </tr>
-  </thead>
-  <tbody id="tablaOrdenes"></tbody>
-</table>
+<div>
+Total pares: <span id="total">0</span>
+</div>
+
+<button type="submit">Crear Orden</button>
+
+</form>
