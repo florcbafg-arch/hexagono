@@ -112,6 +112,16 @@ async function calcular() {
   const modelo_id = document.getElementById("modeloSelect").value
   const cantidad = document.getElementById("cantidad").value
 
+  if(!modelo_id){
+  alert("Seleccioná un modelo")
+  return
+}
+
+if(!cantidad || cantidad <= 0){
+  alert("Ingresá cantidad válida")
+  return
+}
+
   const res = await fetch(API + "/patrones/calcular", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
