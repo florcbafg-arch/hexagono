@@ -1,3 +1,12 @@
+// 🔥 DETECTAR MODO EDICIÓN (VA ARRIBA DE TODO)
+const params = new URLSearchParams(window.location.search)
+const id = params.get("id")
+
+if (id) {
+  cargarFicha(id)
+}
+
+// 👇 DESPUÉS VA TODO LO DEMÁS
 let secciones = []
 
 // 🔥 CARGAR MODELOS
@@ -98,27 +107,50 @@ async function guardarFicha() {
   const codigo = document.getElementById("codigo").value
   const nombre = document.getElementById("nombre").value
 
-  const res = await fetch("/api/fichas", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      modelo_id,
-      codigo,
-      nombre,
-      secciones
-    })
+    // 🟡 VALIDACIONES
+  if (!modelo_id) return alert("Seleccionar modelo")
+  if (!codigo) return alert("Ingresar código")
+  if (!nombre) return alert("Ingresar nombre")
+  if (secciones.length === 0) return alert("Agregar al menos una sección")
+
+  const url = id ? `/api/fichas/${id}` : "/api/fichas"
+const method = id ? "PUT" : "POST"
+
+const res = await fetch(url, {
+  method,
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    modelo_id,
+    codigo,
+    nombre,
+    secciones
   })
+})
 
   const data = await res.json()
 
   if (data.ok) {
-    alert("Ficha creada")
+    alert(id ? "Ficha actualizada" : "Ficha creada")
     window.location.href = "fichas_admin.html"
   } else {
     alert("Error creando ficha")
   }
+}
+
+// 🔥 CARGAR FICHA (MODO EDICIÓN)
+async function cargarFicha(id) {
+  const res = await fetch(`/api/fichas/${id}`)
+  const data = await res.json()
+
+  document.getElementById("modelo").value = data.modelo_id
+  document.getElementById("codigo").value = data.codigo
+  document.getElementById("nombre").value = data.nombre
+
+  secciones = data.secciones || []
+
+  renderSecciones()
 }
 
 // 🔙 VOLVER
@@ -127,4 +159,12 @@ function volver() {
 }
 
 // 🚀 INIT
-cargarModelos()
+async function init() {
+  await cargarModelos()
+
+  if (id) {
+    cargarFicha(id)
+  }
+}
+
+init()

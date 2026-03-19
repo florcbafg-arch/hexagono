@@ -28,7 +28,7 @@ function renderFichas() {
           <td>${f.nombre}</td>
           <td>
             <button onclick="verFicha(${f.modelo_id})">👁</button>
-            <button onclick="editarFicha(${f.id})">✏</button>
+            <button onclick="editarFicha(${f.id})">✏️</button>
             <button onclick="eliminarFicha(${f.id})">🗑</button>
           </td>
         </tr>
@@ -37,7 +37,7 @@ function renderFichas() {
 }
 
 function crearFicha() {
-  window.location.href = "fichas_crear_admin.html"
+    window.location.href = "fichas_crear_admin.html"
 }
 
 function verFicha(modelo_id) {
@@ -45,5 +45,28 @@ function verFicha(modelo_id) {
 }
 
 function editarFicha(id) {
-  alert("Editar ficha " + id)
+  window.location.href = `fichas_crear_admin.html?id=${id}`
 }
+
+async function eliminarFicha(id) {
+  if (!confirm("¿Eliminar ficha?")) return
+
+  try {
+    const res = await fetch(`/api/fichas/${id}`, {
+      method: "DELETE"
+    })
+
+    if (!res.ok) {
+      alert("Error eliminando ficha")
+      return
+    }
+
+    alert("Ficha eliminada")
+    cargarFichas()
+
+  } catch (error) {
+    console.error(error)
+    alert("Error de conexión")
+  }
+}
+
