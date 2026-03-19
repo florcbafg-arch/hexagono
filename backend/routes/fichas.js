@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { supabase } = require("../config/supabase");
+const { supabase } = require("../../config/supabase");
 
 router.post("/fichas", async (req, res) => {
   const { modelo_id, codigo, nombre, secciones } = req.body;
@@ -21,8 +21,8 @@ router.post("/fichas", async (req, res) => {
     const { data: ficha, error: fichaError } = await supabase
       .from("fichas_tecnicas")
       .insert([{ modelo_id, codigo, nombre }])
-      .select()
-      .single();
+.select()
+.single()
 
     if (fichaError) throw fichaError;
 
@@ -186,5 +186,34 @@ router.get("/fichas/:modelo_id", async (req, res) => {
     });
   }
 });
+
+router.get("/fichas", async (req, res) => {
+  try {
+
+    const { data, error } = await supabase
+      .from("fichas_tecnicas")
+      .select(`
+        id,
+        modelo_id,
+        codigo,
+        nombre,
+        modelos(nombre)
+      `)
+      .order("id", { ascending: false })
+
+    if (error) throw error
+
+    const resultado = data.map(f => ({
+      ...f,
+      modelo_nombre: f.modelos?.nombre || "-"
+    }))
+
+    res.json(resultado)
+
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: "error fichas" })
+  }
+})
 
 module.exports = router;

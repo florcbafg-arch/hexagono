@@ -6,6 +6,7 @@ const path = require("path");
 const { supabase } = require("../config/supabase")
 const multer = require("multer")
 
+const fichasRoutes = require("../backend/routes/fichas");
 const app = express();
 
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -17,6 +18,7 @@ let registrosProduccion = []
 app.use(cors());
 app.use(express.json());
 
+app.use("/api", fichasRoutes);
 // =======================
 // CONFIGURAR SUBIDA ARCHIVOS
 // =======================
@@ -610,6 +612,29 @@ fecha: new Date()
 .select()
 .single()
 
+// ==========================
+// CREAR SECTORES AUTOMATICOS
+// ==========================
+
+// traer todos los sectores
+const { data: sectores } = await supabase
+  .from("sectores")
+  .select("id,nombre")
+
+if(sectores && sectores.length > 0){
+
+  const sectoresInsert = sectores.map(s => ({
+    orden_id: tarea.id,
+    sector_id: s.id,
+    estado: "pendiente"
+  }))
+
+  await supabase
+    .from("ordenes_sector")
+    .insert(sectoresInsert)
+
+}
+
 if(errorTarea) throw errorTarea
 
 
@@ -641,6 +666,50 @@ console.error("ERROR CREANDO TAREA:",err)
 res.status(500).json({
 mensaje:"Error creando tarea"
 })
+
+}
+
+})
+
+// ==========================
+// LISTAR ORDENES
+// ==========================
+
+app.get("/api/ordenes", async (req,res)=>{
+
+try{
+
+const { data, error } = await supabase
+.from("ordenes")
+.select(`
+id,
+numero_tarea,
+pares_plan,
+estado,
+fecha_entrega,
+prioridad,
+modelos(nombre)
+`)
+.order("id",{ascending:false})
+
+if(error) throw error
+
+const resultado = data.map(o => ({
+id: o.id,
+numero: o.numero_tarea,
+modelo: o.modelos?.nombre || "-",
+pares: o.pares_plan,
+estado: o.estado || "pendiente",
+fecha: o.fecha_entrega || "-",
+prioridad: o.prioridad || "normal"
+}))
+
+res.json(resultado)
+
+}catch(err){
+
+console.error(err)
+res.status(500).json({error:"error ordenes"})
 
 }
 
@@ -1007,6 +1076,8 @@ app.post("/api/patrones/calcular", async (req, res) => {
     res.status(500).json({ error: "Error calculando" })
   }
 })
+
+
 
 // 🚀 INICIAR SERVIDOR
 app.listen(3000, () => {
