@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>HEXAFLOW — Patrones</title>
 
-  <!-- 🔥 TU CSS GLOBAL -->
   <link rel="stylesheet" href="styles.css">
+
 
   <!-- 🔐 Validación de sesión -->
   <script>
@@ -20,82 +20,52 @@
 
 <body>
 
-<div class="container">
+<div id="contenido">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <h2>HEXAFLOW</h2>
-    <ul>
-      <li>Dashboard</li>
-      <li>Ordenes</li>
-      <li>Producción</li>
-      <li>Usuarios</li>
-      <li>Patrones</li>
-      <li>Fichas Técnicas</li>
-      <li>Cerrar sesión</li>
-    </ul>
-  </aside>
+  <h2>Patrones</h2>
 
-  <!-- MAIN -->
-  <div class="main">
+  <!-- Selector -->
+  <div style="margin-bottom: 20px;">
+    <label>Modelo:</label>
+    <select id="modeloSelect">
+      <option value="">Seleccionar modelo</option>
+    </select>
 
-    <div class="header">Panel Administrador</div>
+    <button onclick="agregarFila()">+ Agregar fila</button>
+    <button onclick="guardarPatron()">💾 Guardar</button>
+  </div>
 
-    <div id="contenido">
+  <!-- Tabla -->
+  <table border="1" width="100%" id="tablaPatrones">
+    <thead>
+      <tr>
+  <th>Bloque</th>
+  <th>Pieza</th>
+  <th>Material</th>
+  <th>Color</th>
+  <th>Unidad</th>
+  <th>Consumo</th>
+  <th></th>
+</tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-      <h1>Patrones</h1>
+  <!-- Simulación -->
+  <div style="margin-top: 30px;">
+    <h3>Simular producción</h3>
 
-      <!-- Selector -->
-      <div class="form-row">
+    <input type="number" id="cantidad" placeholder="Cantidad de pares">
 
-        <label>Modelo:</label>
-        <select id="modeloSelect">
-          <option value="">Seleccionar modelo</option>
-        </select>
+    <button onclick="calcular()">Calcular consumo</button>
 
-        <button onclick="agregarFila()">+ Agregar fila</button>
-        <button onclick="guardarPatron()">💾 Guardar</button>
-
-      </div>
-
-      <!-- Tabla -->
-      <table class="tabla-produccion" id="tablaPatrones">
-        <thead>
-          <tr>
-            <th>Bloque</th>
-            <th>Pieza</th>
-            <th>Material</th>
-            <th>Color</th>
-            <th>Unidad</th>
-            <th>Consumo</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <!-- Simulación -->
-      <div style="margin-top: 30px;">
-
-        <h2>Simular producción</h2>
-
-        <div class="form-row">
-          <input type="number" id="cantidad" placeholder="Cantidad de pares">
-          <button onclick="calcular()">Calcular consumo</button>
-        </div>
-
-        <div id="resultado"></div>
-
-      </div>
-
-    </div>
-
+    <div id="resultado"></div>
   </div>
 
 </div>
 
 <!-- 🔗 JS -->
-<script src="js/patrones_admin.js"></script>
+
 
 </body>
 </html>
