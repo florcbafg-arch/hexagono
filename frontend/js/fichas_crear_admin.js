@@ -158,6 +158,10 @@ function volver() {
   window.location.href = "fichas_admin.html"
 }
 
+function imprimirFicha() {
+  window.print()
+}
+
 // 🚀 INIT
 async function init() {
   await cargarModelos()

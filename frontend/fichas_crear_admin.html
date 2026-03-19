@@ -1,28 +1,70 @@
-<h1>Crear Ficha Técnica</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Ficha</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
 
-<div style="margin-bottom:20px;">
-  <label>Modelo</label>
-  <select id="modelo"></select>
+<body>
 
-  <label>Código</label>
-  <input id="codigo">
+<div class="container">
 
-  <label>Nombre</label>
-  <input id="nombre">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2>HEXAGONO2.0</h2>
+    <ul>
+      <li>Dashboard</li>
+      <li>Ordenes</li>
+      <li>Producción</li>
+      <li>Usuarios</li>
+      <li>Patrones</li>
+      <li>Fichas Técnicas</li>
+      <li>Cerrar sesión</li>
+    </ul>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="header">Panel Administrador</div>
+
+    <div id="contenido">
+
+      <h1>Crear Ficha Técnica</h1>
+
+      <div class="form-row">
+        <label>Modelo</label>
+        <select id="modelo"></select>
+
+        <label>Código</label>
+        <input id="codigo">
+
+        <label>Nombre</label>
+        <input id="nombre">
+      </div>
+
+      <div class="section-divider"></div>
+
+      <h2>Secciones</h2>
+
+      <div id="secciones"></div>
+
+      <button onclick="agregarSeccion()">➕ Agregar Sección</button>
+
+      <br><br>
+
+      <button onclick="guardarFicha()">💾 Guardar</button>
+      <button onclick="imprimirFicha()">🖨 Imprimir</button>
+      <button onclick="volver()">⬅ Volver</button>
+
+    </div>
+
+  </div>
+
 </div>
 
-<hr>
-
-<h2>Secciones</h2>
-
-<div id="secciones"></div>
-
-<button onclick="agregarSeccion()">➕ Agregar Sección</button>
-
-<br><br>
-
-<button onclick="guardarFicha()">💾 Guardar Ficha</button>
-<button onclick="volver()">⬅ Volver</button>
-
-<!-- 🔥 ACÁ VA -->
 <script src="js/fichas_crear_admin.js"></script>
+
+</body>
+</html>
