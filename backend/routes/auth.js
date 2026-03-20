@@ -35,4 +35,41 @@ router.post("/registro", async (req, res) => {
   res.json({ ok: true });
 });
 
+// 🔐 LOGIN
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  // 🔐 login con supabase
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    return res.json({ ok: false, error: error.message });
+  }
+
+  const authUser = data.user; // 🔥 ESTO ES CLAVE
+
+  // 🔍 buscar en tabla usuarios
+  const { data: userData, error: errorUser } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("auth_id", authUser.id)
+    .single();
+
+  if (errorUser || !userData) {
+    return res.json({ ok: false, error: "Usuario no encontrado" });
+  }
+
+  res.json({
+    ok: true,
+    usuario: {
+      id: userData.id,
+      nombre: userData.nombre,
+      rol: userData.rol,
+      puesto_id: userData.puesto_id
+    }
+  });
+});
 module.exports = router;

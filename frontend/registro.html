@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Registro - Hexagono</title>
+<title>Registro - HEXAFLOW</title>
 <link rel="stylesheet" href="styles.css">
 
 
@@ -15,7 +15,7 @@
 <div class="auth-container">
 <div class="auth-card">
 
-<div class="logo">HEXAGONO</div>
+<div class="logo">HEXAFLOW</div>
 <div class="subtitulo">Control de producción</div>
 
 <form id="registroForm">
@@ -49,7 +49,7 @@ const nombre = document.getElementById("nombre").value
 const email = document.getElementById("email").value
 const password = document.getElementById("password").value
 
-const res = await fetch("/registro",{
+const res = await fetch("http://localhost:3000/api/auth/registro", {
 
 method:"POST",
 
