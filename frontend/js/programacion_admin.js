@@ -33,7 +33,7 @@ async function generarOrdenes() {
     })
   })
 
-  const res = await fetch("/api/programacion/generar", {
+  const res = await fetch("https://hexagono.pro/api/programacion/generar", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -48,4 +48,57 @@ async function generarOrdenes() {
   } else {
     alert("Error")
   }
+}
+
+async function importarExcel() {
+
+  const fileInput = document.getElementById("excelFile")
+  const file = fileInput.files[0]
+
+  if (!file) {
+    alert("Seleccioná un archivo")
+    return
+  }
+
+  const reader = new FileReader()
+
+  reader.onload = async (e) => {
+
+    const data = new Uint8Array(e.target.result)
+    const workbook = XLSX.read(data, { type: "array" })
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+
+    const json = XLSX.utils.sheet_to_json(sheet)
+
+    console.log("EXCEL:", json)
+
+    // 🔥 TRANSFORMAR A FORMATO HEXAFLOW
+    const programacion = json.map(row => ({
+      modelo: row.MODELO || row.Modelo,
+      cantidad: row.PARES || row.Cantidad,
+      fecha: new Date(),
+      prioridad: "media"
+    }))
+
+    // 🚀 ENVIAR AL BACKEND
+    const res = await fetch("https://hexagono.pro/api/programacion/generar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(programacion)
+    })
+
+    const result = await res.json()
+
+    if(result.ok){
+      alert("🔥 Programación cargada desde Excel")
+    } else {
+      alert("Error al importar")
+    }
+
+  }
+
+  reader.readAsArrayBuffer(file)
 }
