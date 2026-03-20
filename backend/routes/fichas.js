@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { supabase } = require("../../config/supabase");
+const { supabase } = require("../config/supabase");
 
 router.post("/fichas", async (req, res) => {
   const { modelo_id, codigo, nombre, secciones } = req.body;
