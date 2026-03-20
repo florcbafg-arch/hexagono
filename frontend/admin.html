@@ -46,7 +46,9 @@ window.location.href="login.html"
 
 
 <meta charset="UTF-8">
-<title>Panel Administrador</title>
+<div class="header">
+  Panel Administrador | 👤 <span id="usuarioNombre"></span>
+</div>
 
 <link rel="stylesheet" href="styles.css">
 
@@ -102,6 +104,14 @@ padding:30px;
 </style>
 
 </head>
+
+<script>
+  const user = JSON.parse(localStorage.getItem("hexagono_user"))
+
+  if(user){
+    document.getElementById("usuarioNombre").innerText = user.nombre
+  }
+</script>
 
 <body>
 
