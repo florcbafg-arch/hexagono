@@ -1078,6 +1078,9 @@ app.post("/api/patrones/calcular", async (req, res) => {
 })
 const programacionRoutes = require("../backend/routes/programacion")
 
+const authRoutes = require("../backend/routes/auth");
+app.use("/api/auth", authRoutes);
+
 app.use("/api/programacion", programacionRoutes)
 
 app.get("/api/produccion/resumen", async (req, res) => {
