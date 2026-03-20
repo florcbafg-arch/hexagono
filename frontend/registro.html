@@ -38,42 +38,54 @@
 
 
 <script>
-
 document
-.getElementById("registroForm")
-.addEventListener("submit", async (e)=>{
+  .getElementById("registroForm")
+  .addEventListener("submit", async (e) => {
 
-e.preventDefault()
+    e.preventDefault()
 
-const nombre = document.getElementById("nombre").value
-const email = document.getElementById("email").value
-const password = document.getElementById("password").value
+    console.log("CLICK REGISTRO 🔥")
 
-const res = await fetch("/api/auth/registro", {
+    const nombre = document.getElementById("nombre").value
+    const email = document.getElementById("email").value
+    const password = document.getElementById("password").value
 
-method:"POST",
+    console.log("DATOS:", nombre, email, password)
 
-headers:{
-"Content-Type":"application/json"
-},
+    try {
 
-body: JSON.stringify({
-nombre,
-email,
-password
-})
+      const res = await fetch("/api/auth/registro", { // 🔥 SIN localhost
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre,
+          email,
+          password
+        })
+      })
 
-})
+      const data = await res.json()
 
-const data = await res.json()
+      console.log("RESPUESTA:", data)
 
-alert(data.mensaje || data.error || "Usuario creado correctamente✅")
+      if (data.ok) {
+        alert("Usuario creado correctamente 🚀")
+        window.location.href = "login.html"
+      } else {
+        alert(data.error || "Error en registro")
+      }
 
-window.location.href="login.html"
+    } catch (error) {
+      console.error("ERROR REGISTRO:", error)
+      alert("Error conectando con el servidor")
+    }
 
-})
-
+  })
 </script>
+
+
 
 </body>
 </div>
