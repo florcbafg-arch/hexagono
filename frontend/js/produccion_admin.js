@@ -173,3 +173,36 @@ localStorage.removeItem("hexagono_user")
 window.location.href="login.html"
 
 }
+
+async function cargarProduccion(){
+
+  const res = await fetch("https://hexagono.pro/api/produccion/resumen")
+  const data = await res.json()
+
+  const container = document.getElementById("produccionContainer")
+  container.innerHTML = ""
+
+  data.forEach(item => {
+
+    const porcentaje = Math.min(
+      (item.producido / item.objetivo) * 100,
+      100
+    )
+
+    container.innerHTML += `
+      <div class="card">
+        <h3>Orden #${item.id}</h3>
+        <p>${item.producido} / ${item.objetivo}</p>
+        <p>${item.estado}</p>
+
+        <div style="background:#ddd;height:10px;">
+          <div style="width:${porcentaje}%;background:green;height:10px;"></div>
+        </div>
+      </div>
+    `
+  })
+
+}
+
+cargarProduccion()
+setInterval(cargarProduccion, 5000)

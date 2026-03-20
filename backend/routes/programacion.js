@@ -42,11 +42,9 @@ router.post("/generar", async (req, res) => {
 
       // 3. CREAR PRODUCCIÓN AUTOMÁTICA 🔥
       await supabase.from("produccion").insert({
-        id_orden: orden.id,
-        cantidad_total: orden.cantidad,
-        cantidad_hecha: 0,
-        estado: "pendiente"
-      })
+  orden_id: orden.id,
+  modelo: orden.modelo
+})
 
       // 4. MARCAR PROGRAMACIÓN COMO PROCESADA
       await supabase

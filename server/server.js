@@ -1,4 +1,4 @@
-require('dotenv').config()
+Require('dotenv').config()
 
 const express = require("express");
 const cors = require("cors");
@@ -1076,8 +1076,21 @@ app.post("/api/patrones/calcular", async (req, res) => {
     res.status(500).json({ error: "Error calculando" })
   }
 })
+const programacionRoutes = require("./routes/programacion")
 
+app.use("/api/programacion", programacionRoutes)
 
+app.get("/api/produccion/resumen", async (req, res) => {
+
+  const { data, error } = await supabase.rpc("produccion_resumen")
+
+  if(error){
+    return res.status(500).json({ error })
+  }
+
+  res.json(data)
+
+})
 
 // 🚀 INICIAR SERVIDOR
 app.listen(3000, () => {
