@@ -1076,7 +1076,7 @@ app.post("/api/patrones/calcular", async (req, res) => {
     res.status(500).json({ error: "Error calculando" })
   }
 })
-const programacionRoutes = require("./routes/programacion")
+const programacionRoutes = require("../backend/routes/programacion")
 
 app.use("/api/programacion", programacionRoutes)
 
