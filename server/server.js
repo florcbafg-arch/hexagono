@@ -6,7 +6,7 @@ const path = require("path");
 const { supabase } = require("../config/supabase")
 const multer = require("multer")
 
-const { authMiddleware } = require("./middlewares/authMiddleware") // ✅ SOLO UNA VEZ
+const { authMiddleware } = require("../backend/middlewares/authMiddleware") // ✅ SOLO UNA VEZ
 
 const fichasRoutes = require("../backend/routes/fichas");
 const programacionRoutes = require("../backend/routes/programacion");

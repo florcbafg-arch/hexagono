@@ -8,7 +8,7 @@ async function cargarOrdenes(){
 
   try{
 
-    const res = await fetch(API + "/ordenes")
+    const res = await apiFetch(API + "/ordenes")
     const data = await res.json()
 
     const tbody = document.getElementById("tablaOrdenes")
