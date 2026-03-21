@@ -3,35 +3,46 @@ const router = express.Router();
 const { supabase } = require("../../config/supabase");
 
 // 🔐 REGISTRO
+// 🔐 REGISTRO (MODO PRO SIN EMAIL)
 router.post("/registro", async (req, res) => {
-  const { nombre, email, password } = req.body;
-  // 1. Crear usuario en Supabase Auth
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password
-  });
+  const { email, password, nombre } = req.body;
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
+  try {
+
+    // 🔥 crear usuario SIN email confirmation
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true
+    });
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    const authUser = data.user;
+
+    // guardar en tabla usuarios
+    const { error: errorInsert } = await supabase
+      .from("usuarios")
+      .insert({
+        auth_id: authUser.id,
+        email: authUser.email,
+        nombre: nombre || "Sin nombre",
+        empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
+        rol: "admin"
+      });
+
+    if (errorInsert) {
+      return res.status(400).json({ error: errorInsert.message });
+    }
+
+    res.json({ ok: true });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error en registro" });
   }
-
-  const authUser = data.user;
-
-  // 2. Guardar en tu tabla usuarios
-  const { error: errorInsert } = await supabase
-    .from("usuarios")
-    .insert({
-  auth_id: authUser.id,
-  email: authUser.email,
-  nombre: nombre, // 🔥 ESTA ES LA CLAVE
-  empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
-  rol: "admin"
-})
-  if (errorInsert) {
-    return res.status(400).json({ error: errorInsert.message });
-  }
-
-  res.json({ ok: true });
 });
 
 // 🔐 LOGIN
