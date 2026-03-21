@@ -10,11 +10,10 @@ router.post("/registro", async (req, res) => {
   try {
 
     // 🔥 crear usuario SIN email confirmation
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true
-    });
+    const { data, error } = await supabase.auth.signUp({
+  email,
+  password
+});
 
     if (error) {
       return res.status(400).json({ error: error.message });
