@@ -72,14 +72,15 @@ router.post("/login", async (req, res) => {
     return res.json({ ok: false, error: "Usuario no encontrado" });
   }
 
-  res.json({
-    ok: true,
-    usuario: {
-      id: userData.id,
-      nombre: userData.nombre,
-      rol: userData.rol,
-      puesto_id: userData.puesto_id
-    }
-  });
+ res.json({
+  ok: true,
+  token: data.session.access_token, // 💣 ESTO ES LO IMPORTANTE
+  usuario: {
+    id: userData.id,
+    nombre: userData.nombre,
+    rol: userData.rol,
+    puesto_id: userData.puesto_id
+  }
+});
 });
 module.exports = router;

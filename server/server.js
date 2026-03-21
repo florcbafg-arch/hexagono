@@ -6,7 +6,12 @@ const path = require("path");
 const { supabase } = require("../config/supabase")
 const multer = require("multer")
 
+const { authMiddleware } = require("./middlewares/authMiddleware") // ✅ SOLO UNA VEZ
+
 const fichasRoutes = require("../backend/routes/fichas");
+const programacionRoutes = require("../backend/routes/programacion");
+const authRoutes = require("../backend/routes/auth");
+
 const app = express();
 
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -18,7 +23,29 @@ let registrosProduccion = []
 app.use(cors());
 app.use(express.json());
 
+
+app.use("/api/auth", authRoutes);
+
+app.use('/api', authMiddleware);
+
+app.use("/api/programacion", programacionRoutes)
 app.use("/api", fichasRoutes);
+
+app.get("/api/produccion/resumen", async (req, res) => {
+
+const { data, error } = await supabase.rpc("produccion_resumen")
+
+  if(error){
+    return res.status(500).json({ error })
+  }
+
+  res.json(data)
+
+})
+
+
+
+
 // =======================
 // CONFIGURAR SUBIDA ARCHIVOS
 // =======================
@@ -154,7 +181,7 @@ talles:[
 
 
 // 🔎 BUSCAR TAREA
-app.get("/tarea/:numero", async (req,res)=>{
+app.get("/api/tarea/:numero", ... async (req,res)=>{
 
 try{
 
@@ -208,7 +235,7 @@ res.status(500).send("error servidor")
 })
 
 // 📊 GUARDAR PRODUCCION (MEMORIA LOCAL)
-app.post("/produccion", (req, res) => {
+app.post("/api/produccion-local", ...(req, res) => {
 
   const registro = req.body
 
@@ -223,7 +250,7 @@ app.post("/produccion", (req, res) => {
 
 
 // 📊 VER REGISTROS
-app.get("/registros", (req, res) => {
+app.get("/api/registros", ... (req, res) => {
 
   res.json(registrosProduccion)
 
@@ -326,94 +353,7 @@ if(cantidad <= 0){
 
 })
 
-// ============================
-// REGISTRO USUARIO
-// ============================
 
-app.post("/registro", async (req,res)=>{
-
-try{
-
-const {nombre,email,password} = req.body
-
-const {data,error} = await supabase
-.from("usuarios")
-.insert([
-{
-nombre,
-email,
-password,
-rol:"admin",
-activo:true
-}
-])
-
-if(error){
-console.log("Error registro:",error)
-return res.status(500).json({error})
-}
-
-res.json({
-mensaje:"usuario creado",
-data
-})
-
-}catch(err){
-
-console.error(err)
-res.status(500).json({error:"error servidor"})
-
-}
-
-})
-
-
-// ============================
-// LOGIN USUARIO
-// ============================
-
-app.post("/login", async (req,res)=>{
-
-try{
-
-const {usuario,password} = req.body
-
-const {data:user,error} = await supabase
-.from("usuarios")
-.select("id,nombre,username,email,rol,puesto_id,password")
-.or(`email.eq.${usuario},username.eq.${usuario}`)
-.single()
-
-if(error || !user){
-return res.json({ok:false})
-}
-
-if(user.password !== password){
-return res.json({ok:false})
-}
-
-if(!user.rol){
- return res.json({ok:false})
-}
-
-res.json({
- ok:true,
- usuario:{
-  id:user.id,
-  nombre:user.nombre,
-  rol:user.rol,
-  puesto_id:user.puesto_id
- }
-})
-
-}catch(err){
-
-console.error(err)
-res.json({ok:false})
-
-}
-
-})
 
 // ============================
 // CREAR USUARIO (ADMIN)
@@ -1076,24 +1016,7 @@ app.post("/api/patrones/calcular", async (req, res) => {
     res.status(500).json({ error: "Error calculando" })
   }
 })
-const programacionRoutes = require("../backend/routes/programacion")
 
-const authRoutes = require("../backend/routes/auth");
-app.use("/api/auth", authRoutes);
-
-app.use("/api/programacion", programacionRoutes)
-
-app.get("/api/produccion/resumen", async (req, res) => {
-
-  const { data, error } = await supabase.rpc("produccion_resumen")
-
-  if(error){
-    return res.status(500).json({ error })
-  }
-
-  res.json(data)
-
-})
 
 // 🚀 INICIAR SERVIDOR
 app.listen(3000, () => {

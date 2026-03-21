@@ -68,6 +68,8 @@
 
           if (data.ok && data.usuario) {
 
+            localStorage.setItem("token", data.token)
+            
             localStorage.setItem("hexagono_user", JSON.stringify(data.usuario))
             localStorage.setItem("usuario", data.usuario.nombre)
             localStorage.setItem("puesto_id", data.usuario.puesto_id)

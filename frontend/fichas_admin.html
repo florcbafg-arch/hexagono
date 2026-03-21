@@ -1,4 +1,23 @@
-<h1>Fichas Técnicas</h1>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Fichas Técnicas</title>
+
+  <!-- 🔐 AUTH -->
+  <script src="js/authGuard.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+
+  <script>
+    checkAuth("admin")
+  </script>
+</head>
+
+<body>
+
+  <h1>Fichas Técnicas</h1>
 
 <div style="margin-bottom:20px;">
   <input type="text" id="buscador" placeholder="Buscar modelo o código">
@@ -17,3 +36,6 @@
   </thead>
   <tbody id="tablaFichas"></tbody>
 </table>
+
+</body>
+</html>

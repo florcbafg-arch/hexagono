@@ -4,11 +4,21 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Modelos - Hexágono</title>
+<title>Modelos - HEXAFLOW</title>
 
 <link rel="stylesheet" href="styles.css">
 
+  <!-- 🔐 AUTH -->
+  <script src="js/authGuard.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+
+  <script>
+    checkAuth("admin")
+  </script>
 </head>
+
+<body>
 
 <body>
 
@@ -16,7 +26,7 @@
 
 <a href="admin.html">← Panel</a>
 
-<h2>HEXÁGONO 2</h2>
+<h2>HEXAFLOW</h2>
 
 <button onclick="logout()">Cerrar sesión</button>
 

@@ -1,3 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Admin</title>
+
+  <!-- 🔐 AUTH -->
+  <script src="js/authGuard.js"></script>
+  
+  <!-- 🧠 USER -->
+  <script src="js/auth.js"></script>
+
+  <!-- 💣 API -->
+  <script src="js/api.js"></script>
+
+  <script>
+    checkAuth("admin")
+  </script>
+
+
+</head>
+
+<body>
+
+
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
 
 <div>
@@ -305,294 +332,5 @@ style="width:70px">
 
 </div>
 
-<script>
-
-
-function actualizarTiempo(){
-
-const ahora = new Date()
-
-const fecha = ahora.toLocaleDateString()
-
-const hora = ahora.toLocaleTimeString()
-
-document.getElementById("infoTiempo").innerHTML =
-"Fecha: " + fecha + " | Hora actual: " + hora
-
-}
-
-setInterval(actualizarTiempo,1000)
-
-actualizarTiempo()
-
-</script>
-
-
-<script>
-
-function mostrarAlertas(data,faltantes){
-
-const panel = document.getElementById("panelAlertas")
-
-panel.innerHTML = ""
-
-data.forEach(sector=>{
-
-const prod = sector.produccion || 0
-const obj = sector.objetivo || 100
-
-if(prod === 0 && obj > 0){
-
-panel.innerHTML += `
-<li>⚠ ${sector.nombre} sin producción</li>
-`
-
-}
-
-if(prod > 0 && prod < obj*0.2){
-
-panel.innerHTML += `
-<li>⚠ ${sector.nombre} producción baja</li>
-`
-
-}
-
-})
-
-faltantes.forEach(f=>{
-
-if(f.cantidad > 5){
-
-panel.innerHTML += `
-<li>⚠ pérdida alta en ${f.proceso}</li>
-`
-
-}
-
-})
-
-}
-
-async function actualizarDashboard(){
-
-let total = 0
-let peorPorcentaje = 100
-let sectorLento = "-"
-
-try{
-
-const res = await fetch("/api/dashboard")
-
-const data = await res.json()
-
-const panel = document.getElementById("panelAlertas")
-
-console.log("Datos dashboard:",data)
-
-const faltantes = []
-
-let cuello = null
-let maxFaltante = 0
-
-
-for(let i=0;i<data.length;i++){
-
-const sector = data[i]
-
-let id = sector.nombre.toLowerCase()
-
-const mapa = { "corte":"linea_cortado", "preparación":"linea_strobel", "aparado":"aparado_aparado_1", "control":"aparado_qc", "linea produccion":"linea_ingreso", "base / goma":"aparado_trafila", "empaque":"aparado_embalado" }
-
-
-
-id = mapa[id]
-if(!id) continue
-
-const barra = document.getElementById(id)
-
-if(!barra) continue
-{
-
-const produccion = sector.produccion || 0
-const objetivo = sector.objetivo || 100
-
-total += produccion
-
-const porcentaje = objetivo > 0 ? Math.round((produccion/objetivo)*100) : 0
-
-if(objetivo > 0 && porcentaje < peorPorcentaje){
-peorPorcentaje = porcentaje
-sectorLento = String(sector.nombre)
-}
-
-barra.style.width = Math.min(porcentaje,100) + "%"
-
-barra.innerText = produccion
-
-barra.classList.remove("rojo","amarillo","verde")
-
-if(porcentaje >= 70){
-
-barra.classList.add("verde")
-
-}else if(porcentaje >= 40){
-
-barra.classList.add("amarillo")
-
-}else{
-
-barra.classList.add("rojo")
-}
-}
-
-if(i>0){
-
-const anterior = data[i-1]
-
-const diferencia = (anterior.produccion||0)-(sector.produccion||0)
-
-if(diferencia>0){
-
-panel.innerHTML += `
-<li>⚠ Diferencia alta entre ${anterior.nombre} → ${sector.nombre}</li>
-`
-
-if(diferencia > maxFaltante){
-maxFaltante = diferencia
-cuello = sector.nombre
-}
-
-}
-
-}
-
-}
-
-
-mostrarAlertas(data,faltantes)
-
-if(cuello){
-
-const panel = document.getElementById("panelAlertas")
-
-panel.innerHTML += `
-<li style="color:red;font-weight:bold">
-🔥 CUELLO DE BOTELLA EN ${cuello}
-</li>
-`
-}
-
-}catch(err){
-
-console.error("Error dashboard",err)
-
-}
-
-const ahora = new Date()
-
-const horaInicio = 7
-const minutosInicio = 15
-
-const inicio = new Date()
-inicio.setHours(horaInicio,minutosInicio,0,0)
-
-let horas = (ahora - inicio) / 3600000
-
-if(horas < 1) horas = 1
-
-const ritmo = Math.round(total / horas)
-
-document.getElementById("ritmoProduccion").innerText = ritmo
-document.getElementById("totalProduccion").innerText = total
-document.querySelector("#sectorLento").textContent = String(sectorLento)
-
-}
-
-async function cargarObjetivos(){
-
-try{
-
-const res = await fetch("/api/objetivos")
-
-const data = await res.json()
-
-data.forEach(o=>{
-
-const input = document.querySelector(
-`input[data-sector="${o.nombre || o.sector || o.sector_nombre}"]`
-)
-if(input){
-
-input.value = o.objetivo
-input.disabled = true
-
-}
-
-})
-
-}catch(err){
-
-console.error("Error cargando objetivos",err)
-
-}
-
-}
-
-async function guardarObjetivos(){
-
-const inputs = document.querySelectorAll(".objetivo-input")
-
-for(let input of inputs){
-
-const sector = input.dataset.sector
-const objetivo = input.value
-
-await fetch("/api/sector/objetivo",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({sector,objetivo})
-})
-
-input.disabled = true
-
-}
-
-alert("Objetivos guardados")
-
-}
-
-function editarObjetivos(){
-
-const inputs = document.querySelectorAll(".objetivo-input")
-
-inputs.forEach(i=> i.disabled=false)
-
-}
-
-document.querySelectorAll(".objetivo-input").forEach((input,index,arr)=>{
-
-input.addEventListener("keydown",(e)=>{
-
-if(e.key==="Enter"){
-
-e.preventDefault()
-
-if(arr[index+1]){
-arr[index+1].focus()
-}
-
-}
-
-})
-
-})
-
-cargarObjetivos()
-setInterval(actualizarDashboard,3000)
-actualizarDashboard()
-
-
-</script>
-
+</body>
+</html>
