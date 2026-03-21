@@ -9,32 +9,41 @@ router.post("/registro", async (req, res) => {
 
   try {
 
-    // 🔥 crear usuario SIN email confirmation
-    const { data, error } = await supabase.auth.signUp({
-  email,
-  password
-});
+    // 🔥 1. intentar registro normal
+    let { data, error } = await supabase.auth.signUp({
+      email,
+      password
+    });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    // 🔁 2. si ya existe → intentar login automático
+    if (error && error.message.includes("already registered")) {
+
+      const loginRes = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (loginRes.error) {
+        return res.status(400).json({ error: "Usuario ya existe, pero contraseña incorrecta" });
+      }
+
+      data = loginRes.data;
     }
 
     const authUser = data.user;
 
-    // guardar en tabla usuarios
-    const { error: errorInsert } = await supabase
+    // 🔥 3. sincronizar SIEMPRE tabla usuarios
+    await supabase
       .from("usuarios")
-      .insert({
+      .upsert({
         auth_id: authUser.id,
         email: authUser.email,
         nombre: nombre || "Sin nombre",
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
         rol: "admin"
+      }, {
+        onConflict: "email"
       });
-
-    if (errorInsert) {
-      return res.status(400).json({ error: errorInsert.message });
-    }
 
     res.json({ ok: true });
 
