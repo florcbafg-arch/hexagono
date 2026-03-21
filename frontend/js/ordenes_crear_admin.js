@@ -4,7 +4,7 @@ const form = document.getElementById("formTarea")
 // cargar modelos
 async function cargarModelos(){
 
-const res = await fetch("/api/modelos")
+const res = await apiFetch("/api/modelos")
 
 const modelos = await res.json()
 
@@ -80,7 +80,7 @@ cantidad
 })
 
 
-const res = await fetch("/api/ordenes",{
+const res = await apiFetch("/api/ordenes", {
 
 method:"POST",
 
