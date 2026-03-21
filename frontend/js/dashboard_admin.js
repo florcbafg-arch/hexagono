@@ -39,7 +39,7 @@ async function actualizarDashboard(){
 
   try{
 
-    const res = await fetch("/api/dashboard")
+    const res = await apiFetch("/api/dashboard")
     const data = await res.json()
 
     const faltantes = []
@@ -89,7 +89,7 @@ if(sectorEl) sectorEl.textContent = String(sectorLento)
 
 async function cargarObjetivos(){
   try{
-    const res = await fetch("/api/objetivos")
+    const res = await apiFetch("/api/objetivos")
     const data = await res.json()
 
     data.forEach(o=>{
@@ -113,14 +113,13 @@ async function guardarObjetivos(){
 
   for(let input of inputs){
 
-    await fetch("/api/sector/objetivo",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        sector: input.dataset.sector,
-        objetivo: input.value
-      })
-    })
+    apiFetch("/api/sector/objetivo", {
+  method: "POST",
+  body: JSON.stringify({
+    sector: input.dataset.sector,
+    objetivo: input.value
+  })
+})
 
     input.disabled = true
   }

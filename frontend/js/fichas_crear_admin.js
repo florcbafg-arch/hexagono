@@ -11,7 +11,7 @@ let secciones = []
 
 // 🔥 CARGAR MODELOS
 async function cargarModelos() {
-  const res = await fetch("/api/modelos")
+  const res = await apiFetch("/api/modelos")
   const data = await res.json()
 
   const select = document.getElementById("modelo")
@@ -116,7 +116,7 @@ async function guardarFicha() {
   const url = id ? `/api/fichas/${id}` : "/api/fichas"
 const method = id ? "PUT" : "POST"
 
-const res = await fetch(url, {
+const res = await apiFetch(url, {
   method,
   headers: {
     "Content-Type": "application/json"
@@ -141,7 +141,7 @@ const res = await fetch(url, {
 
 // 🔥 CARGAR FICHA (MODO EDICIÓN)
 async function cargarFicha(id) {
-  const res = await fetch(`/api/fichas/${id}`)
+  const res = await apiFetch(`/api/fichas/${id}`)
   const data = await res.json()
 
   document.getElementById("modelo").value = data.modelo_id

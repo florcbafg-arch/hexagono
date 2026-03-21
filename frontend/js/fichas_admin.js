@@ -1,7 +1,7 @@
 let fichas = []
 
 async function cargarFichas() {
-  const res = await fetch("/api/fichas")
+  const res = await apiFetch("/api/fichas")
   const data = await res.json()
 
   fichas = data
@@ -52,9 +52,9 @@ async function eliminarFicha(id) {
   if (!confirm("¿Eliminar ficha?")) return
 
   try {
-    const res = await fetch(`/api/fichas/${id}`, {
-      method: "DELETE"
-    })
+    const res = await apiFetch(`/api/fichas/${id}`, {
+  method: "DELETE"
+})
 
     if (!res.ok) {
       alert("Error eliminando ficha")

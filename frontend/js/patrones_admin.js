@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // Cargar modelos
 async function cargarModelos() {
   try {
-    const res = await fetch(API + "/modelos")
+    const res = await apiFetch("/api/modelos")
     const modelos = await res.json()
 
     const select = document.getElementById("modeloSelect")
@@ -111,7 +111,7 @@ async function guardarPatron() {
 })
   })
 
-  await fetch(API + "/patrones", {
+  await await apiFetch("/api/patrones", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ modelo_id, patrones })
@@ -135,7 +135,7 @@ if(!cantidad || cantidad <= 0){
   return
 }
 
-  const res = await fetch(API + "/patrones/calcular", {
+  const res = await apiFetch("/api/patrones/calcular", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ modelo_id, cantidad })

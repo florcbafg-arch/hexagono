@@ -4,7 +4,7 @@ async function buscarOrdenes(){
 
 const numero = document.getElementById("ordenes").value
 
-const res = await fetch("http://localhost:3000/ordenes/"+numero)
+const res = await apiFetch("/api/ordenes/" + numero)
 
 if(res.status!=200){
 
@@ -33,7 +33,7 @@ cargarProduccion(numero)
 
 async function cargarProduccion(numero){
 
-const res = await fetch("http://localhost:3000/api/produccion/ordenes/"+numero)
+const res = await apiFetch("/api/produccion/ordenes/" + numero)
 
 const data = await res.json()
 
@@ -134,7 +134,7 @@ cantidad:Number(i.value)
 })
 })
 
-await fetch("http://localhost:3000/api/produccion",{
+await apiFetch("/api/produccion", {
 
 method:"PUT",
 
@@ -176,7 +176,7 @@ window.location.href="login.html"
 
 async function cargarProduccion(){
 
-  const res = await fetch("https://hexagono.pro/api/produccion/resumen")
+  const res = await apiFetch("/api/produccion/resumen")
   const data = await res.json()
 
   const container = document.getElementById("produccionContainer")

@@ -33,7 +33,7 @@ async function generarOrdenes() {
     })
   })
 
-  const res = await fetch("https://hexagono.pro/api/programacion/generar", {
+  const res = await apiFetch("/api/programacion/generar", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -82,7 +82,7 @@ async function importarExcel() {
     }))
 
     // 🚀 ENVIAR AL BACKEND
-    const res = await fetch("https://hexagono.pro/api/programacion/generar", {
+    const res = await apiFetch("/api/programacion/generar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

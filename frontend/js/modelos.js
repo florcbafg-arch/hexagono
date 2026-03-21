@@ -17,11 +17,10 @@ const imagen = document.getElementById("imagen").files[0]
 if(ficha) formData.append("ficha", ficha)
 if(imagen) formData.append("imagen", imagen)
 
-const res = await fetch("/api/modelos",{
-method:"POST",
-body:formData
+apiFetch("/api/modelos", {
+  method: "POST",
+  body: formData
 })
-
 const data = await res.json()
 
 alert(data.message)
@@ -36,7 +35,7 @@ cargarModelos()
 
 async function cargarModelos(){
 
-const res = await fetch("/api/modelos")
+const res = await apiFetch("/api/modelos")
 
 const modelos = await res.json()
 
