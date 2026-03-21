@@ -181,7 +181,7 @@ talles:[
 
 
 // 🔎 BUSCAR TAREA
-app.get("/api/tarea/:numero", ... async (req,res)=>{
+app.get("/api/tarea/:numero", async (req,res)=>{
 
 try{
 
@@ -235,7 +235,7 @@ res.status(500).send("error servidor")
 })
 
 // 📊 GUARDAR PRODUCCION (MEMORIA LOCAL)
-app.post("/api/produccion-local", ...(req, res) => {
+app.post("/api/produccion-local", (req, res) => {
 
   const registro = req.body
 
@@ -250,7 +250,7 @@ app.post("/api/produccion-local", ...(req, res) => {
 
 
 // 📊 VER REGISTROS
-app.get("/api/registros", ... (req, res) => {
+app.get("/api/registros", (req, res) => {
 
   res.json(registrosProduccion)
 
