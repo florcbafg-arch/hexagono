@@ -1,5 +1,10 @@
-if(window.usuariosLoaded) return
-window.usuariosLoaded = true
+if(!window.usuariosLoaded){
+  window.usuariosLoaded = true
+
+  iniciarUsuarios()
+}
+
+function iniciarUsuarios(){
 
 const API_USUARIOS = "/api/usuarios"
 
@@ -172,7 +177,11 @@ alert("Edición de usuario próximamente")
 
 }
 
-
+window.crearUsuario = crearUsuario
+window.eliminarUsuario = eliminarUsuario
+window.editarUsuario = editarUsuario
 
 cargarUsuarios()
 cargarPuestos()
+
+}
