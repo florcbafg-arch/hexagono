@@ -44,7 +44,7 @@ console.log("🔥 EMAIL INPUT:", email);
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
         rol: "admin"
       }, {
-        onConflict: "email"
+       onConflict: "auth_id"
       });
 
     res.json({ ok: true });
