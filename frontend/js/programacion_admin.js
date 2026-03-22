@@ -52,7 +52,6 @@ async function generarOrdenes() {
   } else {
     alert("Error")
   }
-}
 
 if(result.ok){
   alert("🔥 Programación cargada")
