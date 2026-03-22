@@ -51,7 +51,6 @@ console.log("🔥 EMAIL INPUT:", email);
         email: emailLimpio,
         nombre: nombreLimpio,
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
-        rol: "admin"
       }, {
        onConflict: "auth_id"
       });
