@@ -1,6 +1,7 @@
+if(window.usuariosLoaded) return
+window.usuariosLoaded = true
+
 const API_USUARIOS = "/api/usuarios"
-
-
 
 async function cargarUsuarios(){
 
@@ -13,6 +14,8 @@ const tabla = document.getElementById("tablaUsuarios")
 
 tabla.innerHTML = ""
 
+
+if(!Array.isArray(usuarios)) return
 
 usuarios.forEach(u => {
 
@@ -66,7 +69,7 @@ return
 
 try{
 
-const res = await apiFetch(API,{
+const res = await apiFetch(API_USUARIOS,{
 
 method:"POST",
 
@@ -111,7 +114,7 @@ async function cargarPuestos(){
 
 try{
 
-const res = awaitapiFetch( "/api/puestos")
+const res = await apiFetch("/api/puestos")
 const puestos = await res.json()
 
 const select = document.getElementById("puesto")

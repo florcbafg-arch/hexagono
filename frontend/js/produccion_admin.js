@@ -152,11 +152,17 @@ buscarOrdenes()
 
 }
 
-document.getElementById("ordenes").addEventListener("keydown",function(e){
+document.addEventListener("DOMContentLoaded", () => {
 
-if(e.key==="Enter"){
-buscarOrdenes()
-}
+  const input = document.getElementById("ordenes")
+
+  if(input){
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        buscarOrdenes()
+      }
+    })
+  }
 
 })
 
@@ -174,7 +180,7 @@ window.location.href="login.html"
 
 }
 
-async function cargarProduccion(){
+async function cargarProduccionResumen(){
 
   const res = await apiFetch("/api/produccion/resumen")
   const data = await res.json()
@@ -204,5 +210,5 @@ async function cargarProduccion(){
 
 }
 
-cargarProduccion()
-setInterval(cargarProduccion, 5000)
+cargarProduccionResumen()
+setInterval(cargarProduccionResumen, 5000)
