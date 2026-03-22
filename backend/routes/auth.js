@@ -75,8 +75,15 @@ const authUser = data.user;
 let { data: userData } = await supabase
   .from("usuarios")
   .select("*")
-  .eq("auth_id", authUser.id)
+  .or(`auth_id.eq.${authUser.id},email.eq.${authUser.email}`)
   .maybeSingle();
+
+  if (userData && !userData.auth_id) {
+  await supabase
+    .from("usuarios")
+    .update({ auth_id: authUser.id })
+    .eq("id", userData.id);
+}
 
 // 🔁 fallback por email
 if (!userData) {
