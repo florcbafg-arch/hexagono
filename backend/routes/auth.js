@@ -40,7 +40,7 @@ console.log("🔥 EMAIL INPUT:", email);
       .upsert({
         auth_id: authUser.id,
         email: authUser.email,
-        nombre: nombre || "Sin nombre",
+        nombre: userData?.nombre || "Sin nombre",
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
         rol: "admin"
       }, {
