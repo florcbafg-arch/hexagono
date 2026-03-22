@@ -51,6 +51,7 @@ console.log("🔥 EMAIL INPUT:", email);
         email: emailLimpio,
         nombre: nombreLimpio,
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
+        rol: "admin"
       }, {
        onConflict: "auth_id"
       });
@@ -66,6 +67,27 @@ console.log("🔥 EMAIL INPUT:", email);
 // 🔐 LOGIN
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
+
+  // 🔥 LOGIN OPERARIO (ANTES DE AUTH)
+const { data: operario } = await supabase
+  .from("usuarios")
+  .select("*")
+  .eq("username", email) // usamos el campo email como username
+  .eq("password", password)
+  .maybeSingle();
+
+if(operario){
+  return res.json({
+    ok: true,
+    token: null,
+    usuario: {
+      id: operario.id,
+      nombre: operario.nombre,
+      rol: operario.rol,
+      puesto_id: operario.puesto_id
+    }
+  });
+}
 
   // 🔐 login con supabase
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -105,7 +127,6 @@ router.post("/login", async (req, res) => {
       email: email.trim().toLowerCase(),
       nombre: userData?.nombre || "Usuario",
       empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
-      rol: "admin"
     }, {
       onConflict: "email"
     });
