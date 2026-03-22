@@ -58,31 +58,50 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   // 🔐 login con supabase
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+ const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password
+});
 
-  if (error) {
-    return res.json({ ok: false, error: error.message });
-  }
+if (error) {
+  return res.json({ ok: false, error: "Usuario o contraseña incorrectos" });
+}
 
-  const authUser = data.user; // 🔥 ESTO ES CLAVE
+const authUser = data.user;
 
-  // 🔍 buscar en tabla usuarios
-  const { data: userData, error: errorUser } = await supabase
+// 🔥 buscar por auth_id
+let { data: userData } = await supabase
+  .from("usuarios")
+  .select("*")
+  .eq("auth_id", authUser.id)
+  .maybeSingle();
+
+// 🔁 fallback por email
+if (!userData) {
+  const { data: userByEmail } = await supabase
     .from("usuarios")
     .select("*")
-    .eq("auth_id", authUser.id)
-    .single();
+    .eq("email", authUser.email)
+    .maybeSingle();
 
-  if (errorUser || !userData) {
-    return res.json({ ok: false, error: "Usuario no encontrado" });
+  userData = userByEmail;
+
+  // 🔧 reparar si estaba roto
+  if (userData) {
+    await supabase
+      .from("usuarios")
+      .update({ auth_id: authUser.id })
+      .eq("id", userData.id);
   }
+}
 
- res.json({
+if (!userData) {
+  return res.json({ ok: false, error: "Usuario no encontrado" });
+}
+
+res.json({
   ok: true,
-  token: data.session.access_token, // 💣 ESTO ES LO IMPORTANTE
+  token: data.session.access_token,
   usuario: {
     id: userData.id,
     nombre: userData.nombre,
