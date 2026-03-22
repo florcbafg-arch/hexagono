@@ -1108,4 +1108,13 @@ body.tv-mode #contenido{
 padding:20px;
 max-width:1400px;
 margin:auto;
+} 
+.estado.pendiente {
+  color: orange;
+  font-weight: bold;
+}
+
+.estado.procesado {
+  color: green;
+  font-weight: bold;
 }

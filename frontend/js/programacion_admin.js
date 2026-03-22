@@ -11,6 +11,7 @@ function agregarFila() {
           <option value="baja">Baja</option>
         </select>
       </td>
+      <td><span class="estado pendiente">pendiente</span></td>
     </tr>
   `
   document.getElementById("tabla").innerHTML += fila
@@ -18,22 +19,25 @@ function agregarFila() {
 
 async function generarOrdenes() {
 
-  const filas = document.querySelectorAll("#tabla tr")
+  const confirmar = confirm("¿Generar órdenes reales?")
 
-  const data = []
-
-  filas.forEach(fila => {
-    const inputs = fila.querySelectorAll("input, select")
-
-    data.push({
-      modelo: inputs[0].value,
-      cantidad: parseInt(inputs[1].value),
-      fecha: inputs[2].value,
-      prioridad: inputs[3].value
-    })
-  })
+  if (!confirmar) return
 
   const res = await apiFetch("/api/programacion/generar", {
+    method: "POST"
+  })
+
+  const json = await res.json()
+
+  if(json.ok){
+    alert("🚀 Órdenes generadas correctamente")
+    location.reload()
+  } else {
+    alert("Error al generar")
+  }
+}
+
+  const res = await apiFetch("/api/programacion/importar", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -48,6 +52,13 @@ async function generarOrdenes() {
   } else {
     alert("Error")
   }
+}
+
+if(result.ok){
+  alert("🔥 Programación cargada")
+
+  // 🔄 recargar tabla visual (simple)
+  location.reload()
 }
 
 async function importarExcel() {
