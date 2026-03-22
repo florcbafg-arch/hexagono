@@ -7,13 +7,22 @@ const { supabase } = require("../../config/supabase");
 router.post("/registro", async (req, res) => {
   const { email, password, nombre } = req.body;
 
+  // 🔒 VALIDACIÓN BACKEND (CRÍTICA)
+if (!email || !password) {
+  return res.status(400).json({ error: "Email y password requeridos" });
+}
+
+// 🧠 NORMALIZACIÓN (PRO)
+const emailLimpio = email.trim().toLowerCase();
+const nombreLimpio = nombre?.trim() || "Usuario";
+
   try {
 
     // 🔥 1. intentar registro normal
-    let { data, error } = await supabase.auth.signUp({
-      email,
-      password
-    });
+     let { data, error } = await supabase.auth.signUp({
+  email: emailLimpio,
+  password
+});
 
     // 🔁 2. si ya existe → intentar login automático
     if (error && error.message.includes("already registered")) {
@@ -39,8 +48,8 @@ console.log("🔥 EMAIL INPUT:", email);
       .from("usuarios")
       .upsert({
         auth_id: authUser.id,
-        email: authUser.email,
-        nombre: nombre || "Sin nombre",
+        email: emailLimpio,
+        nombre: nombreLimpio,
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
         rol: "admin"
       }, {
@@ -83,7 +92,7 @@ router.post("/login", async (req, res) => {
     const { data: userByEmail } = await supabase
       .from("usuarios")
       .select("*")
-      .eq("email", email)
+      .eq("email", email.trim().toLowerCase())
       .maybeSingle();
 
     userData = userByEmail;
@@ -94,8 +103,8 @@ router.post("/login", async (req, res) => {
     .from("usuarios")
     .upsert({
       auth_id: authUser.id,
-      email: authUser.email,
-      nombre: userData?.nombre || authUser.email,
+      email: email.trim().toLowerCase(),
+      nombre: userData?.nombre || "Usuario",
       empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
       rol: "admin"
     }, {
@@ -111,7 +120,7 @@ router.post("/login", async (req, res) => {
   const { data: finalUser } = await supabase
     .from("usuarios")
     .select("*")
-    .eq("email", email)
+    .eq("email", email.trim().toLowerCase())
     .single();
 
   if (!finalUser) {

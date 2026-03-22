@@ -44,18 +44,42 @@ document
 
     e.preventDefault()
 
-    const nombre = document.getElementById("nombre").value
-    const password = document.getElementById("password").value
+    const nombreInput = document.getElementById("nombre")
     const emailInput = document.getElementById("email")
+    const passwordInput = document.getElementById("password")
 
-if (!emailInput) {
-  console.error("❌ Input email no encontrado")
+    // 🔒 VALIDACIÓN ANTI-NULL (CLAVE)
+    if (!nombreInput || !emailInput || !passwordInput) {
+      console.error("❌ Inputs no encontrados", {
+        nombreInput,
+        emailInput,
+        passwordInput
+      })
+      alert("Error interno: inputs no encontrados")
+      return
+    }
+
+    const nombre = nombreInput.value
+    const email = emailInput.value
+    const password = passwordInput.value
+
+    // 🔒 VALIDACIÓN FRONT
+if (!nombre || !email || !password) {
+  alert("Completar todos los campos")
   return
 }
 
-const email = emailInput.value
-    try {
+if (!email.includes("@")) {
+  alert("Email inválido")
+  return
+}
 
+if (password.length < 6) {
+  alert("La contraseña debe tener al menos 6 caracteres")
+  return
+}
+
+    try {
       const res = await fetch("/api/auth/registro", {
         method: "POST",
         headers: {
