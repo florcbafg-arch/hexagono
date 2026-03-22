@@ -31,6 +31,8 @@ router.post("/registro", async (req, res) => {
     }
 
     const authUser = data.user;
+    console.log("🔥 AUTH USER:", authUser);
+console.log("🔥 EMAIL INPUT:", email);
 
     // 🔥 3. sincronizar SIEMPRE tabla usuarios
     await supabase
@@ -81,7 +83,7 @@ if (!userData) {
   const { data: userByEmail } = await supabase
     .from("usuarios")
     .select("*")
-    .eq("email", email.toLowerCase())
+    .eq("email", email)
     .maybeSingle();
 
   userData = userByEmail;
