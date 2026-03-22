@@ -39,7 +39,7 @@ router.post("/generar", async (req, res) => {
 
   try {
 
-    // 1. TRAER SOLO PENDIENTES
+    // 1. TRAER SOLO PROGRAMACIÓN PENDIENTE
     const { data: pendientes, error } = await supabase
       .from("programacion")
       .select("*")
@@ -63,7 +63,7 @@ router.post("/generar", async (req, res) => {
 
       if (errorOrden) throw errorOrden
 
-      // 3. CREAR ORDEN_TALLES (SIMPLIFICADO)
+      // 3. CREAR ORDEN_TALLES (BASE)
       const { error: errorTalle } = await supabase
         .from("orden_talles")
         .insert([
