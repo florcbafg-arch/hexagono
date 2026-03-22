@@ -60,10 +60,10 @@ document
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          nombre,
-          email,
-          password
-        })
+  email: usuario,
+  password,
+  nombre
+})
       })
 
       const data = await res.json()
