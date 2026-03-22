@@ -47,23 +47,23 @@ document
     console.log("CLICK REGISTRO 🔥")
 
     const nombre = document.getElementById("nombre").value
-    const email = document.getElementById("email").value
+    const email = document.getElementById("usuario").value
     const password = document.getElementById("password").value
 
     console.log("DATOS:", nombre, email, password)
 
     try {
 
-      const res = await fetch("/api/auth/registro", { // 🔥 SIN localhost
+      const res = await fetch("/api/auth/registro", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-  email: usuario,
-  password,
-  nombre
-})
+          email: email,
+          password: password,
+          nombre: nombre
+        })
       })
 
       const data = await res.json()
@@ -83,6 +83,8 @@ document
     }
 
   })
+
+   
 </script>
 
 
