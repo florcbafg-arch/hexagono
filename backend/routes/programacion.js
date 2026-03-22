@@ -3,8 +3,8 @@ const router = express.Router()
 
 const { supabase } = require("../../config/supabase")
 
-// 🚀 GENERAR PROGRAMACIÓN + ÓRDENES
-router.post("/generar", async (req, res) => {
+// 📥 IMPORTAR PROGRAMACIÓN (STAGING)
+router.post("/importar", async (req, res) => {
 
   try {
 
@@ -12,26 +12,49 @@ router.post("/generar", async (req, res) => {
 
     for (const item of items) {
 
-      // 1. GUARDAR PROGRAMACIÓN
-      const { data: prog, error: errorProg } = await supabase
+      const { error } = await supabase
         .from("programacion")
         .insert({
-          modelo: item.modelo,
+          modelo: item.modelo, // luego lo cambiamos a modelo_id
           cantidad: item.cantidad,
           fecha: item.fecha,
-          prioridad: item.prioridad
+          prioridad: item.prioridad,
+          estado: "pendiente"
         })
-        .select()
-        .single()
 
-      if (errorProg) throw errorProg
+      if (error) throw error
+    }
+
+    res.json({ ok: true })
+
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: "Error al importar programación" })
+  }
+
+})
+
+// 🚀 GENERAR ÓRDENES DESDE PROGRAMACIÓN
+router.post("/generar", async (req, res) => {
+
+  try {
+
+    // 1. TRAER SOLO PENDIENTES
+    const { data: pendientes, error } = await supabase
+      .from("programacion")
+      .select("*")
+      .eq("estado", "pendiente")
+
+    if (error) throw error
+
+    for (const prog of pendientes) {
 
       // 2. CREAR ORDEN
       const { data: orden, error: errorOrden } = await supabase
         .from("ordenes")
         .insert({
-          modelo: item.modelo,
-          cantidad: item.cantidad,
+          modelo: prog.modelo,
+          cantidad: prog.cantidad,
           estado: "pendiente",
           id_programacion: prog.id
         })
@@ -40,13 +63,20 @@ router.post("/generar", async (req, res) => {
 
       if (errorOrden) throw errorOrden
 
-      // 3. CREAR PRODUCCIÓN AUTOMÁTICA 🔥
-      await supabase.from("produccion").insert({
-  orden_id: orden.id,
-  modelo: orden.modelo
-})
+      // 3. CREAR ORDEN_TALLES (SIMPLIFICADO)
+      const { error: errorTalle } = await supabase
+        .from("orden_talles")
+        .insert([
+          {
+            orden_id: orden.id,
+            talle: 40,
+            cantidad: prog.cantidad
+          }
+        ])
 
-      // 4. MARCAR PROGRAMACIÓN COMO PROCESADA
+      if (errorTalle) throw errorTalle
+
+      // 4. MARCAR COMO PROCESADO
       await supabase
         .from("programacion")
         .update({ estado: "procesado" })
@@ -58,7 +88,7 @@ router.post("/generar", async (req, res) => {
 
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: "Error al generar programación" })
+    res.status(500).json({ error: "Error generando órdenes" })
   }
 
 })
