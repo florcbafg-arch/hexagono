@@ -4,7 +4,7 @@ const API_USUARIOS = "/api/usuarios"
 
 async function cargarUsuarios(){
 
-const res = await fetch(API_USUARIOS)
+const res = await apiFetch(API_USUARIOS)
 const usuarios = await res.json()
 
 document.getElementById("totalUsuarios").textContent = usuarios.length
@@ -66,7 +66,7 @@ return
 
 try{
 
-const res = await fetch(API,{
+const res = await apiFetch(API,{
 
 method:"POST",
 
@@ -111,7 +111,7 @@ async function cargarPuestos(){
 
 try{
 
-const res = await fetch("/api/puestos")
+const res = awaitapiFetch( "/api/puestos")
 const puestos = await res.json()
 
 const select = document.getElementById("puesto")
@@ -153,7 +153,7 @@ async function eliminarUsuario(id){
 
 if(!confirm("Eliminar usuario?")) return
 
-await fetch(API_USUARIOS + "/" + id,{
+await apiFetch(API_USUARIOS + "/" + id,{
 method:"DELETE"
 })
 
