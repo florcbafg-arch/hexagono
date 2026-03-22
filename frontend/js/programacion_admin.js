@@ -37,29 +37,6 @@ async function generarOrdenes() {
   }
 }
 
-  const res = await apiFetch("/api/programacion/importar", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-
-  const json = await res.json()
-
-  if(json.ok){
-    alert("Órdenes generadas 🚀")
-  } else {
-    alert("Error")
-  }
-
-if(result.ok){
-  alert("🔥 Programación cargada")
-
-  // 🔄 recargar tabla visual (simple)
-  location.reload()
-}
-
 async function importarExcel() {
 
   const fileInput = document.getElementById("excelFile")
@@ -92,7 +69,7 @@ async function importarExcel() {
     }))
 
     // 🚀 ENVIAR AL BACKEND
-    const res = await apiFetch("/api/programacion/generar", {
+   const res = await apiFetch("/api/programacion/importar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
