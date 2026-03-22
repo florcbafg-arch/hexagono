@@ -26,7 +26,11 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 
-app.use('/api', authMiddleware);
+// 🔐 SOLO proteger producción
+app.use('/api/produccion', authMiddleware)
+
+// 🔐 opcional: proteger dashboard
+app.use('/api/dashboard', authMiddleware)
 
 app.use("/api/programacion", programacionRoutes)
 app.use("/api", fichasRoutes);
