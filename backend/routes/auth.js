@@ -81,7 +81,7 @@ if (!userData) {
   const { data: userByEmail } = await supabase
     .from("usuarios")
     .select("*")
-    .eq("email", authUser.email)
+    .eq("email", email.toLowerCase())
     .maybeSingle();
 
   userData = userByEmail;
