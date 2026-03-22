@@ -53,7 +53,7 @@ router.post("/generar", async (req, res) => {
       const { data: orden, error: errorOrden } = await supabase
         .from("ordenes")
         .insert({
-          modelo: prog.modelo,
+          modelo: 8,
           cantidad: prog.cantidad,
           estado: "pendiente",
           id_programacion: prog.id
@@ -63,18 +63,31 @@ router.post("/generar", async (req, res) => {
 
       if (errorOrden) throw errorOrden
 
-      // 3. CREAR ORDEN_TALLES (BASE)
-      const { error: errorTalle } = await supabase
-        .from("orden_talles")
-        .insert([
-          {
-            orden_id: orden.id,
-            talle: 40,
-            cantidad: prog.cantidad
-          }
-        ])
+      // 🔥 3. OBTENER CURVA DEL MODELO
+const { data: curva, error: errorCurva } = await supabase
+  .from("curvas_talles")
+  .select("*")
+  .eq("modelo_id", 8)
 
-      if (errorTalle) throw errorTalle
+if (errorCurva) throw errorCurva
+
+if (!curva || curva.length === 0) {
+  throw new Error("El modelo no tiene curva de talles")
+}
+
+// 🔥 4. GENERAR DISTRIBUCIÓN
+const tallesInsert = curva.map(c => ({
+  orden_id: orden.id,
+  talle: c.talle,
+  cantidad: Math.round(prog.cantidad * c.porcentaje)
+}))
+
+// 🔥 5. INSERTAR TALLES
+const { error: errorTalles } = await supabase
+  .from("orden_talles")
+  .insert(tallesInsert)
+
+if (errorTalles) throw errorTalles
 
       // 4. MARCAR COMO PROCESADO
       await supabase
