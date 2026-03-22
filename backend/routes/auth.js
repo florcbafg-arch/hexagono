@@ -40,7 +40,7 @@ console.log("🔥 EMAIL INPUT:", email);
       .upsert({
         auth_id: authUser.id,
         email: authUser.email,
-        nombre: userData?.nombre || "Sin nombre",
+        nombre: nombre || "Sin nombre",
         empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
         rol: "admin"
       }, {
@@ -60,66 +60,74 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   // 🔐 login con supabase
- const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password
-});
-
-if (error) {
-  return res.json({ ok: false, error: "Usuario o contraseña incorrectos" });
-}
-
-const authUser = data.user;
-
-// 🔥 buscar por auth_id
-const { error: insertError } = await supabase
-  .from("usuarios")
-  .upsert({
-    auth_id: authUser.id,
-    email: authUser.email,
-    nombre: nombre || "Sin nombre",
-    empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
-    rol: "admin"
-  }, {
-    onConflict: "email"
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
   });
 
-if (insertError) {
-  console.log("❌ ERROR INSERT USUARIO:", insertError);
-  return res.status(500).json({ error: insertError.message });
-}
-// 🔁 fallback por email
-if (!userData) {
-  const { data: userByEmail } = await supabase
+  if (error) {
+    return res.json({ ok: false, error: "Usuario o contraseña incorrectos" });
+  }
+
+  const authUser = data.user;
+
+  // 🔍 1. buscar usuario en tabla
+  let { data: userData } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("auth_id", authUser.id)
+    .maybeSingle();
+
+  // 🔁 2. fallback por email
+  if (!userData) {
+    const { data: userByEmail } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+
+    userData = userByEmail;
+  }
+
+  // 🔥 3. upsert SIEMPRE (ahora sí seguro)
+  const { error: insertError } = await supabase
+    .from("usuarios")
+    .upsert({
+      auth_id: authUser.id,
+      email: authUser.email,
+      nombre: userData?.nombre || authUser.email,
+      empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
+      rol: "admin"
+    }, {
+      onConflict: "email"
+    });
+
+  if (insertError) {
+    console.log("❌ ERROR INSERT USUARIO:", insertError);
+    return res.status(500).json({ error: insertError.message });
+  }
+
+  // 🔁 4. volver a buscar ya actualizado
+  const { data: finalUser } = await supabase
     .from("usuarios")
     .select("*")
     .eq("email", email)
-    .maybeSingle();
+    .single();
 
-  userData = userByEmail;
-
-  // 🔧 reparar si estaba roto
-  if (userData) {
-    await supabase
-      .from("usuarios")
-      .update({ auth_id: authUser.id })
-      .eq("id", userData.id);
+  if (!finalUser) {
+    return res.json({ ok: false, error: "Usuario no encontrado" });
   }
-}
 
-if (!userData) {
-  return res.json({ ok: false, error: "Usuario no encontrado" });
-}
-
-res.json({
-  ok: true,
-  token: data.session.access_token,
-  usuario: {
-    id: userData.id,
-    nombre: userData.nombre,
-    rol: userData.rol,
-    puesto_id: userData.puesto_id
-  }
-});
+  // ✅ 5. respuesta final
+  res.json({
+    ok: true,
+    token: data.session.access_token,
+    usuario: {
+      id: finalUser.id,
+      nombre: finalUser.nombre,
+      rol: finalUser.rol,
+      puesto_id: finalUser.puesto_id
+    }
+  });
 });
 module.exports = router;
