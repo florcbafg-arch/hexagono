@@ -286,7 +286,7 @@ return res.json({registrado:false})
 const {data,error} = await supabase
 .from("produccion")
 .select("*")
-.eq("tarea_id", tarea.id)
+.eq("orden_id", tarea.id)
 .eq("puesto_id", puesto)
 
 if(error){
@@ -310,40 +310,42 @@ res.json({registrado:false})
 // 🏭 GUARDAR PRODUCCION EN SUPABASE
 app.post("/api/produccion", async (req, res) => {
 
-  const { tarea_id, puesto_id, cantidad, usuario } = req.body
+  const { orden_id, puesto_id, cantidad } = req.body
+  const usuario = req.user
 
-  if(!tarea_id || !puesto_id || !cantidad){
- return res.status(400).json({
-  error:"Datos incompletos"
- })
-}
+  // VALIDACIONES
+  if(!orden_id || !puesto_id || !cantidad){
+    return res.status(400).json({
+      error:"Datos incompletos"
+    })
+  }
 
-if(cantidad <= 0){
- return res.status(400).json({
-  error:"Cantidad inválida"
- })
-}
+  if(cantidad <= 0){
+    return res.status(400).json({
+      error:"Cantidad inválida"
+    })
+  }
 
+  // INSERT EN SUPABASE
   const { data, error } = await supabase
     .from("produccion")
     .insert([
       {
-        tarea_id,
+        orden_id,
         puesto_id,
         cantidad,
-        usuario
+        usuario: usuario?.nombre || "sistema",
+        empresa_id: usuario?.empresa_id || null
       }
     ])
 
- if (error) {
+  if (error) {
+    console.log("❌ Error guardando producción:", error)
+    return res.status(500).json({
+      error: error.message
+    })
+  }
 
-  console.log("❌ Error guardando producción:", error)
-
-  return res.status(500).json({
-    error: error.message
-  })
-
-}
   console.log("✅ Producción guardada:", data)
 
   res.json({
@@ -352,7 +354,6 @@ if(cantidad <= 0){
   })
 
 })
-
 
 
 // ============================
@@ -683,7 +684,7 @@ cantidad,
 puesto_id,
 puestos(nombre,orden)
 `)
-.eq("tarea_id", tarea.id)
+.eq("orden_id", tarea.id)
 
 if(errProd) throw errProd
 

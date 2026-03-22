@@ -260,19 +260,14 @@ return
 }
 
 const datos = {
-  tarea_id: tareaActual.id,
+  orden_id: tareaActual.id, // 🔥 CAMBIO CLAVE
   puesto_id: Number(puestoActivo),
-  cantidad: total,
-  usuario: usuarioActivo
+  cantidad: total
 }
-  const res = await fetch("/api/produccion",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify(datos)
-  })
-
+  const res = await apiFetch("/api/produccion", {
+  method: "POST",
+  body: JSON.stringify(datos)
+})
   const data = await res.json()
 
  if(data.error){
@@ -345,6 +340,7 @@ window.location.href="login.html"
 obtenerSector()
 
 </script>
+
 
 
 </body>
