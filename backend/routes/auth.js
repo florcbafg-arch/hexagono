@@ -72,19 +72,22 @@ if (error) {
 const authUser = data.user;
 
 // 🔥 buscar por auth_id
-let { data: userData } = await supabase
+const { error: insertError } = await supabase
   .from("usuarios")
-  .select("*")
-  .or(`auth_id.eq.${authUser.id},email.eq.${authUser.email}`)
-  .maybeSingle();
+  .upsert({
+    auth_id: authUser.id,
+    email: authUser.email,
+    nombre: nombre || "Sin nombre",
+    empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
+    rol: "admin"
+  }, {
+    onConflict: "email"
+  });
 
-  if (userData && !userData.auth_id) {
-  await supabase
-    .from("usuarios")
-    .update({ auth_id: authUser.id })
-    .eq("id", userData.id);
+if (insertError) {
+  console.log("❌ ERROR INSERT USUARIO:", insertError);
+  return res.status(500).json({ error: insertError.message });
 }
-
 // 🔁 fallback por email
 if (!userData) {
   const { data: userByEmail } = await supabase
