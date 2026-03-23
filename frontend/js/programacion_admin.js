@@ -155,4 +155,4 @@ console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
   reader.readAsArrayBuffer(file)
 }
 
-document.addEventListener("DOMContentLoaded", cargarProgramacion)
+cargarProgramacion()
