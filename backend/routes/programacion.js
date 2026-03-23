@@ -271,7 +271,7 @@ router.post("/generar", async (req, res) => {
   id_programacion: p.id,
 
   // 🔥 CLAVE PARA QUE NO ROMPA
-  empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb2xxxxxx"
+  empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4"
 }])
           .select()
           .single()
@@ -315,7 +315,7 @@ router.post("/generar", async (req, res) => {
             orden_id: orden.id,
             talle: item.talle,
             cantidad: cantidadTalle,
-            empresa_id: "00000000-0000-0000-0000-000000000000"
+            empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4"
           })
         }
 
