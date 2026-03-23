@@ -1,5 +1,3 @@
-console.log("ENV TEST:", process.env)
-
 const { createClient } = require("@supabase/supabase-js")
 
 const supabaseUrl = process.env.SUPABASE_URL
