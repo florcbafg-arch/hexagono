@@ -90,6 +90,7 @@ async function generarOrdenes() {
 async function importarExcel() {
   const fileInput = document.getElementById("excelFile")
   const file = fileInput.files[0]
+  
 
   if (!file) {
     alert("Seleccioná un archivo")
@@ -99,172 +100,82 @@ async function importarExcel() {
   console.log("ARCHIVO SELECCIONADO:", file.name)
 
   if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-    alert("Solo se permiten archivos Excel (.xlsx o .xls)")
-    return
+  alert("Solo se permiten archivos Excel (.xlsx o .xls)")
+  return
+}
+
+function convertirFecha(fecha) {
+  if (!fecha) return null
+
+  const texto = String(fecha).trim()
+  const match = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+
+  if (match) {
+    const [, d, m, y] = match
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`
   }
+
+  return fecha
+}
 
   const reader = new FileReader()
 
-  function normalizarTexto(texto) {
-    return String(texto || "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // saca acentos
-      .replace(/\s+/g, " ") // espacios dobles
-  }
+  reader.onload = async (e) => {
+    const data = new Uint8Array(e.target.result)
+    const workbook = XLSX.read(data, { type: "array" })
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const json = XLSX.utils.sheet_to_json(sheet)
 
-  function normalizarFila(row) {
-    const fila = {}
+   console.log("PRIMERA FILA EXCEL:", json[0])
+console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
 
-    Object.keys(row || {}).forEach(key => {
-      const keyNormalizada = normalizarTexto(key)
-      fila[keyNormalizada] = row[key]
+    const programacion = json
+  .map(row => ({
+    marca: row["MARCA"] || row["Marca"] || row["marca"] || null,
+    estado: row["ESTADO"] || row["Estado"] || row["estado"] || "pendiente",
+    fecha: row["FECHA DE INGRESO"] || row["Fecha de ingreso"] || row["fecha"] || null,
+    numero_tarea: row["Nº DE TAREA"] || row["N° DE TAREA"] || row["N DE TAREA"] || row["numero_tarea"] || null,
+    curva: row["CURVA"] || row["Curva"] || row["curva"] || null,
+    modelo: row["MODELO"] || row["Modelo"] || row["modelo"] || null,
+    codigo: row["CODIGO"] || row["Codigo"] || row["codigo"] || null,
+    v_p: row["V/P"] || row["v_p"] || row["vp"] || null,
+    horma: row["HORMA"] || row["Horma"] || row["horma"] || null,
+    cantidad: Number(row["PARES"] || row["Cantidad"] || row["cantidad"] || 0),
+    pares_remitidos: Number(row["PARES REMITADOS"] || row["pares_remitidos"] || 0),
+    pedido: row["PEDIDO"] || row["Pedido"] || row["pedido"] || null,
+    comentario: row["COMENTARIO"] || row["Comentario"] || row["comentario"] || null,
+    mes_entrega: row["MES ENTREGA"] || row["Mes entrega"] || row["mes_entrega"] || null,
+    prioridad: "media"
+  }))
+  .filter(item => item.modelo && item.cantidad > 0)
+      
+
+console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
+    console.log("PROGRAMACION LIMPIA:", programacion[0])
+    console.log("TOTAL VALIDAS:", programacion.length)
+
+    if (programacion.length === 0) {
+      alert("El Excel no tiene filas válidas. Revisá nombres de columnas como MODELO y PARES.")
+      return
+    }
+
+    const res = await apiFetch("/api/programacion/importar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(programacion)
     })
 
-    return fila
-  }
+    const result = await res.json()
 
-  function obtenerValor(fila, aliases = []) {
-    for (const alias of aliases) {
-      const key = normalizarTexto(alias)
-      if (fila[key] !== undefined && fila[key] !== null && fila[key] !== "") {
-        return fila[key]
-      }
-    }
-    return null
-  }
-
-  function convertirNumero(valor) {
-    if (valor === null || valor === undefined || valor === "") return 0
-
-    if (typeof valor === "number") return valor
-
-    const limpio = String(valor)
-      .replace(/\./g, "")
-      .replace(",", ".")
-      .trim()
-
-    const numero = Number(limpio)
-    return isNaN(numero) ? 0 : numero
-  }
-
-  function convertirFechaExcel(valor) {
-    if (!valor) return null
-
-    // Si ya viene como número serial de Excel
-    if (typeof valor === "number") {
-      const fecha = new Date(Math.round((valor - 25569) * 86400 * 1000))
-      return isNaN(fecha.getTime()) ? null : fecha.toISOString().split("T")[0]
-    }
-
-    // Si viene como texto
-    const texto = String(valor).trim()
-
-    // dd/mm/yyyy
-    const match = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-    if (match) {
-      const [, dd, mm, yyyy] = match
-      return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`
-    }
-
-    const fecha = new Date(texto)
-    return isNaN(fecha.getTime()) ? texto : fecha.toISOString().split("T")[0]
-  }
-
-  reader.onload = async (e) => {
-    try {
-      const data = new Uint8Array(e.target.result)
-      const workbook = XLSX.read(data, { type: "array" })
-      const sheet = workbook.Sheets[workbook.SheetNames[0]]
-      const json = XLSX.utils.sheet_to_json(sheet, { defval: "" })
-
-      console.log("PRIMERA FILA EXCEL:", json[0])
-      console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
-
-      const programacion = json
-        .map(row => {
-          const fila = normalizarFila(row)
-
-          return {
-            marca: obtenerValor(fila, ["MARCA", "Marca", "marca"]),
-            estado: obtenerValor(fila, ["ESTADO", "Estado", "estado"]) || "pendiente",
-            fecha: convertirFechaExcel(
-              obtenerValor(fila, [
-                "FECHA DE INGRESO",
-                "Fecha de ingreso",
-                "FECHA",
-                "Fecha",
-                "fecha"
-              ])
-            ),
-            numero_tarea: obtenerValor(fila, [
-              "Nº DE TAREA",
-              "N° DE TAREA",
-              "N DE TAREA",
-              "NUMERO DE TAREA",
-              "NUMERO_TAREA",
-              "numero_tarea"
-            ]),
-            curva: obtenerValor(fila, ["CURVA", "Curva", "curva"]),
-            modelo: obtenerValor(fila, ["MODELO", "Modelo", "modelo"]),
-            codigo: obtenerValor(fila, ["CODIGO", "CÓDIGO", "Codigo", "Código", "codigo"]),
-            v_p: obtenerValor(fila, ["V/P", "V P", "VP", "v_p", "vp"]),
-            horma: obtenerValor(fila, ["HORMA", "Horma", "horma"]),
-            cantidad: convertirNumero(
-              obtenerValor(fila, ["PARES", "Cantidad", "CANTIDAD", "cantidad"])
-            ),
-            pares_remitidos: convertirNumero(
-              obtenerValor(fila, [
-                "PARES REMITIDOS",
-                "PARES REMITADOS",
-                "PARES_REMITIDOS",
-                "pares_remitidos"
-              ])
-            ),
-            pedido: obtenerValor(fila, ["PEDIDO", "Pedido", "pedido"]),
-            comentario: obtenerValor(fila, ["COMENTARIO", "Comentario", "comentario"]),
-            mes_entrega: obtenerValor(fila, [
-              "MES ENTREGA",
-              "MES DE ENTREGA",
-              "Mes entrega",
-              "mes_entrega"
-            ]),
-            prioridad: "media"
-          }
-        })
-        .filter(item => item.modelo && item.cantidad > 0)
-
-      console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
-      console.log("PROGRAMACION LIMPIA:", programacion[0])
-      console.log("TOTAL VALIDAS:", programacion.length)
-
-      if (programacion.length === 0) {
-        alert("El Excel no tiene filas válidas. Revisá nombres de columnas como MODELO y PARES.")
-        return
-      }
-
-      const res = await apiFetch("/api/programacion/importar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(programacion)
-      })
-
-      const result = await res.json()
-
-      if (result.ok) {
-        alert(`🔥 Programación cargada. Importadas: ${result.total}`)
-        fileInput.value = ""
-        await cargarProgramacion()
-      } else {
-        alert(result.error || "Error al importar")
-        console.error("ERROR BACKEND:", result)
-      }
-    } catch (error) {
-      console.error("ERROR IMPORTANDO EXCEL:", error)
-      alert("Ocurrió un error al procesar el Excel")
+    if (result.ok) {
+  alert(`🔥 Programación cargada. Importadas: ${result.total}`)
+  fileInput.value = ""
+  await cargarProgramacion()
+} else {
+      alert(result.error || "Error al importar")
+      console.error("ERROR BACKEND:", result)
     }
   }
 
