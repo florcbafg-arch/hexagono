@@ -3,6 +3,26 @@ const router = express.Router()
 
 const { supabase } = require("../../config/supabase")
 
+// 📊 OBTENER PROGRAMACION 🔥🔥🔥
+router.get("/", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("programacion")
+      .select("*")
+      .order("fecha", { ascending: false })
+
+    if (error) {
+      console.error("ERROR SUPABASE:", error)
+      return res.status(500).json({ error: "Error al obtener programación" })
+    }
+
+    res.json(data)
+  } catch (err) {
+    console.error("ERROR SERVER:", err)
+    res.status(500).json({ error: "Error interno" })
+  }
+})
+
 // 📥 IMPORTAR PROGRAMACIÓN
 router.post("/importar", async (req, res) => {
   try {
