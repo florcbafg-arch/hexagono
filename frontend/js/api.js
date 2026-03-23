@@ -2,7 +2,7 @@ function apiFetch(url, options = {}) {
 
   const token = localStorage.getItem("token")
 
-  return fetch(url, {
+  return fetch("/api" + url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
