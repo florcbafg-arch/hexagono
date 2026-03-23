@@ -15,7 +15,7 @@ router.post("/importar", async (req, res) => {
     console.log("📥 Items recibidos:", items.length)
     console.log("📌 Primer item:", items[0])
 
-    const dataInsert = items.map((item, index) => ({
+    const dataInsert = items.map((item) => ({
       modelo: item.modelo ?? item.Modelo ?? null,
       cantidad: Number(item.cantidad ?? item.Cantidad ?? 0),
       fecha: item.fecha ?? item.Fecha ?? null,
@@ -23,52 +23,39 @@ router.post("/importar", async (req, res) => {
       estado: "pendiente"
     }))
 
-    // validar filas mínimas
-    const invalidos = dataInsert.filter(
-      (x) => !x.modelo || !x.cantidad || !x.fecha
+    const validos = dataInsert.filter(
+      (x) => x.modelo && x.cantidad > 0 && x.fecha
     )
 
-   if (invalidos.length > 0) {
-
-  console.log("❌ FILA INVALIDA:", invalidos[0])
-
-  return res.status(400).json({
-    error: "Hay filas inválidas en el Excel",
-    ejemplo: invalidos[0]
-  })
-}
-
-    // insertar en bloque
-    const chunkSize = 200
-
-for (let i = 0; i < dataInsert.length; i += chunkSize) {
-
-  const chunk = dataInsert.slice(i, i + chunkSize)
-
-  console.log(`🚀 Insertando bloque ${i} - ${i + chunk.length}`)
-
-  const { error } = await supabase
-    .from("programacion")
-    .insert(chunk)
-
-  if (error) {
-    console.error("❌ Error en bloque:", error)
-    return res.status(500).json({
-      error: error.message,
-      bloque: i
-    })
-  }
-}
-
-    if (error) {
-      console.error("❌ Error Supabase al importar:", error)
-      return res.status(500).json({
-        error: error.message,
-        detalle: error
+    if (validos.length === 0) {
+      return res.status(400).json({
+        error: "No hay datos válidos para importar"
       })
     }
 
-    res.json({ ok: true, total: dataInsert.length })
+    console.log("⚠️ Filas ignoradas:", dataInsert.length - validos.length)
+
+    const chunkSize = 200
+
+    for (let i = 0; i < validos.length; i += chunkSize) {
+      const chunk = validos.slice(i, i + chunkSize)
+
+      console.log(`🚀 Insertando bloque ${i} - ${i + chunk.length}`)
+
+      const { error } = await supabase
+        .from("programacion")
+        .insert(chunk)
+
+      if (error) {
+        console.error("❌ Error en bloque:", error)
+        return res.status(500).json({
+          error: error.message,
+          bloque: i
+        })
+      }
+    }
+
+    res.json({ ok: true, total: validos.length })
   } catch (error) {
     console.error("❌ Error al importar programación:", error)
     res.status(500).json({
