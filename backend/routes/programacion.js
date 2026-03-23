@@ -3,107 +3,59 @@ const router = express.Router()
 
 const { supabase } = require("../../config/supabase")
 
-// 📥 IMPORTAR PROGRAMACIÓN (STAGING)
+// 📥 IMPORTAR PROGRAMACIÓN
 router.post("/importar", async (req, res) => {
-
   try {
-
     const items = req.body
 
-    for (const item of items) {
-
-      const { error } = await supabase
-        .from("programacion")
-        .insert({
-          modelo: item.modelo, // luego lo cambiamos a modelo_id
-          cantidad: item.cantidad,
-          fecha: item.fecha,
-          prioridad: item.prioridad,
-          estado: "pendiente"
-        })
-
-      if (error) throw error
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "No se recibieron items válidos" })
     }
 
-    res.json({ ok: true })
+    console.log("📥 Items recibidos:", items.length)
+    console.log("📌 Primer item:", items[0])
 
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: "Error al importar programación" })
-  }
+    const dataInsert = items.map((item, index) => ({
+      modelo: item.modelo ?? item.Modelo ?? null,
+      cantidad: Number(item.cantidad ?? item.Cantidad ?? 0),
+      fecha: item.fecha ?? item.Fecha ?? null,
+      prioridad: item.prioridad ?? item.Prioridad ?? "normal",
+      estado: "pendiente"
+    }))
 
-})
+    // validar filas mínimas
+    const invalidos = dataInsert.filter(
+      (x) => !x.modelo || !x.cantidad || !x.fecha
+    )
 
-// 🚀 GENERAR ÓRDENES DESDE PROGRAMACIÓN
-router.post("/generar", async (req, res) => {
+    if (invalidos.length > 0) {
+      console.log("❌ Filas inválidas:", invalidos.slice(0, 5))
+      return res.status(400).json({
+        error: "Hay filas inválidas en el Excel",
+        ejemplo: invalidos[0]
+      })
+    }
 
-  try {
-
-    // 1. TRAER SOLO PROGRAMACIÓN PENDIENTE
-    const { data: pendientes, error } = await supabase
+    // insertar en bloque
+    const { error } = await supabase
       .from("programacion")
-      .select("*")
-      .eq("estado", "pendiente")
+      .insert(dataInsert)
 
-    if (error) throw error
-
-    for (const prog of pendientes) {
-
-      // 2. CREAR ORDEN
-      const { data: orden, error: errorOrden } = await supabase
-        .from("ordenes")
-        .insert({
-          modelo: 8,
-          cantidad: prog.cantidad,
-          estado: "pendiente",
-          id_programacion: prog.id
-        })
-        .select()
-        .single()
-
-      if (errorOrden) throw errorOrden
-
-      // 🔥 3. OBTENER CURVA DEL MODELO
-const { data: curva, error: errorCurva } = await supabase
-  .from("curvas_talles")
-  .select("*")
-  .eq("modelo_id", 8)
-
-if (errorCurva) throw errorCurva
-
-if (!curva || curva.length === 0) {
-  throw new Error("El modelo no tiene curva de talles")
-}
-
-// 🔥 4. GENERAR DISTRIBUCIÓN
-const tallesInsert = curva.map(c => ({
-  orden_id: orden.id,
-  talle: c.talle,
-  cantidad: Math.round(prog.cantidad * c.porcentaje)
-}))
-
-// 🔥 5. INSERTAR TALLES
-const { error: errorTalles } = await supabase
-  .from("orden_talles")
-  .insert(tallesInsert)
-
-if (errorTalles) throw errorTalles
-
-      // 4. MARCAR COMO PROCESADO
-      await supabase
-        .from("programacion")
-        .update({ estado: "procesado" })
-        .eq("id", prog.id)
-
+    if (error) {
+      console.error("❌ Error Supabase al importar:", error)
+      return res.status(500).json({
+        error: error.message,
+        detalle: error
+      })
     }
 
-    res.json({ ok: true })
-
+    res.json({ ok: true, total: dataInsert.length })
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: "Error generando órdenes" })
+    console.error("❌ Error al importar programación:", error)
+    res.status(500).json({
+      error: error.message || "Error al importar programación"
+    })
   }
-
 })
 
 module.exports = router
