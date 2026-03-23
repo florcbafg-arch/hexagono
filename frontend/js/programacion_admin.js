@@ -83,14 +83,15 @@ async function generarOrdenes() {
   await cargarProgramacion()
 } else {
   console.error("Resultado generar:", json)
-  console.log("ERRORES DETALLADOS:", json.errores)
-  console.log("ERRORES JSON:", JSON.stringify(json.errores, null, 2))
 
-  alert(
-    `No se generó ninguna orden.\n` +
-    `Errores: ${(json.errores || []).length}\n` +
-    `Revisá consola para ver el detalle.`
-  )
+// 👇 ESTO ES LO IMPORTANTE
+console.log("ERRORES DETALLADOS:", json.errores)
+console.log("ERRORES JSON:", JSON.stringify(json.errores, null, 2))
+
+// 👇 opcional pero útil
+if (json.errores && json.errores.length > 0) {
+  console.table(json.errores)
+}
 }
 }
 
