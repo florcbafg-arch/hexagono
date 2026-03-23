@@ -255,21 +255,24 @@ router.post("/generar", async (req, res) => {
         // 7. CREAR ORDEN
         const { data: orden, error: errorOrden } = await supabase
           .from("ordenes")
-          .insert([{
-            numero_tarea: numeroTarea,
-            modelo: p.modelo || modelo.nombre,
-            marca: p.marca || modelo.marca || null,
-            pares_plan: Number(p.cantidad),
-            fecha: p.fecha || new Date().toISOString().slice(0, 10),
-            modelo_id: modelo.id,
-            codigo: p.codigo || null,
-            horma: p.horma || null,
-            pedido: p.pedido || null,
-            comentario: p.comentario || null,
-            prioridad: p.prioridad || "normal",
-            estado: "pendiente",
-            id_programacion: p.id
-          }])
+.insert([{
+  numero_tarea: numeroTarea,
+  modelo: p.modelo || modelo.nombre,
+  marca: p.marca || modelo.marca || null,
+  pares_plan: Number(p.cantidad),
+  fecha: p.fecha || new Date().toISOString().slice(0, 10),
+  modelo_id: modelo.id,
+  codigo: p.codigo || null,
+  horma: p.horma || null,
+  pedido: p.pedido || null,
+  comentario: p.comentario || null,
+  prioridad: p.prioridad || "normal",
+  estado: "pendiente",
+  id_programacion: p.id,
+
+  // 🔥 CLAVE PARA QUE NO ROMPA
+  empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb2xxxxxx"
+}])
           .select()
           .single()
 
