@@ -40,11 +40,19 @@ async function generarOrdenes() {
 async function importarExcel() {
   const fileInput = document.getElementById("excelFile")
   const file = fileInput.files[0]
+  
 
   if (!file) {
     alert("Seleccioná un archivo")
     return
   }
+
+  console.log("ARCHIVO SELECCIONADO:", file.name)
+
+  if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+  alert("Solo se permiten archivos Excel (.xlsx o .xls)")
+  return
+}
 
   const reader = new FileReader()
 
