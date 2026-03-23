@@ -35,17 +35,26 @@ router.post("/importar", async (req, res) => {
     console.log("📥 Items recibidos:", items.length)
     console.log("📌 Primer item:", items[0])
 
-    const dataInsert = items.map((item) => ({
-      modelo: item.modelo ?? item.Modelo ?? null,
-      cantidad: Number(item.cantidad ?? item.Cantidad ?? 0),
-      fecha: item.fecha ?? item.Fecha ?? null,
-      prioridad: item.prioridad ?? item.Prioridad ?? "normal",
-      estado: "pendiente"
-    }))
-
-    const validos = dataInsert.filter(
-      (x) => x.modelo && x.cantidad > 0 && x.fecha
-    )
+   const dataInsert = items.map((item) => ({
+  marca: item.MARCA ?? item.marca ?? null,
+  estado: item.ESTADO ?? item.estado ?? "pendiente",
+  fecha: item["FECHA DE INGRESO"] ?? item.fecha ?? item.Fecha ?? null,
+  numero_tarea: item["Nº DE TAREA"] ?? item["N° DE TAREA"] ?? item.numero_tarea ?? null,
+  curva: item.CURVA ?? item.curva ?? null,
+  modelo: item.MODELO ?? item.Modelo ?? item.modelo ?? null,
+  codigo: item.CODIGO ?? item.codigo ?? null,
+  v_p: item["V/P"] ?? item.v_p ?? null,
+  horma: item.HORMA ?? item.horma ?? null,
+  cantidad: Number(item.PARES ?? item.Cantidad ?? item.cantidad ?? 0),
+  pares_remitidos: Number(item["PARES REMITADOS"] ?? item.pares_remitidos ?? 0),
+  pedido: item.PEDIDO ?? item.pedido ?? null,
+  comentario: item.COMENTARIO ?? item.comentario ?? null,
+  mes_entrega: item["MES ENTREGA"] ?? item.mes_entrega ?? null,
+  prioridad: item.Prioridad ?? item.prioridad ?? "media"
+}))
+   const validos = dataInsert.filter(
+  (x) => x.modelo && x.cantidad > 0
+)
 
     if (validos.length === 0) {
       return res.status(400).json({
@@ -164,18 +173,22 @@ router.post("/generar", async (req, res) => {
 
         // 7. CREAR ORDEN (usando columnas reales)
         const { data: orden, error: errorOrden } = await supabase
-          .from("ordenes")
-          .insert([{
-            numero_tarea: numeroTarea,
-            modelo: modelo.nombre,
-            marca: modelo.marca || null,
-            pares_plan: Number(p.cantidad),
-            fecha: p.fecha || new Date().toISOString().slice(0, 10),
-            modelo_id: modelo.id,
-            prioridad: p.prioridad || "normal",
-            estado: "pendiente",
-            id_programacion: p.id
-          }])
+  .from("ordenes")
+  .insert([{
+    numero_tarea: numeroTarea,
+    modelo: p.modelo || modelo.nombre,
+    marca: p.marca || modelo.marca || null,
+    pares_plan: Number(p.cantidad),
+    fecha: p.fecha || new Date().toISOString().slice(0, 10),
+    modelo_id: modelo.id,
+    codigo: p.codigo || null,
+    horma: p.horma || null,
+    pedido: p.pedido || null,
+    comentario: p.comentario || null,
+    prioridad: p.prioridad || "normal",
+    estado: "pendiente",
+    id_programacion: p.id
+  }])
           .select()
           .single()
 
