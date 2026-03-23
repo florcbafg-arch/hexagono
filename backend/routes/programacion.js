@@ -37,9 +37,26 @@ router.post("/importar", async (req, res) => {
     }
 
     // insertar en bloque
-    const { error } = await supabase
-      .from("programacion")
-      .insert(dataInsert)
+    const chunkSize = 200
+
+for (let i = 0; i < dataInsert.length; i += chunkSize) {
+
+  const chunk = dataInsert.slice(i, i + chunkSize)
+
+  console.log(`🚀 Insertando bloque ${i} - ${i + chunk.length}`)
+
+  const { error } = await supabase
+    .from("programacion")
+    .insert(chunk)
+
+  if (error) {
+    console.error("❌ Error en bloque:", error)
+    return res.status(500).json({
+      error: error.message,
+      bloque: i
+    })
+  }
+}
 
     if (error) {
       console.error("❌ Error Supabase al importar:", error)
