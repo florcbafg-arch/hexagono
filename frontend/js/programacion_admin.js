@@ -54,8 +54,8 @@ async function importarExcel() {
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const json = XLSX.utils.sheet_to_json(sheet)
 
-    console.log("EXCEL:", json)
-    console.log("PRIMERA FILA:", json[0])
+   console.log("PRIMERA FILA EXCEL:", json[0])
+console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
 
     const programacion = json
       .map(row => ({
@@ -66,6 +66,7 @@ async function importarExcel() {
       }))
       .filter(item => item.modelo && item.cantidad > 0)
 
+console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
     console.log("PROGRAMACION LIMPIA:", programacion[0])
     console.log("TOTAL VALIDAS:", programacion.length)
 
