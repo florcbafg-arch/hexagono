@@ -17,6 +17,55 @@ function agregarFila() {
   document.getElementById("tabla").innerHTML += fila
 }
 
+function formatearFecha(fecha) {
+  if (!fecha) return "-"
+  const d = new Date(fecha)
+  if (isNaN(d)) return fecha
+  return d.toLocaleDateString("es-AR")
+}
+
+function pintarProgramacion(items) {
+  const tabla = document.getElementById("tabla")
+
+  if (!items || items.length === 0) {
+    tabla.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;">No hay programación cargada</td>
+      </tr>
+    `
+    return
+  }
+
+  tabla.innerHTML = items.map(item => `
+    <tr>
+      <td>${item.modelo || "-"}</td>
+      <td>${item.cantidad || 0}</td>
+      <td>${formatearFecha(item.fecha)}</td>
+      <td>${item.prioridad || "-"}</td>
+      <td>${item.estado || "pendiente"}</td>
+    </tr>
+  `).join("")
+}
+
+async function cargarProgramacion() {
+  try {
+    const res = await apiFetch("/api/programacion")
+    const data = await res.json()
+
+    console.log("PROGRAMACION DESDE BACK:", data)
+
+    const items = Array.isArray(data) ? data : (data.items || data.data || [])
+    pintarProgramacion(items)
+  } catch (error) {
+    console.error("ERROR CARGANDO PROGRAMACION:", error)
+    document.getElementById("tabla").innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;">Error al cargar programación</td>
+      </tr>
+    `
+  }
+}
+
 async function generarOrdenes() {
 
   const confirmar = confirm("¿Generar órdenes reales?")
@@ -94,8 +143,10 @@ console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
     const result = await res.json()
 
     if (result.ok) {
-      alert(`🔥 Programación cargada. Importadas: ${result.total}`)
-    } else {
+  alert(`🔥 Programación cargada. Importadas: ${result.total}`)
+  fileInput.value = ""
+  await cargarProgramacion()
+} else {
       alert(result.error || "Error al importar")
       console.error("ERROR BACKEND:", result)
     }
@@ -103,3 +154,5 @@ console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
 
   reader.readAsArrayBuffer(file)
 }
+
+document.addEventListener("DOMContentLoaded", cargarProgramacion)
