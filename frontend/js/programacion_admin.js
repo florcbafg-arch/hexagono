@@ -83,7 +83,14 @@ async function generarOrdenes() {
   await cargarProgramacion()
 } else {
   console.error("Resultado generar:", json)
-  alert(`No se generó ninguna orden. Revisá consola.\nErrores: ${(json.errores || []).length}`)
+  console.log("ERRORES DETALLADOS:", json.errores)
+  console.log("ERRORES JSON:", JSON.stringify(json.errores, null, 2))
+
+  alert(
+    `No se generó ninguna orden.\n` +
+    `Errores: ${(json.errores || []).length}\n` +
+    `Revisá consola para ver el detalle.`
+  )
 }
 }
 
@@ -133,7 +140,9 @@ console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
   .map(row => ({
     marca: row["MARCA"] || row["Marca"] || row["marca"] || null,
     estado: row["ESTADO"] || row["Estado"] || row["estado"] || "pendiente",
-    fecha: row["FECHA DE INGRESO"] || row["Fecha de ingreso"] || row["fecha"] || null,
+   fecha: convertirFecha(
+  row["FECHA DE INGRESO"] || row["Fecha de ingreso"] || row["fecha"] || null
+),
     numero_tarea: row["Nº DE TAREA"] || row["N° DE TAREA"] || row["N DE TAREA"] || row["numero_tarea"] || null,
     curva: row["CURVA"] || row["Curva"] || row["curva"] || null,
     modelo: row["MODELO"] || row["Modelo"] || row["modelo"] || null,
