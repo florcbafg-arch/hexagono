@@ -1,5 +1,4 @@
 function apiFetch(url, options = {}) {
-
   const token = localStorage.getItem("token")
 
   return fetch(url, {
