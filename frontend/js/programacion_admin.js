@@ -116,12 +116,24 @@ async function importarExcel() {
 console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
 
     const programacion = json
-      .map(row => ({
-        modelo: row.MODELO || row.Modelo || row.modelo || null,
-        cantidad: Number(row.PARES || row.Cantidad || row.cantidad || 0),
-        fecha: new Date().toISOString(),
-        prioridad: "media"
-      }))
+  .map(row => ({
+    marca: row["MARCA"] || row["Marca"] || row["marca"] || null,
+    estado: row["ESTADO"] || row["Estado"] || row["estado"] || "pendiente",
+    fecha: row["FECHA DE INGRESO"] || row["Fecha de ingreso"] || row["fecha"] || null,
+    numero_tarea: row["Nº DE TAREA"] || row["N° DE TAREA"] || row["N DE TAREA"] || row["numero_tarea"] || null,
+    curva: row["CURVA"] || row["Curva"] || row["curva"] || null,
+    modelo: row["MODELO"] || row["Modelo"] || row["modelo"] || null,
+    codigo: row["CODIGO"] || row["Codigo"] || row["codigo"] || null,
+    v_p: row["V/P"] || row["v_p"] || row["vp"] || null,
+    horma: row["HORMA"] || row["Horma"] || row["horma"] || null,
+    cantidad: Number(row["PARES"] || row["Cantidad"] || row["cantidad"] || 0),
+    pares_remitidos: Number(row["PARES REMITADOS"] || row["pares_remitidos"] || 0),
+    pedido: row["PEDIDO"] || row["Pedido"] || row["pedido"] || null,
+    comentario: row["COMENTARIO"] || row["Comentario"] || row["comentario"] || null,
+    mes_entrega: row["MES ENTREGA"] || row["Mes entrega"] || row["mes_entrega"] || null,
+    prioridad: "media"
+  }))
+  .filter(item => item.modelo && item.cantidad > 0)
       .filter(item => item.modelo && item.cantidad > 0)
 
 console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
