@@ -85,6 +85,7 @@ router.post("/importar", async (req, res) => {
 })
 
 // 🚀 GENERAR ÓRDENES
+// 🚀 GENERAR ÓRDENES
 router.post("/generar", async (req, res) => {
   try {
     const { data: programaciones, error } = await supabase
@@ -101,16 +102,21 @@ router.post("/generar", async (req, res) => {
     for (const p of programaciones) {
       try {
         // 1. VALIDACIONES BÁSICAS
-        if (!p.numero_tarea || !p.modelo || !p.cantidad) {
-          errores.push(`Fila ${p.id}: faltan datos básicos`)
+        if (!p.modelo || !p.cantidad) {
+          errores.push(`Fila ${p.id}: faltan modelo o cantidad`)
           continue
         }
 
-        // 2. EVITAR DUPLICADOS
+        // 2. ARMAR NÚMERO DE TAREA
+        // Como Programación hoy no guarda numero_tarea,
+        // generamos uno estable desde el id de programación.
+        const numeroTarea = p.numero_tarea || `PG-${String(p.id).padStart(6, "0")}`
+
+        // 3. EVITAR DUPLICADOS
         const { data: existe, error: errorExiste } = await supabase
           .from("ordenes")
           .select("id")
-          .eq("numero_tarea", p.numero_tarea)
+          .eq("numero_tarea", numeroTarea)
           .maybeSingle()
 
         if (errorExiste) throw errorExiste
@@ -120,10 +126,10 @@ router.post("/generar", async (req, res) => {
           continue
         }
 
-        // 3. BUSCAR MODELO
+        // 4. BUSCAR MODELO
         const { data: modelo, error: errorModelo } = await supabase
           .from("modelos")
-          .select("id, nombre")
+          .select("id, nombre, marca")
           .ilike("nombre", `%${p.modelo}%`)
           .maybeSingle()
 
@@ -134,7 +140,7 @@ router.post("/generar", async (req, res) => {
           continue
         }
 
-        // 4. BUSCAR CURVA DEL MODELO
+        // 5. BUSCAR CURVA DEL MODELO
         const { data: curva, error: errorCurva } = await supabase
           .from("curvas_talles")
           .select("talle, porcentaje")
@@ -148,7 +154,7 @@ router.post("/generar", async (req, res) => {
           continue
         }
 
-        // 5. VALIDAR QUE LA CURVA SUME 1
+        // 6. VALIDAR SUMA DE CURVA
         const sumaPorcentajes = curva.reduce((acc, c) => acc + Number(c.porcentaje), 0)
 
         if (Math.abs(sumaPorcentajes - 1) > 0.001) {
@@ -156,26 +162,28 @@ router.post("/generar", async (req, res) => {
           continue
         }
 
-        // 6. CREAR ORDEN
+        // 7. CREAR ORDEN (usando columnas reales)
         const { data: orden, error: errorOrden } = await supabase
           .from("ordenes")
           .insert([{
-            numero_tarea: p.numero_tarea,
+            numero_tarea: numeroTarea,
+            modelo: modelo.nombre,
+            marca: modelo.marca || null,
+            pares_plan: Number(p.cantidad),
+            fecha: p.fecha || new Date().toISOString().slice(0, 10),
             modelo_id: modelo.id,
-            pares_plan: p.cantidad,
-            fecha: p.fecha || new Date().toISOString(),
+            prioridad: p.prioridad || "normal",
             estado: "pendiente",
-            origen: "programacion",
-            programacion_id: p.id
+            id_programacion: p.id
           }])
           .select()
           .single()
 
         if (errorOrden) throw errorOrden
 
-        // 7. REPARTIR TOTALES SEGÚN CURVA
+        // 8. CALCULAR TALLES POR CURVA
         const totalPares = Number(p.cantidad)
-        let tallesCalculados = []
+        const tallesCalculados = []
         let acumulado = 0
 
         for (let i = 0; i < curva.length; i++) {
@@ -184,7 +192,6 @@ router.post("/generar", async (req, res) => {
           let cantidadTalle
 
           if (i === curva.length - 1) {
-            // último talle: absorbe diferencia por redondeo
             cantidadTalle = totalPares - acumulado
           } else {
             cantidadTalle = Math.round(totalPares * Number(item.porcentaje))
@@ -192,20 +199,21 @@ router.post("/generar", async (req, res) => {
           }
 
           tallesCalculados.push({
-            tarea_id: orden.id,
+            orden_id: orden.id,
             talle: item.talle,
-            cantidad: cantidadTalle
+            cantidad: cantidadTalle,
+            empresa_id: "00000000-0000-0000-0000-000000000000"
           })
         }
 
-        // 8. INSERTAR TALLES
+        // 9. INSERTAR TALLES EN TABLA REAL
         const { error: errorTalles } = await supabase
-          .from("tarea_talles")
+          .from("orden_talles")
           .insert(tallesCalculados)
 
         if (errorTalles) throw errorTalles
 
-        // 9. CREAR SECTORES AUTOMÁTICOS
+        // 10. CREAR SECTORES AUTOMÁTICOS
         const { data: sectores, error: errorSectores } = await supabase
           .from("sectores")
           .select("id")
@@ -226,7 +234,7 @@ router.post("/generar", async (req, res) => {
           if (errorOrdenesSector) throw errorOrdenesSector
         }
 
-        // 10. MARCAR PROGRAMACIÓN COMO GENERADA
+        // 11. MARCAR PROGRAMACIÓN COMO GENERADA
         const { error: errorUpdate } = await supabase
           .from("programacion")
           .update({ estado: "generado" })
@@ -243,7 +251,7 @@ router.post("/generar", async (req, res) => {
     }
 
     res.json({
-      ok: true,
+      ok: creadas > 0,
       creadas,
       saltadas,
       errores,
@@ -261,4 +269,3 @@ router.post("/generar", async (req, res) => {
 
 module.exports = router
 
-module.exports = router

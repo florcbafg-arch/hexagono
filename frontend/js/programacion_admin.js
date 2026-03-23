@@ -78,12 +78,13 @@ async function generarOrdenes() {
 
   const json = await res.json()
 
-  if(json.ok){
-    alert("🚀 Órdenes generadas correctamente")
-    location.reload()
-  } else {
-    alert("Error al generar")
-  }
+  if (json.ok && json.creadas > 0) {
+  alert(`🚀 Órdenes generadas: ${json.creadas}`)
+  await cargarProgramacion()
+} else {
+  console.error("Resultado generar:", json)
+  alert(`No se generó ninguna orden. Revisá consola.\nErrores: ${(json.errores || []).length}`)
+}
 }
 
 async function importarExcel() {
@@ -155,4 +156,4 @@ console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
   reader.readAsArrayBuffer(file)
 }
 
-document.addEventListener("DOMContentLoaded", cargarProgramacion)
+cargarProgramacion()
