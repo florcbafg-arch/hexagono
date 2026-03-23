@@ -28,13 +28,15 @@ router.post("/importar", async (req, res) => {
       (x) => !x.modelo || !x.cantidad || !x.fecha
     )
 
-    if (invalidos.length > 0) {
-      console.log("❌ Filas inválidas:", invalidos.slice(0, 5))
-      return res.status(400).json({
-        error: "Hay filas inválidas en el Excel",
-        ejemplo: invalidos[0]
-      })
-    }
+   if (invalidos.length > 0) {
+
+  console.log("❌ FILA INVALIDA:", invalidos[0])
+
+  return res.status(400).json({
+    error: "Hay filas inválidas en el Excel",
+    ejemplo: invalidos[0]
+  })
+}
 
     // insertar en bloque
     const chunkSize = 200
