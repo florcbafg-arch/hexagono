@@ -38,7 +38,6 @@ async function generarOrdenes() {
 }
 
 async function importarExcel() {
-
   const fileInput = document.getElementById("excelFile")
   const file = fileInput.files[0]
 
@@ -50,26 +49,32 @@ async function importarExcel() {
   const reader = new FileReader()
 
   reader.onload = async (e) => {
-
     const data = new Uint8Array(e.target.result)
     const workbook = XLSX.read(data, { type: "array" })
-
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
-
     const json = XLSX.utils.sheet_to_json(sheet)
 
     console.log("EXCEL:", json)
+    console.log("PRIMERA FILA:", json[0])
 
-    // 🔥 TRANSFORMAR A FORMATO HEXAFLOW
-    const programacion = json.map(row => ({
-      modelo: row.MODELO || row.Modelo,
-      cantidad: row.PARES || row.Cantidad,
-      fecha: new Date(),
-      prioridad: "media"
-    }))
+    const programacion = json
+      .map(row => ({
+        modelo: row.MODELO || row.Modelo || row.modelo || null,
+        cantidad: Number(row.PARES || row.Cantidad || row.cantidad || 0),
+        fecha: new Date().toISOString(),
+        prioridad: "media"
+      }))
+      .filter(item => item.modelo && item.cantidad > 0)
 
-    // 🚀 ENVIAR AL BACKEND
-   const res = await apiFetch("/api/programacion/importar", {
+    console.log("PROGRAMACION LIMPIA:", programacion[0])
+    console.log("TOTAL VALIDAS:", programacion.length)
+
+    if (programacion.length === 0) {
+      alert("El Excel no tiene filas válidas. Revisá nombres de columnas como MODELO y PARES.")
+      return
+    }
+
+    const res = await apiFetch("/api/programacion/importar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -79,12 +84,12 @@ async function importarExcel() {
 
     const result = await res.json()
 
-    if(result.ok){
-      alert("🔥 Programación cargada desde Excel")
+    if (result.ok) {
+      alert(`🔥 Programación cargada. Importadas: ${result.total}`)
     } else {
-      alert("Error al importar")
+      alert(result.error || "Error al importar")
+      console.error("ERROR BACKEND:", result)
     }
-
   }
 
   reader.readAsArrayBuffer(file)
