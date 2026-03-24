@@ -181,16 +181,10 @@ form.addEventListener("submit", async (e) => {
   btnCrearOrden.textContent = "Creando..."
 
   try {
-    const token = localStorage.getItem("token")
-
-   const usuario = JSON.parse(localStorage.getItem("hexagono_user") || "null")
+    const usuario = JSON.parse(localStorage.getItem("hexagono_user") || "null")
 
 const res = await apiFetch("/api/ordenes", {
   method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": "Bearer " + token
-  },
   body: JSON.stringify({
     numero,
     modelo_id,
@@ -206,11 +200,7 @@ const res = await apiFetch("/api/ordenes", {
       setMensaje(data.mensaje || data.error || "Error creando orden", "error")
       return
     }
-
-    if (!res.ok || !Array.isArray(data)) {
-  console.error("Respuesta inválida de órdenes:", data)
-  return
-}
+    
 
     setMensaje(data.mensaje || "Orden creada correctamente", "ok")
 
