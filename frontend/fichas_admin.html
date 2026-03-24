@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Fichas Técnicas</title>
-
   <link rel="stylesheet" href="styles.css">
 
   <script src="js/authGuard.js"></script>
@@ -17,32 +16,65 @@
 
 <body>
 
-  <h1>Fichas Técnicas</h1>
+<div class="container">
 
-  <div style="margin-bottom:20px;">
-    <input
-      type="text"
-      id="buscador"
-      placeholder="Buscar modelo, código o nombre"
-      oninput="filtrarFichas()"
-    >
-    <button onclick="crearFicha()">➕ Nueva Ficha</button>
+  <aside class="sidebar">
+    <h2>HEXAFLOW</h2>
+    <ul>
+      <li onclick="window.location.href='admin.html'" style="cursor:pointer;">Dashboard</li>
+      <li onclick="window.location.href='ordenes_admin.html'" style="cursor:pointer;">Ordenes</li>
+      <li onclick="window.location.href='produccion_admin.html'" style="cursor:pointer;">Producción</li>
+      <li onclick="window.location.href='usuarios_admin.html'" style="cursor:pointer;">Usuarios</li>
+      <li onclick="window.location.href='patrones_admin.html'" style="cursor:pointer;">Patrones</li>
+      <li onclick="window.location.href='fichas_admin.html'" style="cursor:pointer;">Fichas Técnicas</li>
+      <li onclick="window.location.href='programacion_admin.html'" style="cursor:pointer;">Programación</li>
+      <li onclick="logout()" style="cursor:pointer;">Cerrar sesión</li>
+    </ul>
+  </aside>
+
+  <div class="main">
+    <div class="header">Panel Administrador</div>
+
+    <div id="contenido">
+      <h1>Fichas Técnicas</h1>
+
+      <div style="margin-bottom:20px;">
+        <input
+          type="text"
+          id="buscador"
+          placeholder="Buscar modelo, código o nombre"
+          oninput="filtrarFichas()"
+        >
+        <button onclick="crearFicha()">➕ Nueva Ficha</button>
+      </div>
+
+      <table border="1" width="100%">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Fuente</th>
+            <th>PDF</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaFichas"></tbody>
+      </table>
+    </div>
   </div>
 
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>Modelo</th>
-        <th>Código</th>
-        <th>Nombre</th>
-        <th>Fuente</th>
-        <th>PDF</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tablaFichas"></tbody>
-  </table>
+</div>
 
-  <script src="js/fichas_admin.js"></script>
+<script src="js/fichas_admin.js"></script>
+
+<script>
+  function logout() {
+    localStorage.removeItem("token")
+    localStorage.removeItem("usuario")
+    window.location.href = "login.html"
+  }
+</script>
+
 </body>
 </html>
