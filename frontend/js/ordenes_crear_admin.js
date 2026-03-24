@@ -183,7 +183,7 @@ form.addEventListener("submit", async (e) => {
   try {
     const token = localStorage.getItem("token")
 
-const res = await fetch("http://localhost:3000/api/ordenes", {
+const res = await apiFetch("/api/ordenes", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
