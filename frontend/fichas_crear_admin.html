@@ -15,7 +15,6 @@
 </head>
 
 <body>
-
 <div class="container">
 
   <aside class="sidebar">
@@ -35,7 +34,7 @@
     <div class="header">Panel Administrador</div>
 
     <div id="contenido">
-      <h1>Importar Ficha Técnica</h1>
+      <h1>Crear / Importar Ficha Técnica</h1>
 
       <div class="form-row">
         <label>Modelo</label>
@@ -73,10 +72,21 @@
         <small id="estado_pdf"></small>
       </div>
 
+      <hr>
+
+      <h2>Estructura técnica</h2>
+      <p>Completá secciones, piezas, materiales y operaciones para alimentar órdenes e impresión.</p>
+
+      <div id="secciones"></div>
+
+      <div style="margin-top: 12px;">
+        <button type="button" onclick="agregarSeccion()">➕ Agregar Sección</button>
+      </div>
+
       <br>
 
-      <button onclick="guardarFichaPDF()">💾 Guardar Ficha</button>
-      <button onclick="volver()">⬅ Volver</button>
+      <button type="button" onclick="guardarFichaCompleta()">💾 Guardar Ficha</button>
+      <button type="button" onclick="volver()">⬅ Volver</button>
     </div>
   </div>
 
