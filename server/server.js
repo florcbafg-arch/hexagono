@@ -528,95 +528,130 @@ app.get("/api/modelos", async (req, res) => {
 
 })
 
+// ==========================
+// modelos y curvas
+// ==========================
 
+app.get("/api/modelos/:id/curva", async (req, res) => {
+  try {
+
+    const modeloId = req.params.id
+
+    const { data, error } = await supabase
+      .from("curvas_talles")
+      .select("talle, porcentaje")
+      .eq("modelo_id", modeloId)
+      .order("talle", { ascending: true })
+
+    if (error) throw error
+
+    res.json(data)
+
+  } catch (err) {
+    console.error("Error obteniendo curva:", err)
+    res.status(500).json({ error: "Error obteniendo curva" })
+  }
+})
 
 // ==========================
 // CREAR TAREA (ORDEN PRODUCCION)
 // ==========================
 
-app.post("/api/ordenes", async (req,res)=>{
+app.post("/api/ordenes", async (req, res) => {
+  try {
+    const { numero, modelo_id, total_pares, talles } = req.body
 
-try{
+    if (!numero || !numero.trim()) {
+      return res.status(400).json({ mensaje: "Falta número de tarea" })
+    }
 
-const {numero,modelo_id,talles} = req.body
+    if (!modelo_id) {
+      return res.status(400).json({ mensaje: "Falta modelo" })
+    }
 
-// calcular total pares
-let total = 0
-talles.forEach(t=>{
-total += t.cantidad
-})
+    if (!total_pares || Number(total_pares) <= 0) {
+      return res.status(400).json({ mensaje: "Total de pares inválido" })
+    }
 
-// guardar tarea
-const {data:tarea,error:errorTarea} = await supabase
-.from("ordenes")
-.insert([
-{
-numero_tarea: numero,
-modelo_id: modelo_id,
-pares_plan: total,
-fecha: new Date()
-}
-])
-.select()
-.single()
+    if (!Array.isArray(talles) || talles.length === 0) {
+      return res.status(400).json({ mensaje: "No hay talles calculados" })
+    }
 
-// ==========================
-// CREAR SECTORES AUTOMATICOS
-// ==========================
+    const { data: existente, error: errorExistente } = await supabase
+      .from("ordenes")
+      .select("id")
+      .eq("numero_tarea", numero)
+      .maybeSingle()
 
-// traer todos los sectores
-const { data: sectores } = await supabase
-  .from("sectores")
-  .select("id,nombre")
+    if (errorExistente) throw errorExistente
 
-if(sectores && sectores.length > 0){
+    if (existente) {
+      return res.status(400).json({ mensaje: "Ya existe una orden con ese número de tarea" })
+    }
 
-  const sectoresInsert = sectores.map(s => ({
-    orden_id: tarea.id,
-    sector_id: s.id,
-    estado: "pendiente"
-  }))
+    const { data: tarea, error: errorTarea } = await supabase
+      .from("ordenes")
+      .insert([{
+        numero_tarea: numero,
+        modelo_id: modelo_id,
+        pares_plan: Number(total_pares),
+        estado: "pendiente",
+        fecha: new Date().toISOString(),
+        prioridad: "media"
+      }])
+      .select()
+      .single()
 
-  await supabase
-    .from("ordenes_sector")
-    .insert(sectoresInsert)
+    if (errorTarea) throw errorTarea
 
-}
+    const { data: sectores, error: errorSectores } = await supabase
+      .from("sectores")
+      .select("id,nombre")
 
-if(errorTarea) throw errorTarea
+    if (errorSectores) throw errorSectores
 
+    if (sectores && sectores.length > 0) {
+      const sectoresInsert = sectores.map(s => ({
+        orden_id: tarea.id,
+        sector_id: s.id,
+        estado: "pendiente"
+      }))
 
-// guardar talles
-for(const t of talles){
+      const { error: errorInsertSectores } = await supabase
+        .from("ordenes_sector")
+        .insert(sectoresInsert)
 
-const {error:errorTalle} = await supabase
-.from("tarea_talles")
-.insert([
-{
-tarea_id: tarea.id,
-talle: t.talle,
-cantidad: t.cantidad
-}
-])
+      if (errorInsertSectores) throw errorInsertSectores
+    }
 
-if(errorTalle) throw errorTalle
+    const tallesInsert = talles
+      .filter(t => Number(t.cantidad) > 0)
+      .map(t => ({
+        tarea_id: tarea.id,
+        talle: t.talle,
+        cantidad: Number(t.cantidad)
+      }))
 
-}
+    if (tallesInsert.length === 0) {
+      return res.status(400).json({ mensaje: "No hay talles válidos para guardar" })
+    }
 
-res.json({
-mensaje:"Tarea creada correctamente"
-})
+    const { error: errorTalles } = await supabase
+      .from("tarea_talles")
+      .insert(tallesInsert)
 
-}catch(err){
+    if (errorTalles) throw errorTalles
 
-console.error("ERROR CREANDO TAREA:",err)
+    res.json({
+      mensaje: "Orden creada correctamente"
+    })
 
-res.status(500).json({
-mensaje:"Error creando tarea"
-})
-
-}
-
+  } catch (err) {
+    console.error("ERROR CREANDO TAREA:", err)
+    res.status(500).json({
+      mensaje: "Error creando tarea"
+    })
+  }
 })
 
 // ==========================
@@ -648,7 +683,7 @@ numero: o.numero_tarea,
 modelo: o.modelos?.nombre || "-",
 pares: o.pares_plan,
 estado: o.estado || "pendiente",
-fecha: o.fecha_entrega || "-",
+fecha: o.fecha || o.fecha_entrega || "-",
 prioridad: o.prioridad || "normal"
 }))
 

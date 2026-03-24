@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <title>Crear Orden</title>
 
-  <!-- 🔐 AUTH -->
   <script src="js/authGuard.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
@@ -14,38 +12,56 @@
     checkAuth("admin")
   </script>
 </head>
-
 <body>
 
 <h1>Crear Orden de Producción</h1>
 
-<form id="formTarea" onsubmit="return false;">
+<form id="formTarea">
 
-<label>Número de tarea</label>
-<input type="text" id="numero_tarea" required>
+  <div>
+    <label>Número de tarea</label><br>
+    <input type="text" id="numero_tarea" required>
+  </div>
 
-<label>Modelo</label>
-<select id="modelo"></select>
+  <br>
 
-<h3>Plan de talles</h3>
+  <div>
+    <label>Modelo</label><br>
+    <select id="modelo" required>
+      <option value="">Seleccionar modelo</option>
+    </select>
+  </div>
 
-<div id="talles">
-<input type="number" placeholder="39" data-talle="39">
-<input type="number" placeholder="40" data-talle="40">
-<input type="number" placeholder="41" data-talle="41">
-<input type="number" placeholder="42" data-talle="42">
-<input type="number" placeholder="43" data-talle="43">
-<input type="number" placeholder="44" data-talle="44">
-</div>
+  <br>
 
-<div>
-Total pares: <span id="total">0</span>
-</div>
+  <div>
+    <label>Total pares</label><br>
+    <input type="number" id="total_pares_input" min="1" placeholder="Ej: 120" required>
+  </div>
 
-<button type="submit">Crear Orden</button>
+  <br>
+
+  <button type="button" id="btnCalcular">Calcular talles</button>
+
+  <h3>Plan de talles</h3>
+  <div id="tallesPreview"></div>
+
+  <br>
+
+  <div>
+    Total pares calculados: <span id="total">0</span>
+  </div>
+
+  <br>
+
+  <div id="mensajeOrden"></div>
+
+  <br>
+
+  <button type="submit" id="btnCrearOrden">Crear Orden</button>
+  <button type="button" onclick="cargarModulo('ordenes')">Volver</button>
 
 </form>
-
 
 </body>
 </html>

@@ -27,9 +27,16 @@ async function cargarOrdenes(){
       const prioridad = o.prioridad || "-"
       const fechaRaw = o.fecha || null
 
-      const fecha = fechaRaw
-        ? new Date(fechaRaw).toLocaleDateString()
-        : "-"
+  
+
+let fecha = "-"
+
+if (fechaRaw && fechaRaw !== "-") {
+  const fechaObj = new Date(fechaRaw)
+  if (!isNaN(fechaObj.getTime())) {
+    fecha = fechaObj.toLocaleDateString()
+  }
+}
 
       // 🔍 FILTROS
       if(filtro && estado !== filtro) return
