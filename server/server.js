@@ -34,7 +34,7 @@ app.use('/api/produccion', authMiddleware)
 
 // 🔐 opcional: proteger dashboard
 app.use('/api/dashboard', authMiddleware)
-app.use('/api/ordenes', authMiddleware)
+
 app.use("/api/programacion", programacionRoutes)
 app.use("/api", fichasRoutes);
 
@@ -676,8 +676,6 @@ app.get("/api/ordenes", async (req,res)=>{
 
 try{
 
-  const usuario = req.user
-
 const { data, error } = await supabase
 .from("ordenes")
 .select(`
@@ -689,7 +687,6 @@ fecha_entrega,
 prioridad,
 modelos(nombre)
 `)
-.eq("empresa_id", usuario?.empresa_id)
 .order("id",{ascending:false})
 
 if(error) throw error
