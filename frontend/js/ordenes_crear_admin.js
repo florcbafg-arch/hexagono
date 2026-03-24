@@ -207,6 +207,11 @@ const res = await apiFetch("/api/ordenes", {
       return
     }
 
+    if (!res.ok || !Array.isArray(data)) {
+  console.error("Respuesta inválida de órdenes:", data)
+  return
+}
+
     setMensaje(data.mensaje || "Orden creada correctamente", "ok")
 
     form.reset()
