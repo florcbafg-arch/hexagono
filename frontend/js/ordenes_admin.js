@@ -27,8 +27,6 @@ async function cargarOrdenes(){
       const prioridad = o.prioridad || "-"
       const fechaRaw = o.fecha || null
 
-  
-
 let fecha = "-"
 
 if (fechaRaw && fechaRaw !== "-") {

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Orden por sector</title>
+  <link rel="stylesheet" href="orden_ver.css">
+</head>
+<body>
+
+  <div class="acciones no-print">
+    <button onclick="window.print()">Imprimir</button>
+    <button onclick="window.close()">Cerrar</button>
+  </div>
+
+  <div class="hoja">
+    <div class="sector-titulo" id="sectorTitulo">CORTE CAPELLADA</div>
+
+    <div class="cabecera">
+      <div class="bloque">
+        <div class="campo"><strong>Tarea N°:</strong> <span id="numeroTarea">-</span></div>
+        <div class="campo"><strong>Modelo:</strong> <span id="modeloNombre">-</span></div>
+        <div class="campo"><strong>Cod. interno:</strong> <span id="codigoInterno">-</span></div>
+        <div class="campo"><strong>Marca:</strong> <span id="marcaNombre">-</span></div>
+        <div class="campo"><strong>Temporada:</strong> <span id="temporada">-</span></div>
+      </div>
+
+      <div class="bloque">
+        <div class="campo"><strong>Fecha emisión:</strong> <span id="fechaEmision">-</span></div>
+        <div class="campo"><strong>Fecha entrega:</strong> <span id="fechaEntrega">-</span></div>
+        <div class="campo"><strong>Horma:</strong> <span id="horma">-</span></div>
+        <div class="campo"><strong>Pedido:</strong> <span id="pedido">-</span></div>
+        <div class="campo"><strong>Pares:</strong> <span id="pares">0</span></div>
+        <div class="campo"><strong>Nro. Seg.:</strong> <span id="nroSeg">0</span></div>
+      </div>
+
+      <div class="bloque">
+        <div class="campo"><strong>Artículo:</strong> <span id="articuloNombre">-</span></div>
+        <div class="campo"><strong>Detalle técnico:</strong></div>
+        <div id="detalleTecnico" style="font-size:13px; min-height:48px;">
+          Pendiente de conectar con ficha técnica.
+        </div>
+        <div class="barcode-box">CÓDIGO DE BARRAS</div>
+      </div>
+    </div>
+
+    <div class="subtitulo">Talles</div>
+    <table class="tabla-talles">
+      <thead>
+        <tr id="tallesHead">
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="tallesRow">
+          <td id="totalPares">0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="subtitulo" id="subtituloSector">Corte Capellada</div>
+    <table class="tabla-materiales">
+      <thead>
+        <tr>
+          <th>Materiales</th>
+          <th>Color / Variante</th>
+          <th>U.M.</th>
+          <th>T. Tarea</th>
+        </tr>
+      </thead>
+      <tbody id="tablaMaterialesBody">
+        <tr>
+          <td colspan="4">Pendiente de conectar con ficha técnica y patrones</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="firma">
+      <div class="linea-firma">Operador:</div>
+      <div class="linea-firma">Fecha:</div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/orden_ver.js"></script>
+</body>
+</html>

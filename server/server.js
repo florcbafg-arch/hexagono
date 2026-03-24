@@ -705,7 +705,7 @@ pares_plan,
 estado,
 fecha_entrega,
 prioridad,
-modelos(nombre)
+modelos(nombre, marca, codigo)
 `)
 .order("id",{ascending:false})
 
@@ -732,6 +732,51 @@ res.status(500).json({error:"error ordenes"})
 
 })
 
+// ==========================
+// VER UNA ORDEN
+// ==========================
+app.get("/api/ordenes/:id", async (req, res) => {
+  try {
+    const id = req.params.id
+
+    const { data: orden, error: errorOrden } = await supabase
+      .from("ordenes")
+      .select(`
+        id,
+        numero_tarea,
+        pares_plan,
+        estado,
+        fecha,
+        fecha_entrega,
+        prioridad,
+        modelo_id,
+        modelos(nombre, marca, codigo)
+      `)
+      .eq("id", id)
+      .single()
+
+    if (errorOrden) throw errorOrden
+
+    const { data: talles, error: errorTalles } = await supabase
+      .from("order_talles")
+      .select("talle, cantidad")
+      .eq("orden_id", id)
+      .order("talle", { ascending: true })
+
+    if (errorTalles) throw errorTalles
+
+    res.json({
+      ...orden,
+      talles: talles || []
+    })
+
+  } catch (err) {
+    console.error("Error obteniendo orden:", err)
+    res.status(500).json({
+      error: "Error obteniendo orden"
+    })
+  }
+})
 // ==========================
 //  PRODUCCION.admin
 // ==========================

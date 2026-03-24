@@ -1,0 +1,122 @@
+ body {
+      font-family: Arial, sans-serif;
+      margin: 16px;
+      color: #111;
+    }
+
+    .hoja {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      border: 1px solid #000;
+      padding: 10px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    .sector-titulo {
+      background: #111;
+      color: #fff;
+      font-weight: bold;
+      font-size: 24px;
+      padding: 8px 12px;
+      display: inline-block;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .cabecera {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: start;
+    }
+
+    .bloque {
+      border: 1px solid #000;
+      padding: 8px;
+      min-height: 80px;
+    }
+
+    .campo {
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .campo strong {
+      display: inline-block;
+      min-width: 120px;
+    }
+
+    .barcode-box {
+      border: 1px solid #000;
+      height: 70px;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .tabla-talles,
+    .tabla-materiales {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+
+    .tabla-talles th,
+    .tabla-talles td,
+    .tabla-materiales th,
+    .tabla-materiales td {
+      border: 1px solid #000;
+      padding: 6px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .tabla-talles th,
+    .tabla-materiales thead th {
+      background: #d9d9d9;
+    }
+
+    .subtitulo {
+      background: #d9d9d9;
+      border: 1px solid #000;
+      border-bottom: none;
+      padding: 6px 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    .firma {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .linea-firma {
+      border-top: 1px solid #000;
+      padding-top: 6px;
+      font-size: 13px;
+      min-height: 28px;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+      }
+
+      .hoja {
+        border: none;
+        max-width: 100%;
+        padding: 8mm;
+      }
+
+      .no-print {
+        display: none;
+      }
+    }
