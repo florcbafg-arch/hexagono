@@ -1,72 +1,77 @@
 let fichas = []
 
 async function cargarFichas() {
-  const res = await apiFetch("/api/fichas")
-  const data = await res.json()
+  try {
+    const res = await apiFetch("/api/fichas")
+    const data = await res.json()
 
-  fichas = data
-  renderFichas()
+    fichas = Array.isArray(data) ? data : []
+    renderFichas()
+  } catch (error) {
+    console.error("Error cargando fichas:", error)
+    alert("Error cargando fichas")
+  }
 }
 
 function renderFichas() {
   const tbody = document.getElementById("tablaFichas")
-  const filtro = document.getElementById("buscador").value.toLowerCase()
+  const buscador = document.getElementById("buscador")
+  const filtro = (buscador?.value || "").toLowerCase().trim()
 
   tbody.innerHTML = ""
 
-  fichas
-    .filter(f => 
-      f.nombre.toLowerCase().includes(filtro) ||
-      f.codigo.toLowerCase().includes(filtro)
-    )
-    .forEach(f => {
+  const filtradas = fichas.filter(f =>
+    (f.nombre || "").toLowerCase().includes(filtro) ||
+    (f.codigo || "").toLowerCase().includes(filtro) ||
+    (f.modelo_nombre || "").toLowerCase().includes(filtro)
+  )
 
-      tbody.innerHTML += `
-        <tr>
-          <td>${f.modelo_nombre || "-"}</td>
-          <td>${f.codigo}</td>
-          <td>${f.nombre}</td>
-          <td>
-            <button onclick="verFicha(${f.modelo_id})">👁</button>
-            <button onclick="editarFicha(${f.id})">✏️</button>
-            <button onclick="eliminarFicha(${f.id})">🗑</button>
-          </td>
-        </tr>
-      `
-    })
+  if (filtradas.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;">No hay fichas técnicas cargadas</td>
+      </tr>
+    `
+    return
+  }
+
+  filtradas.forEach(f => {
+    const tienePDF = !!f.pdf_url
+    const fuente = f.fuente || "-"
+    const pdfBoton = tienePDF
+      ? `<button onclick="verPDF('${f.pdf_url}')">📄 PDF</button>`
+      : `<span style="color:#888;">Sin PDF</span>`
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${f.modelo_nombre || "-"}</td>
+        <td>${f.codigo || "-"}</td>
+        <td>${f.nombre || "-"}</td>
+        <td>${fuente}</td>
+        <td>${tienePDF ? "Sí" : "No"}</td>
+        <td>
+          <button onclick="verFicha(${f.modelo_id})">👁 Ver</button>
+          ${pdfBoton}
+        </td>
+      </tr>
+    `
+  })
 }
 
 function crearFicha() {
-    window.location.href = "fichas_crear_admin.html"
+  window.location.href = "fichas_crear_admin.html"
 }
 
 function verFicha(modelo_id) {
   window.location.href = `fichas_detalle_admin.html?modelo_id=${modelo_id}`
 }
 
-function editarFicha(id) {
-  window.location.href = `fichas_crear_admin.html?id=${id}`
+function verPDF(pdf_url) {
+  window.open(pdf_url, "_blank")
 }
 
-async function eliminarFicha(id) {
-  if (!confirm("¿Eliminar ficha?")) return
-
-  try {
-    const res = await apiFetch(`/api/fichas/${id}`, {
-  method: "DELETE"
-})
-
-    if (!res.ok) {
-      alert("Error eliminando ficha")
-      return
-    }
-
-    alert("Ficha eliminada")
-    cargarFichas()
-
-  } catch (error) {
-    console.error(error)
-    alert("Error de conexión")
-  }
+function filtrarFichas() {
+  renderFichas()
 }
 
+cargarFichas()
