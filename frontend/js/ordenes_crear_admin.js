@@ -181,18 +181,21 @@ form.addEventListener("submit", async (e) => {
   btnCrearOrden.textContent = "Creando..."
 
   try {
-    const res = await apiFetch("/api/ordenes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        numero,
-        modelo_id,
-        total_pares,
-        talles: tallesCalculados
-      })
-    })
+    const token = localStorage.getItem("token")
+
+const res = await fetch("http://localhost:3000/api/ordenes", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + token
+  },
+  body: JSON.stringify({
+    numero,
+    modelo_id,
+    total_pares,
+    talles: tallesCalculados
+  })
+})
 
     const data = await res.json()
 
