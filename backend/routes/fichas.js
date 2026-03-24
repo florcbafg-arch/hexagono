@@ -5,7 +5,7 @@ const fs = require("fs");
 const multer = require("multer");
 const { supabase } = require("../../config/supabase");
 
-const uploadDir = path.join(__dirname, "../../uploads/fichas");
+const uploadDir = path.join(__dirname, "../../uploads");
 fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
@@ -38,7 +38,7 @@ router.post("/fichas/upload-pdf", upload.single("pdf"), async (req, res) => {
       });
     }
 
-    const fileUrl = `/uploads/fichas/${req.file.filename}`;
+    const fileUrl = `/uploads/${req.file.filename}`;
 
     res.json({
       ok: true,
