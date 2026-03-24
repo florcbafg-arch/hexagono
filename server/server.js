@@ -562,8 +562,7 @@ app.post("/api/ordenes", async (req, res) => {
   try {
     console.log("BODY ORDEN:", req.body)
 
-    const usuario = req.user
-    const { numero, modelo_id, total_pares, talles } = req.body
+    const { numero, modelo_id, total_pares, talles, usuario_id } = req.body
 
     if (!numero || !numero.trim()) {
       return res.status(400).json({ mensaje: "Falta número de tarea" })
@@ -580,6 +579,20 @@ app.post("/api/ordenes", async (req, res) => {
     if (!Array.isArray(talles) || talles.length === 0) {
       return res.status(400).json({ mensaje: "No hay talles calculados" })
     }
+
+    if (!usuario_id) {
+  return res.status(400).json({ mensaje: "Falta usuario_id" })
+}
+
+const { data: usuarioDb, error: errorUsuario } = await supabase
+  .from("usuarios")
+  .select("empresa_id")
+  .eq("id", usuario_id)
+  .single()
+
+if (errorUsuario || !usuarioDb?.empresa_id) {
+  return res.status(400).json({ mensaje: "No se pudo obtener empresa_id del usuario" })
+}
 
     const { data: existente, error: errorExistente } = await supabase
       .from("ordenes")
@@ -604,7 +617,7 @@ console.log("Insertando orden...")
     estado: "pendiente",
     fecha: new Date().toISOString(),
     prioridad: "media",
-    empresa_id: usuario?.empresa_id
+    empresa_id: usuarioDb.empresa_id
   }])
       .select()
       .single()

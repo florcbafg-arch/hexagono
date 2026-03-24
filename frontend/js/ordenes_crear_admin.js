@@ -183,6 +183,8 @@ form.addEventListener("submit", async (e) => {
   try {
     const token = localStorage.getItem("token")
 
+   const usuario = JSON.parse(localStorage.getItem("hexagono_user") || "null")
+
 const res = await apiFetch("/api/ordenes", {
   method: "POST",
   headers: {
@@ -193,7 +195,8 @@ const res = await apiFetch("/api/ordenes", {
     numero,
     modelo_id,
     total_pares,
-    talles: tallesCalculados
+    talles: tallesCalculados,
+    usuario_id: usuario?.id || null
   })
 })
 
