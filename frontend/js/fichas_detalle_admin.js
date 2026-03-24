@@ -49,12 +49,14 @@ function renderPDF(ficha) {
   const cont = document.getElementById("pdfFicha")
 
   if (ficha.pdf_url) {
-    cont.innerHTML = `
-      <button onclick="window.open('${ficha.pdf_url}', '_blank')">📄 Ver PDF</button>
-    `
-  } else {
-    cont.innerHTML = `<p><strong>PDF:</strong> No cargado</p>`
-  }
+  const url = ficha.pdf_url.startsWith("http")
+    ? ficha.pdf_url
+    : window.location.origin + ficha.pdf_url
+
+  cont.innerHTML = `
+    <button onclick="window.open('${url}', '_blank')">📄 Ver PDF</button>
+  `
+}
 }
 
 function renderEstructura(ficha) {

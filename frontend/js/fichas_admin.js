@@ -67,7 +67,11 @@ function verFicha(modelo_id) {
 }
 
 function verPDF(pdf_url) {
-  window.open(pdf_url, "_blank")
+  const url = pdf_url.startsWith("http")
+    ? pdf_url
+    : window.location.origin + pdf_url
+
+  window.open(url, "_blank")
 }
 
 function filtrarFichas() {
