@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalle Ficha Técnica</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="js/authGuard.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+
+  <script>
+    checkAuth("admin")
+  </script>
+</head>
+
+<body>
+<div class="container">
+
+  <aside class="sidebar">
+    <h2>HEXAFLOW</h2>
+    <ul>
+      <li>Dashboard</li>
+      <li>Ordenes</li>
+      <li>Producción</li>
+      <li>Usuarios</li>
+      <li>Patrones</li>
+      <li>Fichas Técnicas</li>
+      <li>Cerrar sesión</li>
+    </ul>
+  </aside>
+
+  <div class="main">
+    <div class="header">Panel Administrador</div>
+
+    <div id="contenido">
+      <h1>Detalle Ficha Técnica</h1>
+
+      <div id="cabeceraFicha" style="margin-bottom:20px;"></div>
+
+      <div style="margin-bottom:20px;">
+        <button onclick="volver()">⬅ Volver</button>
+      </div>
+
+      <div id="pdfFicha" style="margin-bottom:20px;"></div>
+
+      <div id="estructuraFicha"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/fichas_detalle_admin.js"></script>
+</body>
+</html>
