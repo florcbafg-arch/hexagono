@@ -41,34 +41,6 @@ async function obtenerCurvaModelo(modeloId) {
   return await res.json()
 }
 
-function calcularTallesSegunCurva(curva, totalPares) {
-  const items = curva.items || []
-  if (!items.length) return []
-
-  const sumaBase = items.reduce((acc, item) => acc + Number(item.valor || 0), 0)
-  if (!sumaBase) return []
-
-  let acumulado = 0
-
-  const resultado = items.map((item, index) => {
-    let cantidad
-
-    if (index === items.length - 1) {
-      cantidad = totalPares - acumulado
-    } else {
-      cantidad = Math.round((Number(item.valor || 0) / sumaBase) * totalPares)
-      acumulado += cantidad
-    }
-
-    return {
-      talle: item.talle,
-      cantidad: cantidad < 0 ? 0 : cantidad
-    }
-  })
-
-  return resultado
-}
-
 function renderTalles(talles) {
   tallesPreview.innerHTML = ""
 
@@ -111,6 +83,70 @@ function renderTalles(talles) {
   totalSpan.textContent = total
 }
 
+btnCalcular.addEventListener("click", async () => {
+  setMensaje("")
+  tallesPreview.innerHTML = ""
+  totalSpan.textContent = "0"
+  tallesCalculados = []
+
+  const modelo_id = modeloSelect.value
+  const totalPares = parseInt(totalParesInput.value)
+
+  if (!modelo_id) {
+    setMensaje("Debes seleccionar un modelo", "error")
+    return
+  }
+
+  if (isNaN(totalPares) || totalPares <= 0) {
+    setMensaje("Total inválido", "error")
+    return
+  }
+
+  try {
+    const curva = await obtenerCurvaModelo(modelo_id)
+
+    console.log("CURVA RECIBIDA:", curva)
+
+    if (!curva || curva.length === 0) {
+      setMensaje("Este modelo no tiene curva cargada", "error")
+      return
+    }
+
+    const suma = curva.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
+
+    if (!suma || suma <= 0) {
+      setMensaje("La curva del modelo es inválida", "error")
+      return
+    }
+
+    let acumulado = 0
+
+    tallesCalculados = curva.map((c, index) => {
+      let cantidad
+
+      if (index === curva.length - 1) {
+        cantidad = totalPares - acumulado
+      } else {
+        cantidad = Math.round((Number(c.porcentaje || 0) / suma) * totalPares)
+        acumulado += cantidad
+      }
+
+      return {
+        talle: c.talle,
+        cantidad: cantidad < 0 ? 0 : cantidad
+      }
+    })
+
+    console.log("TALLES CALCULADOS:", tallesCalculados)
+
+    renderTalles(tallesCalculados)
+    setMensaje("Talles calculados correctamente", "ok")
+
+  } catch (err) {
+    console.error("Error calculando curva:", err)
+    setMensaje("Error calculando curva", "error")
+  }
+})
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault()
@@ -168,8 +204,6 @@ form.addEventListener("submit", async (e) => {
     setMensaje(data.mensaje || "Orden creada correctamente", "ok")
 
     form.reset()
-    curvaSelect.innerHTML = `<option value="">Seleccionar curva</option>`
-    curvaSelect.disabled = true
     tallesCalculados = []
     tallesPreview.innerHTML = ""
     totalSpan.textContent = "0"
