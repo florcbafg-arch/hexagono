@@ -584,6 +584,8 @@ app.post("/api/ordenes", async (req, res) => {
   return res.status(400).json({ mensaje: "Falta usuario_id" })
 }
 
+console.log("usuario_id recibido:", usuario_id)
+
 const { data: usuarioDb, error: errorUsuario } = await supabase
   .from("usuarios")
   .select("empresa_id")
@@ -647,24 +649,29 @@ console.log("Insertando orden...")
     }
 
     const tallesInsert = talles
-      .filter(t => Number(t.cantidad) > 0)
-      .map(t => ({
-        tarea_id: tarea.id,
-        talle: t.talle,
-        cantidad: Number(t.cantidad)
-      }))
+  .filter(t => Number(t.cantidad) > 0)
+  .map(t => ({
+    orden_id: tarea.id,
+    talle: Number(t.talle),
+    cantidad: Number(t.cantidad),
+    empresa_id: usuarioDb.empresa_id
+  }))
 
-    if (tallesInsert.length === 0) {
-      return res.status(400).json({ mensaje: "No hay talles válidos para guardar" })
-    }
+if (tallesInsert.length === 0) {
+  return res.status(400).json({ mensaje: "No hay talles válidos para guardar" })
+}
 
-    console.log("Insertando talles...", tallesInsert)
+console.log("Insertando talles...", tallesInsert)
 
-        const { error: errorTalles } = await supabase
-      .from("tarea_talles")
-      .insert(tallesInsert)
+const { data: dataTalles, error: errorTalles } = await supabase
+  .from("order_talles")
+  .insert(tallesInsert)
+  .select()
 
-    if (errorTalles) throw errorTalles
+console.log("resultado insert talles:", dataTalles)
+console.log("error insert talles:", errorTalles)
+
+if (errorTalles) throw errorTalles
 
     res.json({
       mensaje: "Orden creada correctamente"
