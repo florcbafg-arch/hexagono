@@ -1,238 +1,203 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
+  <meta charset="UTF-8">
+  <title>Panel Administrador - HEXAFLOW</title>
+  <link rel="stylesheet" href="styles.css">
 
-<link rel="stylesheet" href="styles.css">
+  <script src="js/authGuard.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-<script src="js/authGuard.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/api.js"></script>
+  <script>
+    checkAuth("admin")
+  </script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
 
-<script>
-checkAuth("admin")
-</script>
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
 
-<script>
+    .sidebar {
+      width: 220px;
+      background: #1e1e1e;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
 
-</script>
+    .sidebar h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
 
-<script>
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
 
-// ACTIVAR MODO TV
-window.addEventListener("DOMContentLoaded", () => {
+    .sidebar li {
+      padding: 12px;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
 
-const params = new URLSearchParams(window.location.search)
+    .sidebar li:hover {
+      background: #333;
+    }
 
-if(params.get("tv") === "1"){
-document.body.classList.add("tv-mode")
-}
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
 
-})
-</script>
+    .header {
+      background: #f4f4f4;
+      padding: 15px 20px;
+      font-weight: bold;
+      border-bottom: 1px solid #ddd;
+    }
 
-<script>
+    #contenido {
+      padding: 30px;
+      box-sizing: border-box;
+      flex: 1;
+    }
 
-function cerrarSesion(){
+    .tv-mode .sidebar {
+      width: 280px;
+    }
 
-localStorage.removeItem("hexagono_user")
+    .tv-mode .sidebar li {
+      font-size: 20px;
+      padding: 16px;
+    }
 
-window.location.href="login.html"
+    .tv-mode .header {
+      font-size: 22px;
+      padding: 20px 24px;
+    }
 
-}
-
-</script>
-
-
-<meta charset="UTF-8">
-<div class="header">
-  Panel Administrador | 👤 <span id="usuarioNombre"></span>
-</div>
-
-<style>
-
-.container{
-display:flex;
-height:100vh;
-}
-
-.sidebar{
-width:220px;
-background:#1e1e1e;
-color:white;
-padding:20px;
-}
-
-.sidebar h2{
-margin-bottom:20px;
-}
-
-.sidebar ul{
-list-style:none;
-padding:0;
-}
-
-.sidebar li{
-padding:12px;
-cursor:pointer;
-border-radius:6px;
-}
-
-.sidebar li:hover{
-background:#333;
-}
-
-.main{
-flex:1;
-display:flex;
-flex-direction:column;
-}
-
-.header{
-background:#f4f4f4;
-padding:15px;
-font-weight:bold;
-}
-
-#contenido{
-padding:30px;
-}
-
-</style>
-
+    .tv-mode #contenido {
+      font-size: 20px;
+      padding: 40px;
+    }
+  </style>
 </head>
+<body class="admin-page">
 
-<script>
-  const user = JSON.parse(localStorage.getItem("hexagono_user"))
+  <div class="container">
+    <div class="sidebar">
+      <h2>HEXAFLOW</h2>
 
-  if(user){
-    document.getElementById("usuarioNombre").innerText = user.nombre
-  }
-</script>
+      <ul>
+        <li onclick="cargarModulo('dashboard')">Dashboard</li>
+        <li onclick="cargarModulo('ordenes')">Órdenes</li>
+        <li onclick="cargarModulo('produccion')">Producción</li>
+        <li onclick="cargarModulo('usuarios')">Usuarios</li>
+        <li onclick="cargarModulo('patrones')">Patrones</li>
+        <li onclick="cargarModulo('fichas')">Fichas Técnicas</li>
+        <li onclick="cargarModulo('programacion')">Programación</li>
+        <li onclick="cerrarSesion()">Cerrar sesión</li>
+      </ul>
+    </div>
 
-<body>
+    <div class="main">
+      <div class="header">
+        Panel Administrador | 👤 <span id="usuarioNombre"></span>
+      </div>
 
-<div class="container">
+      <div id="contenido">
+        <h1>Bienvenido al Panel</h1>
+        <p>Seleccioná un módulo desde el menú lateral.</p>
+      </div>
+    </div>
+  </div>
 
-<!-- SIDEBAR -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search)
 
-<div class="sidebar">
-
-<h2>HEXAFLOW</h2>
-
-<ul>
-
-<li onclick="cargarModulo('dashboard')">Dashboard</li>
-
-<li onclick="cargarModulo('ordenes')">ordenes</li>
-
-<li onclick="cargarModulo('produccion')">Producción</li>
-
-<li onclick="cargarModulo('usuarios')">Usuarios</li>
-
-<li onclick="cargarModulo('patrones')">Patrones</li>
-
-<li onclick="cargarModulo('fichas')">Fichas Técnicas</li>
-
-<li onclick="cargarModulo('programacion')">
-  Programación
-</li>
-
-<li onclick="cerrarSesion()">Cerrar sesión</li>
-
-
-</ul>
-
-</div>
-
-<!-- CONTENIDO -->
-
-<div class="main">
-
-<div class="header">
-
-Panel Administrador
-
-</div>
-
-<div id="contenido">
-
-<h1>Bienvenido al Panel</h1>
-
-</div>
-
-</div>
-
-</div>
-
-<script>
-
-function cargarModulo(modulo){
-
-  const contenedor = document.getElementById("contenido")
-
-  contenedor.innerHTML = ""
-
-  document.querySelectorAll(".modulo-script").forEach(s => s.remove())
-
-  fetch(modulo + "_admin.html")
-    .then(res => res.text())
-    .then(html => {
-
-      contenedor.innerHTML = html
-
-      const script = document.createElement("script")
-      script.src = "js/" + modulo + "_admin.js"
-      script.classList.add("modulo-script")
-
-      document.body.appendChild(script)
-
-      // 🔥 CLAVE TOTAL
-      script.onload = () => {
-
-        if(modulo === "dashboard"){
-          initDashboard()
-        }
-
+      if (params.get("tv") === "1") {
+        document.body.classList.add("tv-mode")
       }
 
+      const user = JSON.parse(localStorage.getItem("hexagono_user"))
+      const usuarioNombre = document.getElementById("usuarioNombre")
+
+      if (user && usuarioNombre) {
+        usuarioNombre.innerText = user.nombre || user.email || "Admin"
+      }
+
+      cargarModulo("dashboard")
     })
-}
- 
 
-</script>
+    function cerrarSesion() {
+      localStorage.removeItem("hexagono_user")
+      localStorage.removeItem("token")
+      window.location.href = "login.html"
+    }
 
-<script>
+    function cargarModulo(modulo) {
+      const contenedor = document.getElementById("contenido")
+      if (!contenedor) return
 
-function iniciarDashboard(){
+      contenedor.innerHTML = "<p>Cargando módulo...</p>"
 
-function actualizarTiempo(){
+      document.querySelectorAll(".modulo-script").forEach(s => s.remove())
 
-const ahora = new Date()
+      fetch(modulo + "_admin.html")
+        .then(res => {
+          if (!res.ok) {
+            throw new Error("No se pudo cargar " + modulo + "_admin.html")
+          }
+          return res.text()
+        })
+        .then(html => {
+          contenedor.innerHTML = html
 
-const fecha = ahora.toLocaleDateString()
+          const script = document.createElement("script")
+          script.src = "js/" + modulo + "_admin.js?v=" + Date.now()
+          script.classList.add("modulo-script")
 
-const hora = ahora.toLocaleTimeString()
+          script.onload = () => {
+            const nombreInit = "init" + modulo.charAt(0).toUpperCase() + modulo.slice(1)
 
-const el = document.getElementById("infoTiempo")
+            if (typeof window[nombreInit] === "function") {
+              window[nombreInit]()
+            } else {
+              console.warn("No existe la función:", nombreInit)
+            }
+          }
 
-if(el){
-el.innerHTML = "Fecha: " + fecha + " | Hora actual: " + hora
-}
+          script.onerror = () => {
+            console.error("Error cargando script del módulo:", modulo)
+          }
 
-}
-
-setInterval(actualizarTiempo,1000)
-
-actualizarTiempo()
-
-}
-</script>
-
+          document.body.appendChild(script)
+        })
+        .catch(error => {
+          console.error("Error cargando módulo:", error)
+          contenedor.innerHTML = `
+            <div style="color:red;">
+              Error cargando el módulo <strong>${modulo}</strong>
+            </div>
+          `
+        })
+    }
+  </script>
 
 </body>
 </html>
-
-

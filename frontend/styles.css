@@ -28,10 +28,8 @@ overflow:hidden;
 body:not(.pagina-produccion):not(.pagina-usuarios) .container{
 display:flex;
 background:white;
-border:1px solid #bdbdbd;
-border-radius:10px;
 overflow:hidden;
-height:100vh;
+min-height:100vh;
 }
 /* SIDEBAR */
 
@@ -1117,4 +1115,47 @@ margin:auto;
 .estado.procesado {
   color: green;
   font-weight: bold;
+}
+/* =========================
+   FIX ADMIN LAYOUT
+========================= */
+
+body.admin-page {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+body.admin-page .container {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+body.admin-page .sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+body.admin-page .main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+body.admin-page .header {
+  margin: 0;
+}
+
+body.admin-page #contenido {
+  flex: 1;
+  margin: 0;
+  overflow: auto;
+  border: none;
 }
