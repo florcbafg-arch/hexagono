@@ -559,6 +559,8 @@ app.get("/api/modelos/:id/curva", async (req, res) => {
 
 app.post("/api/ordenes", async (req, res) => {
   try {
+    console.log("BODY ORDEN:", req.body)
+
     const { numero, modelo_id, total_pares, talles } = req.body
 
     if (!numero || !numero.trim()) {
@@ -589,6 +591,8 @@ app.post("/api/ordenes", async (req, res) => {
       return res.status(400).json({ mensaje: "Ya existe una orden con ese número de tarea" })
     }
 
+console.log("Insertando orden...")
+
     const { data: tarea, error: errorTarea } = await supabase
       .from("ordenes")
       .insert([{
@@ -617,6 +621,8 @@ app.post("/api/ordenes", async (req, res) => {
         estado: "pendiente"
       }))
 
+      console.log("Insertando sectores...")
+
       const { error: errorInsertSectores } = await supabase
         .from("ordenes_sector")
         .insert(sectoresInsert)
@@ -636,7 +642,9 @@ app.post("/api/ordenes", async (req, res) => {
       return res.status(400).json({ mensaje: "No hay talles válidos para guardar" })
     }
 
-    const { error: errorTalles } = await supabase
+    console.log("Insertando talles...", tallesInsert)
+
+        const { error: errorTalles } = await supabase
       .from("tarea_talles")
       .insert(tallesInsert)
 
@@ -648,8 +656,11 @@ app.post("/api/ordenes", async (req, res) => {
 
   } catch (err) {
     console.error("ERROR CREANDO TAREA:", err)
+
     res.status(500).json({
-      mensaje: "Error creando tarea"
+      mensaje: "Error creando tarea",
+      detalle: err.message,
+      full: err
     })
   }
 })
