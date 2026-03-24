@@ -34,7 +34,7 @@ app.use('/api/produccion', authMiddleware)
 
 // 🔐 opcional: proteger dashboard
 app.use('/api/dashboard', authMiddleware)
-
+app.use('/api/ordenes', authMiddleware)
 app.use("/api/programacion", programacionRoutes)
 app.use("/api", fichasRoutes);
 
@@ -558,9 +558,11 @@ app.get("/api/modelos/:id/curva", async (req, res) => {
 // ==========================
 
 app.post("/api/ordenes", async (req, res) => {
+  
   try {
     console.log("BODY ORDEN:", req.body)
 
+    const usuario = req.user
     const { numero, modelo_id, total_pares, talles } = req.body
 
     if (!numero || !numero.trim()) {
@@ -594,15 +596,16 @@ app.post("/api/ordenes", async (req, res) => {
 console.log("Insertando orden...")
 
     const { data: tarea, error: errorTarea } = await supabase
-      .from("ordenes")
-      .insert([{
-        numero_tarea: numero,
-        modelo_id: modelo_id,
-        pares_plan: Number(total_pares),
-        estado: "pendiente",
-        fecha: new Date().toISOString(),
-        prioridad: "media"
-      }])
+  .from("ordenes")
+  .insert([{
+    numero_tarea: numero,
+    modelo_id: modelo_id,
+    pares_plan: Number(total_pares),
+    estado: "pendiente",
+    fecha: new Date().toISOString(),
+    prioridad: "media",
+    empresa_id: usuario?.empresa_id
+  }])
       .select()
       .single()
 
@@ -673,6 +676,8 @@ app.get("/api/ordenes", async (req,res)=>{
 
 try{
 
+  const usuario = req.user
+
 const { data, error } = await supabase
 .from("ordenes")
 .select(`
@@ -684,6 +689,7 @@ fecha_entrega,
 prioridad,
 modelos(nombre)
 `)
+.eq("empresa_id", usuario?.empresa_id)
 .order("id",{ascending:false})
 
 if(error) throw error
