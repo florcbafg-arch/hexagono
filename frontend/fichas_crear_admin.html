@@ -2,10 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Crear Ficha</title>
+  <title>Crear Ficha Técnica</title>
   <link rel="stylesheet" href="styles.css">
 
- <!-- 🔐 AUTH -->
   <script src="js/authGuard.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
@@ -17,11 +16,8 @@
 
 <body>
 
-<body>
-
 <div class="container">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <h2>HEXAFLOW</h2>
     <ul>
@@ -35,46 +31,57 @@
     </ul>
   </aside>
 
-  <!-- MAIN -->
   <div class="main">
-
     <div class="header">Panel Administrador</div>
 
     <div id="contenido">
-
-      <h1>Crear Ficha Técnica</h1>
+      <h1>Importar Ficha Técnica</h1>
 
       <div class="form-row">
         <label>Modelo</label>
         <select id="modelo"></select>
 
         <label>Código</label>
-        <input id="codigo">
+        <input id="codigo" placeholder="Código de ficha o modelo">
 
         <label>Nombre</label>
-        <input id="nombre">
+        <input id="nombre" placeholder="Nombre de la ficha">
       </div>
 
-      <div class="section-divider"></div>
+      <div class="form-row">
+        <label>Marca</label>
+        <input id="marca" placeholder="Marca">
 
-      <h2>Secciones</h2>
+        <label>Horma</label>
+        <input id="horma" placeholder="Horma">
 
-      <div id="secciones"></div>
+        <label>Temporada</label>
+        <input id="temporada" placeholder="Temporada">
+      </div>
 
-      <button onclick="agregarSeccion()">➕ Agregar Sección</button>
+      <div class="form-row">
+        <label>Detalle general</label>
+        <textarea id="detalle_general" rows="4" placeholder="Detalle general de la ficha"></textarea>
+      </div>
 
-      <br><br>
+      <div class="form-row">
+        <label>PDF de ficha técnica</label>
+        <input id="pdf_file" type="file" accept="application/pdf">
+      </div>
 
-      <button onclick="guardarFicha()">💾 Guardar</button>
-      <button onclick="imprimirFicha()">🖨 Imprimir</button>
+      <div class="form-row">
+        <small id="estado_pdf"></small>
+      </div>
+
+      <br>
+
+      <button onclick="guardarFichaPDF()">💾 Guardar Ficha</button>
       <button onclick="volver()">⬅ Volver</button>
-
     </div>
-
   </div>
 
 </div>
 
-
+<script src="js/fichas_crear_admin.js"></script>
 </body>
 </html>
