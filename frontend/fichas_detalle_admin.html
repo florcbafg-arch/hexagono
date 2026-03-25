@@ -1,63 +1,11 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Detalle Ficha Técnica</title>
+<h1>Detalle Ficha Técnica</h1>
 
-  <link rel="stylesheet" href="styles.css">
+<div id="cabeceraFicha" style="margin-bottom:20px;"></div>
 
-  <script src="js/authGuard.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/api.js"></script>
-
-  <script>
-    checkAuth("admin")
-  </script>
-</head>
-
-<body>
-<div class="container">
-
-  <aside class="sidebar">
-    <h2>HEXAFLOW</h2>
-    <ul>
-  <li onclick="window.location.href='dashboard_admin.html'" style="cursor:pointer;">Dashboard</li>
-  <li onclick="window.location.href='ordenes_admin.html'" style="cursor:pointer;">Ordenes</li>
-  <li onclick="window.location.href='produccion_admin.html'" style="cursor:pointer;">Producción</li>
-  <li onclick="window.location.href='usuarios_admin.html'" style="cursor:pointer;">Usuarios</li>
-  <li onclick="window.location.href='patrones_admin.html'" style="cursor:pointer;">Patrones</li>
-  <li onclick="window.location.href='fichas_admin.html'" style="cursor:pointer;">Fichas Técnicas</li>
-  <li onclick="logout()" style="cursor:pointer;">Cerrar sesión</li>
-</ul>
-  </aside>
-
-  <div class="main">
-    <div class="header">Panel Administrador</div>
-
-    <div id="contenido">
-      <h1>Detalle Ficha Técnica</h1>
-
-      <div id="cabeceraFicha" style="margin-bottom:20px;"></div>
-
-      <div style="margin-bottom:20px;">
-        <button onclick="volver()">⬅ Volver</button>
-      </div>
-
-      <div id="pdfFicha" style="margin-bottom:20px;"></div>
-
-      <div id="estructuraFicha"></div>
-    </div>
-  </div>
-
+<div style="margin-bottom:20px;">
+  <button onclick="volver()">⬅ Volver</button>
 </div>
 
-<script src="js/fichas_detalle_admin.js"></script>
-<script>
-  function logout() {
-    localStorage.removeItem("token")
-    localStorage.removeItem("usuario")
-    window.location.href = "login.html"
-  }
-</script>
-</body>
-</html>
+<div id="pdfFicha" style="margin-bottom:20px;"></div>
+
+<div id="estructuraFicha"></div>

@@ -1,9 +1,20 @@
-const params = new URLSearchParams(window.location.search)
-const modelo_id = params.get("modelo_id")
+function initFichaDetalle() {
+  cargarDetalleFicha()
+}
+
+function getModeloIdDesdeURL() {
+  const params = new URLSearchParams(window.location.search)
+  return params.get("modelo_id")
+}
 
 async function cargarDetalleFicha() {
+  const modelo_id = getModeloIdDesdeURL()
+
   if (!modelo_id) {
-    alert("Falta modelo_id en la URL")
+    const cont = document.getElementById("cabeceraFicha")
+    if (cont) {
+      cont.innerHTML = `<p style="color:red;">Falta modelo_id en la URL</p>`
+    }
     return
   }
 
@@ -22,14 +33,20 @@ async function cargarDetalleFicha() {
 
   } catch (error) {
     console.error("Error cargando detalle ficha:", error)
-    document.getElementById("contenido").innerHTML += `
-      <p style="color:red;">Error cargando ficha: ${error.message}</p>
-    `
+
+    const cont = document.getElementById("cabeceraFicha")
+    if (cont) {
+      cont.innerHTML += `
+        <p style="color:red;">Error cargando ficha: ${error.message}</p>
+      `
+    }
   }
 }
 
 function renderCabecera(ficha) {
   const cont = document.getElementById("cabeceraFicha")
+
+  if (!cont) return
 
   cont.innerHTML = `
     <div style="border:1px solid #999; padding:12px;">
@@ -48,19 +65,25 @@ function renderCabecera(ficha) {
 function renderPDF(ficha) {
   const cont = document.getElementById("pdfFicha")
 
-  if (ficha.pdf_url) {
-  const url = ficha.pdf_url.startsWith("http")
-    ? ficha.pdf_url
-    : window.location.origin + ficha.pdf_url
+  if (!cont) return
 
-  cont.innerHTML = `
-    <button onclick="window.open('${url}', '_blank')">📄 Ver PDF</button>
-  `
-}
+  if (ficha.pdf_url) {
+    const url = ficha.pdf_url.startsWith("http")
+      ? ficha.pdf_url
+      : window.location.origin + ficha.pdf_url
+
+    cont.innerHTML = `
+      <button onclick="window.open('${url}', '_blank')">📄 Ver PDF</button>
+    `
+  } else {
+    cont.innerHTML = ``
+  }
 }
 
 function renderEstructura(ficha) {
   const cont = document.getElementById("estructuraFicha")
+
+  if (!cont) return
 
   if (!ficha.secciones || ficha.secciones.length === 0) {
     cont.innerHTML = `<p>No hay estructura técnica cargada para esta ficha.</p>`
@@ -125,7 +148,5 @@ function renderEstructura(ficha) {
 }
 
 function volver() {
-  window.location.href = "fichas_admin.html"
+  window.location.href = "admin.html?modulo=fichas"
 }
-
-cargarDetalleFicha()
