@@ -51,7 +51,7 @@ function renderPDF(ficha) {
   console.log("pdf_url guardado:", ficha.pdf_url)
 
   if (!ficha.pdf_url) {
-    cont.innerHTML = ""
+    cont.innerHTML = `<p style="color:#666;">Esta ficha no tiene PDF cargado.</p>`
     return
   }
 
@@ -68,7 +68,9 @@ function renderPDF(ficha) {
   console.log("url final pdf:", url)
 
   cont.innerHTML = `
-    <button onclick="window.open('${url}', '_blank')">📄 Ver PDF</button>
+    <a href="${url}" target="_blank" rel="noopener noreferrer">
+      <button type="button">📄 Ver PDF</button>
+    </a>
   `
 }
 
