@@ -175,6 +175,11 @@
           script.onload = () => {
             const nombreInit = "init" + modulo.charAt(0).toUpperCase() + modulo.slice(1)
 
+            // 🔥 FIX para fichas_detalle
+if (modulo === "fichas_detalle") {
+  nombreInit = "initFichaDetalle"
+}
+
             if (typeof window[nombreInit] === "function") {
               window[nombreInit]()
             } else {
