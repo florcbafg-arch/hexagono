@@ -1,11 +1,54 @@
-<h1>Detalle Ficha Técnica</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalle Ficha Técnica</title>
 
-<div id="cabeceraFicha" style="margin-bottom:20px;"></div>
+  <link rel="stylesheet" href="styles.css">
 
-<div style="margin-bottom:20px;">
-  <button onclick="volver()">⬅ Volver</button>
+  <script src="js/authGuard.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+
+  <script>
+    checkAuth("admin")
+  </script>
+</head>
+
+<body>
+<div class="container">
+
+  <aside class="sidebar">
+    <h2>HEXAFLOW</h2>
+
+
+  <div class="main">
+    <div class="header">Panel Administrador</div>
+
+    <div id="contenido">
+      <h1>Detalle Ficha Técnica</h1>
+
+      <div id="cabeceraFicha" style="margin-bottom:20px;"></div>
+
+      <div style="margin-bottom:20px;">
+        <button onclick="volver()">⬅ Volver</button>
+      </div>
+
+      <div id="pdfFicha" style="margin-bottom:20px;"></div>
+
+      <div id="estructuraFicha"></div>
+    </div>
+  </div>
+
 </div>
 
-<div id="pdfFicha" style="margin-bottom:20px;"></div>
-
-<div id="estructuraFicha"></div>
+<script src="js/fichas_detalle_admin.js"></script>
+<script>
+  function logout() {
+    localStorage.removeItem("token")
+    localStorage.removeItem("usuario")
+    window.location.href = "login.html"
+  }
+</script>
+</body>
+</html>
