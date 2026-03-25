@@ -48,10 +48,8 @@ function renderCabecera(ficha) {
 function renderPDF(ficha) {
   const cont = document.getElementById("pdfFicha")
 
-  console.log("pdf_url guardado:", ficha.pdf_url)
-
   if (!ficha.pdf_url) {
-    cont.innerHTML = `<p style="color:#666;">Esta ficha no tiene PDF cargado.</p>`
+    cont.innerHTML = ""
     return
   }
 
@@ -65,12 +63,8 @@ function renderPDF(ficha) {
     ? ruta
     : window.location.origin + ruta
 
-  console.log("url final pdf:", url)
-
   cont.innerHTML = `
-    <a href="${url}" target="_blank" rel="noopener noreferrer">
-      <button type="button">📄 Ver PDF</button>
-    </a>
+    <button onclick="window.location.href='${url}'">📄 Ver PDF</button>
   `
 }
 

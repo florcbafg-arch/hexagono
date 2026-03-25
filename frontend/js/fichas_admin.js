@@ -79,10 +79,7 @@ function verPDF(pdf_url) {
     ? ruta
     : window.location.origin + ruta
 
-  console.log("pdf_url listado:", pdf_url)
-  console.log("url final listado:", url)
-
-  window.open(url, "_blank")
+  window.location.href = url
 }
 
 function filtrarFichas() {
