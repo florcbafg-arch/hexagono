@@ -48,16 +48,30 @@ function renderCabecera(ficha) {
 function renderPDF(ficha) {
   const cont = document.getElementById("pdfFicha")
 
-  if (ficha.pdf_url) {
-  const url = ficha.pdf_url.startsWith("http")
-    ? ficha.pdf_url
-    : window.location.origin + ficha.pdf_url
+  console.log("pdf_url guardado:", ficha.pdf_url)
+
+  if (!ficha.pdf_url) {
+    cont.innerHTML = ""
+    return
+  }
+
+  let ruta = ficha.pdf_url.trim()
+
+  if (!ruta.startsWith("http") && !ruta.startsWith("/")) {
+    ruta = "/" + ruta
+  }
+
+  const url = ruta.startsWith("http")
+    ? ruta
+    : window.location.origin + ruta
+
+  console.log("url final pdf:", url)
 
   cont.innerHTML = `
     <button onclick="window.open('${url}', '_blank')">📄 Ver PDF</button>
   `
 }
-}
+
 
 function renderEstructura(ficha) {
   const cont = document.getElementById("estructuraFicha")
