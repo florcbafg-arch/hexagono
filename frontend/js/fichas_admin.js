@@ -67,15 +67,30 @@ function verFicha(modelo_id) {
 }
 
 function verPDF(pdf_url) {
-  const url = pdf_url.startsWith("http")
-    ? pdf_url
-    : window.location.origin + pdf_url
+  if (!pdf_url) return
+
+  let ruta = pdf_url.trim()
+
+  if (!ruta.startsWith("http") && !ruta.startsWith("/")) {
+    ruta = "/" + ruta
+  }
+
+  const url = ruta.startsWith("http")
+    ? ruta
+    : window.location.origin + ruta
+
+  console.log("pdf_url listado:", pdf_url)
+  console.log("url final listado:", url)
 
   window.open(url, "_blank")
 }
 
 function filtrarFichas() {
   renderFichas()
+}
+
+function initFichas() {
+  cargarFichas()
 }
 
 cargarFichas()
