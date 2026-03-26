@@ -735,9 +735,6 @@ res.status(500).json({error:"error ordenes"})
 // ==========================
 // VER UNA ORDEN
 // ==========================
-// ==========================
-// VER UNA ORDEN
-// ==========================
 app.get("/api/ordenes/:id", async (req, res) => {
   try {
     const id = req.params.id
@@ -851,7 +848,14 @@ try{
 // traer tarea
 const { data:tarea, error:errTarea } = await supabase
 .from("ordenes")
-.select("*")
+.select(`
+  *,
+  modelos (
+    nombre,
+    marca,
+    codigo
+  )
+`)
 .eq("numero_tarea", numero)
 .single()
 
@@ -871,8 +875,12 @@ puestos(nombre,orden)
 if(errProd) throw errProd
 
 res.json({
-tarea,
-produccion
+  ...orden,
+  modelo_nombre: orden.modelos?.nombre || "-",
+  marca: orden.modelos?.marca || "-",
+  codigo: orden.modelos?.codigo || "-",
+  talles,
+  ficha
 })
 
 }catch(err){

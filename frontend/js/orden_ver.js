@@ -109,9 +109,9 @@ async function cargarOrden() {
     limpiarFichaVisual()
 
     // cabecera base desde orden
-    document.getElementById("numeroTarea").textContent = orden.numero_tarea || "-"
-    document.getElementById("modeloNombre").textContent = orden.modelo || orden.modelos?.nombre || "-"
-    document.getElementById("codigoInterno").textContent = orden.codigo || orden.modelos?.codigo || "-"
+    document.getElementById("modeloNombre").textContent = orden.modelo_nombre || "-"
+document.getElementById("codigoInterno").textContent = orden.codigo || "-"
+document.getElementById("marcaNombre").textContent = orden.marca || "-"
     document.getElementById("marcaNombre").textContent = orden.marca || orden.modelos?.marca || "-"
     document.getElementById("pares").textContent = orden.pares_plan || orden.pares || 0
     document.getElementById("totalPares").textContent = orden.pares_plan || orden.pares || 0
@@ -123,8 +123,8 @@ async function cargarOrden() {
     document.getElementById("nroSeg").textContent = orden.nro_seg || "0"
 
     // IMPORTANTE: acá NO usamos ficha todavía
-    document.getElementById("articuloNombre").textContent =
-      orden.modelo || orden.modelos?.nombre || "-"
+   document.getElementById("articuloNombre").textContent =
+  ficha.nombre || orden.modelo_nombre || "-"
 
     renderTalles(orden.talles, orden.pares_plan || orden.pares || 0)
 
@@ -132,38 +132,21 @@ async function cargarOrden() {
     renderMaterialesFicha(null)
 
     // buscar ficha por modelo_id
-    if (orden.modelo_id) {
-      try {
-        const resFicha = await apiFetch(`/api/fichas/${orden.modelo_id}`)
-        const dataFicha = await resFicha.json()
+    const ficha = orden.ficha || null
 
-        console.log("FICHA:", dataFicha)
+if (ficha) {
+  document.getElementById("temporada").textContent = ficha.temporada || "-"
+  document.getElementById("horma").textContent = ficha.horma || "-"
+  document.getElementById("articuloNombre").textContent =
+    ficha.nombre || orden.modelo_nombre || "-"
+  document.getElementById("detalleTecnico").textContent =
+    ficha.detalle_general || "Sin detalle técnico"
 
-        if (resFicha.ok && dataFicha.ok && dataFicha.ficha) {
-          const ficha = dataFicha.ficha
-
-          document.getElementById("temporada").textContent = ficha.temporada || "-"
-          document.getElementById("horma").textContent = ficha.horma || "-"
-          document.getElementById("articuloNombre").textContent =
-            ficha.nombre || orden.modelo || orden.modelos?.nombre || "-"
-          document.getElementById("detalleTecnico").textContent =
-            ficha.detalle_general || "Sin detalle técnico"
-
-          renderMaterialesFicha(ficha)
-        } else {
-          limpiarFichaVisual()
-          renderMaterialesFicha(null)
-        }
-      } catch (errorFicha) {
-        console.error("Error cargando ficha técnica:", errorFicha)
-        limpiarFichaVisual()
-        renderMaterialesFicha(null)
-      }
-    } else {
-      limpiarFichaVisual()
-      renderMaterialesFicha(null)
-    }
-
+  renderMaterialesFicha(ficha)
+} else {
+  limpiarFichaVisual()
+  renderMaterialesFicha(null)
+}
   } catch (err) {
     console.error("Error en orden_ver:", err)
     alert("Error inesperado al cargar la orden")
