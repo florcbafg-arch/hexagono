@@ -92,4 +92,8 @@ document.getElementById("filtroEstado")?.addEventListener("change", cargarOrdene
 // INICIO
 // ==========================
 
+function initOrdenes() {
+  cargarOrdenes()
+}
+
 cargarOrdenes()

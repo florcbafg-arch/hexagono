@@ -112,9 +112,19 @@ async function cargarOrden() {
     renderTalles(orden.talles, orden.pares_plan)
 
     // estado inicial mientras buscamos ficha
-    document.getElementById("temporada").textContent = "-"
-    document.getElementById("horma").textContent = "-"
-    document.getElementById("detalleTecnico").textContent = "Sin ficha técnica asociada"
+document.getElementById("numeroTarea").textContent = orden.numero_tarea || "-"
+document.getElementById("modeloNombre").textContent = orden.modelo || orden.modelos?.nombre || "-"
+document.getElementById("codigoInterno").textContent = orden.codigo || orden.modelos?.codigo || "-"
+document.getElementById("marcaNombre").textContent = orden.marca || orden.modelos?.marca || "-"
+document.getElementById("pares").textContent = orden.pares_plan || orden.pares || 0
+document.getElementById("totalPares").textContent = orden.pares_plan || orden.pares || 0
+
+document.getElementById("fechaEmision").textContent = formatearFecha(orden.fecha)
+document.getElementById("fechaEntrega").textContent = formatearFecha(orden.fecha_entrega)
+
+document.getElementById("pedido").textContent = "-"
+document.getElementById("nroSeg").textContent = "0"
+document.getElementById("articuloNombre").textContent = ficha?.nombre || orden.modelo || orden.modelos?.nombre || "-"
 
     // segundo fetch: ficha por modelo_id
     if (orden.modelo_id) {
