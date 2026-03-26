@@ -56,11 +56,15 @@ function renderMaterialesFicha(ficha, sectorFiltro = null) {
 
       const materiales = []
 
-      ;(seccion.piezas || []).forEach(pieza => {
-        ;(pieza.materiales || []).forEach(material => {
-          materiales.push(material)
-        })
-      })
+;(seccion.materiales || []).forEach(material => {
+  materiales.push(material)
+})
+
+;(seccion.piezas || []).forEach(pieza => {
+  ;(pieza.materiales || []).forEach(material => {
+    materiales.push(material)
+  })
+})
 
       if (!materiales.length) {
         body.innerHTML += `
@@ -149,6 +153,30 @@ function agruparFichaPorSector(ficha) {
   return grupos
 }
 
+function normalizarFicha(ficha) {
+  if (!ficha) return null
+
+  const seccionesRaw = ficha.secciones || ficha.ficha_secciones || []
+
+  return {
+    ...ficha,
+    secciones: seccionesRaw.map(seccion => {
+      const piezasRaw = seccion.piezas || seccion.ficha_piezas || []
+      const materialesDirectos = seccion.materiales || seccion.ficha_materiales || []
+
+      return {
+        ...seccion,
+        nombre: seccion.nombre || seccion.titulo || seccion.titulo_impresion || `Sección`,
+        piezas: piezasRaw.map(pieza => ({
+          ...pieza,
+          materiales: pieza.materiales || pieza.ficha_materiales || []
+        })),
+        materiales: materialesDirectos
+      }
+    })
+  }
+}
+
 async function cargarOrden() {
   try {
     const params = new URLSearchParams(window.location.search)
@@ -196,7 +224,7 @@ document.getElementById("marcaNombre").textContent = orden.marca || "-"
     renderMaterialesFicha(null)
 
     // buscar ficha por modelo_id
-    const ficha = orden.ficha || null
+    const ficha = normalizarFicha(orden.ficha || null)
 
 if (ficha) {
   document.getElementById("temporada").textContent = ficha.temporada || "-"
