@@ -735,10 +735,14 @@ res.status(500).json({error:"error ordenes"})
 // ==========================
 // VER UNA ORDEN
 // ==========================
+// ==========================
+// VER UNA ORDEN
+// ==========================
 app.get("/api/ordenes/:id", async (req, res) => {
   try {
     const id = req.params.id
 
+    // 1. traer orden
     const { data: orden, error: errorOrden } = await supabase
       .from("ordenes")
       .select("*")
@@ -754,6 +758,7 @@ app.get("/api/ordenes/:id", async (req, res) => {
       return res.status(404).json({ error: "Orden no encontrada" })
     }
 
+    // 2. traer talles
     let talles = []
 
     const { data: tallesData, error: errorTalles } = await supabase
@@ -768,9 +773,64 @@ app.get("/api/ordenes/:id", async (req, res) => {
       console.warn("⚠️ no se pudieron cargar talles:", errorTalles.message)
     }
 
+    // 3. inicializar ficha
+    let ficha = null
+
+    // 4. parche temporal por si la orden no tiene modelo_id pero sí modelo texto
+    if (!orden.modelo_id && orden.modelo) {
+      const { data: modeloEncontrado, error: errorModelo } = await supabase
+        .from("modelos")
+        .select("id")
+        .eq("nombre", orden.modelo)
+        .maybeSingle()
+
+      if (!errorModelo && modeloEncontrado?.id) {
+        orden.modelo_id = modeloEncontrado.id
+      }
+    }
+
+    // 5. buscar ficha por modelo_id
+    if (orden.modelo_id) {
+      const { data: fichaBase, error: errorFichaBase } = await supabase
+        .from("fichas_tecnicas")
+        .select("id")
+        .eq("modelo_id", orden.modelo_id)
+        .maybeSingle()
+
+      if (!errorFichaBase && fichaBase?.id) {
+        const { data: fichaCompleta, error: errorFichaCompleta } = await supabase
+          .from("fichas_tecnicas")
+          .select(`
+            *,
+            ficha_secciones (
+              *,
+              ficha_materiales (*),
+              ficha_operaciones (*),
+              ficha_piezas (*),
+              ficha_imagenes (*)
+            )
+          `)
+          .eq("id", fichaBase.id)
+          .single()
+
+        if (!errorFichaCompleta && fichaCompleta) {
+          ficha = fichaCompleta
+        } else {
+          console.warn("⚠️ no se pudo cargar ficha completa:", errorFichaCompleta?.message)
+        }
+      }
+    }
+
+    // debug temporal
+    console.log("✅ orden cargada:", orden.id)
+    console.log("✅ modelo_id:", orden.modelo_id)
+    console.log("✅ ficha encontrada:", !!ficha)
+
+    // 6. responder todo junto
     res.json({
       ...orden,
-      talles
+      talles,
+      ficha
     })
 
   } catch (err) {
@@ -778,7 +838,6 @@ app.get("/api/ordenes/:id", async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
-
 // ==========================
 //  PRODUCCION.admin
 // ==========================
