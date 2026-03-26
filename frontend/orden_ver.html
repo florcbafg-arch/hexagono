@@ -7,10 +7,14 @@
 </head>
 <body>
 
-  <div class="acciones no-print">
-    <button onclick="window.print()">Imprimir</button>
-    <button onclick="window.close()">Cerrar</button>
-  </div>
+ <div class="acciones-impresion">
+  <button onclick="imprimirTodo()">Imprimir Todo</button>
+  <button onclick="imprimirSector('corte')">Imprimir Corte</button>
+  <button onclick="imprimirSector('aparado')">Imprimir Aparado</button>
+  <button onclick="imprimirSector('armado')">Imprimir Armado</button>
+  <button onclick="imprimirSector('terminacion')">Imprimir Terminación</button>
+  <button onclick="window.close()">Cerrar</button>
+</div>
 
   <div class="hoja">
     <div class="sector-titulo" id="sectorTitulo">CORTE CAPELLADA</div>

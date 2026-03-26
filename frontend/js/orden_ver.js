@@ -153,7 +153,7 @@ function agruparFichaPorSector(ficha) {
   return grupos
 }
 
-function normalizarFicha(ficha) {
+ function normalizarFicha(ficha) {
   if (!ficha) return null
 
   const seccionesRaw = ficha.secciones || ficha.ficha_secciones || []
@@ -177,6 +177,7 @@ function normalizarFicha(ficha) {
   }
 }
 
+
 async function cargarOrden() {
   try {
     const params = new URLSearchParams(window.location.search)
@@ -190,6 +191,8 @@ async function cargarOrden() {
     const res = await apiFetch(`/api/ordenes/${id}`)
     const orden = await res.json()
 
+    ordenActual = orden
+
     console.log("ORDEN:", orden)
 
     if (!res.ok) {
@@ -202,9 +205,8 @@ async function cargarOrden() {
 
     // cabecera base desde orden
     document.getElementById("modeloNombre").textContent = orden.modelo_nombre || "-"
-document.getElementById("codigoInterno").textContent = orden.codigo || "-"
-document.getElementById("marcaNombre").textContent = orden.marca || "-"
-    document.getElementById("marcaNombre").textContent = orden.marca || orden.modelos?.marca || "-"
+    document.getElementById("codigoInterno").textContent = orden.codigo || "-"
+    document.getElementById("marcaNombre").textContent = orden.marca || "-"
     document.getElementById("pares").textContent = orden.pares_plan || orden.pares || 0
     document.getElementById("totalPares").textContent = orden.pares_plan || orden.pares || 0
 
@@ -221,10 +223,60 @@ document.getElementById("marcaNombre").textContent = orden.marca || "-"
     renderTalles(orden.talles, orden.pares_plan || orden.pares || 0)
 
     // limpiar tabla de materiales al arrancar
+    sectorActual = null
+    actualizarTituloSector(null)
     renderMaterialesFicha(null)
 
-    // buscar ficha por modelo_id
+   function actualizarTituloSector(sector = null) {
+  const titulo = document.getElementById("tituloSector")
+  if (!titulo) return
+
+  const nombres = {
+    corte: "CORTE CAPELLADA",
+    aparado: "APARADO",
+    armado: "ARMADO",
+    terminacion: "TERMINACIÓN"
+  }
+
+  titulo.textContent = sector
+    ? (nombres[sector] || sector.toUpperCase())
+    : "ORDEN GENERAL"
+}
+
+function imprimirTodo() {
+  if (!fichaActual) {
+    alert("Esta orden no tiene ficha técnica para imprimir")
+    return
+  }
+
+  sectorActual = null
+  actualizarTituloSector(null)
+  renderMaterialesFicha(fichaActual, null)
+
+  window.print()
+}
+
+function imprimirSector(sector) {
+  if (!fichaActual) {
+    alert("Esta orden no tiene ficha técnica para imprimir ese sector")
+    return
+  }
+
+  sectorActual = sector
+  actualizarTituloSector(sector)
+  renderMaterialesFicha(fichaActual, sector)
+
+  window.print()
+
+  sectorActual = null
+  actualizarTituloSector(null)
+  renderMaterialesFicha(fichaActual, null)
+}
+
+    // usar ficha ya incluida en la orden
     const ficha = normalizarFicha(orden.ficha || null)
+
+    fichaActual = ficha
 
 if (ficha) {
   document.getElementById("temporada").textContent = ficha.temporada || "-"
@@ -244,5 +296,12 @@ if (ficha) {
     alert("Error inesperado al cargar la orden")
   }
 }
+
+
+
+  let ordenActual = null
+   let fichaActual = null
+   let sectorActual = null
+
 
 cargarOrden()
