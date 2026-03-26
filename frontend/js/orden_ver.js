@@ -31,6 +31,50 @@ function renderTalles(talles, totalPares) {
   })
 }
 
+function renderMaterialesFicha(ficha) {
+  const body = document.getElementById("tablaMaterialesBody")
+  body.innerHTML = ""
+
+  if (!ficha?.secciones?.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="4">No hay materiales cargados en la ficha técnica</td>
+      </tr>
+    `
+    return
+  }
+
+  const materiales = []
+
+  ficha.secciones.forEach(seccion => {
+    ;(seccion.piezas || []).forEach(pieza => {
+      ;(pieza.materiales || []).forEach(material => {
+        materiales.push(material)
+      })
+    })
+  })
+
+  if (!materiales.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="4">No hay materiales cargados en la ficha técnica</td>
+      </tr>
+    `
+    return
+  }
+
+  materiales.forEach(m => {
+    body.innerHTML += `
+      <tr>
+        <td>${m.material || "-"}</td>
+        <td>${m.color || "-"}</td>
+        <td>${m.unidad_medida || "-"}</td>
+        <td>${m.consumo ?? "-"}</td>
+      </tr>
+    `
+  })
+}
+
 async function cargarOrden() {
   try {
     const params = new URLSearchParams(window.location.search)
@@ -61,15 +105,44 @@ async function cargarOrden() {
     document.getElementById("fechaEmision").textContent = formatearFecha(orden.fecha)
     document.getElementById("fechaEntrega").textContent = formatearFecha(orden.fecha_entrega)
 
-    // placeholders por ahora
-    document.getElementById("temporada").textContent = "-"
-    document.getElementById("horma").textContent = "-"
     document.getElementById("pedido").textContent = "-"
     document.getElementById("nroSeg").textContent = "0"
     document.getElementById("articuloNombre").textContent = orden.modelos?.nombre || "-"
-    document.getElementById("detalleTecnico").textContent = "Pendiente de conectar con ficha técnica."
 
     renderTalles(orden.talles, orden.pares_plan)
+
+    // estado inicial mientras buscamos ficha
+    document.getElementById("temporada").textContent = "-"
+    document.getElementById("horma").textContent = "-"
+    document.getElementById("detalleTecnico").textContent = "Sin ficha técnica asociada"
+
+    // segundo fetch: ficha por modelo_id
+    if (orden.modelo_id) {
+      try {
+        const resFicha = await apiFetch(`/api/fichas/${orden.modelo_id}`)
+        const dataFicha = await resFicha.json()
+
+        console.log("FICHA:", dataFicha)
+
+        if (resFicha.ok && dataFicha.ok && dataFicha.ficha) {
+          const ficha = dataFicha.ficha
+
+          document.getElementById("temporada").textContent = ficha.temporada || "-"
+          document.getElementById("horma").textContent = ficha.horma || "-"
+          document.getElementById("articuloNombre").textContent = ficha.nombre || orden.modelos?.nombre || "-"
+          document.getElementById("detalleTecnico").textContent = ficha.detalle_general || "Sin detalle técnico"
+
+          renderMaterialesFicha(ficha)
+        } else {
+          renderMaterialesFicha(null)
+        }
+      } catch (errorFicha) {
+        console.error("Error cargando ficha técnica:", errorFicha)
+        renderMaterialesFicha(null)
+      }
+    } else {
+      renderMaterialesFicha(null)
+    }
 
   } catch (err) {
     console.error("Error en orden_ver:", err)

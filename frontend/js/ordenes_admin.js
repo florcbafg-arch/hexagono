@@ -71,14 +71,13 @@ if (fechaRaw && fechaRaw !== "-") {
 // VER ORDEN (placeholder PRO)
 // ==========================
 
-function verOrden(id){
-
-  alert("Ver orden ID: " + id)
+function verOrden(id) {
+  window.open(`orden_ver.html?id=${id}`, "_blank")
+}
 
   // 🔥 después acá vamos a:
   // cargar detalle real
   // o abrir modal
-}
 
 
 // ==========================
