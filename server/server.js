@@ -739,11 +739,6 @@ app.get("/api/ordenes/:id", async (req, res) => {
   try {
     const id = req.params.id
 
-    console.log("👉 BUSCANDO ORDEN ID:", id)
-
-    // =========================
-    // ORDEN
-    // =========================
     const { data: orden, error: errorOrden } = await supabase
       .from("ordenes")
       .select("*")
@@ -759,45 +754,31 @@ app.get("/api/ordenes/:id", async (req, res) => {
       return res.status(404).json({ error: "Orden no encontrada" })
     }
 
-    // =========================
-    // MODELO
-    // =========================
-    const { data: modelo } = await supabase
-      .from("modelos")
-      .select("nombre, marca, codigo")
-      .eq("id", orden.modelo_id)
-      .maybeSingle()
+    let talles = []
 
-    // =========================
-    // TALLES
-    // =========================
-    const { data: talles, error: errorTalles } = await supabase
+    const { data: tallesData, error: errorTalles } = await supabase
       .from("order_talles")
       .select("talle, cantidad")
       .eq("orden_id", id)
       .order("talle", { ascending: true })
 
-    if (errorTalles) {
-      console.error("❌ error talles:", errorTalles)
-      return res.status(500).json({ error: errorTalles.message })
+    if (!errorTalles) {
+      talles = tallesData || []
+    } else {
+      console.warn("⚠️ no se pudieron cargar talles:", errorTalles.message)
     }
 
-    // =========================
-    // RESPUESTA FINAL
-    // =========================
     res.json({
       ...orden,
-      modelos: modelo || null,
-      talles: talles || []
+      talles
     })
 
   } catch (err) {
-    console.error("💥 ERROR GENERAL:", err)
-    res.status(500).json({
-      error: err.message
-    })
+    console.error("💥 ERROR GENERAL /api/ordenes/:id:", err)
+    res.status(500).json({ error: err.message })
   }
 })
+
 // ==========================
 //  PRODUCCION.admin
 // ==========================
