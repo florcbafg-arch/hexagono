@@ -739,41 +739,62 @@ app.get("/api/ordenes/:id", async (req, res) => {
   try {
     const id = req.params.id
 
+    console.log("👉 BUSCANDO ORDEN ID:", id)
+
+    // =========================
+    // ORDEN
+    // =========================
     const { data: orden, error: errorOrden } = await supabase
       .from("ordenes")
-      .select(`
-        id,
-        numero_tarea,
-        pares_plan,
-        estado,
-        fecha,
-        fecha_entrega,
-        prioridad,
-        modelo_id,
-        modelos(nombre, marca, codigo)
-      `)
+      .select("*")
       .eq("id", id)
-      .single()
+      .maybeSingle()
 
-    if (errorOrden) throw errorOrden
+    if (errorOrden) {
+      console.error("❌ error orden:", errorOrden)
+      return res.status(500).json({ error: errorOrden.message })
+    }
 
+    if (!orden) {
+      return res.status(404).json({ error: "Orden no encontrada" })
+    }
+
+    // =========================
+    // MODELO
+    // =========================
+    const { data: modelo } = await supabase
+      .from("modelos")
+      .select("nombre, marca, codigo")
+      .eq("id", orden.modelo_id)
+      .maybeSingle()
+
+    // =========================
+    // TALLES
+    // =========================
     const { data: talles, error: errorTalles } = await supabase
       .from("order_talles")
       .select("talle, cantidad")
       .eq("orden_id", id)
       .order("talle", { ascending: true })
 
-    if (errorTalles) throw errorTalles
+    if (errorTalles) {
+      console.error("❌ error talles:", errorTalles)
+      return res.status(500).json({ error: errorTalles.message })
+    }
 
+    // =========================
+    // RESPUESTA FINAL
+    // =========================
     res.json({
       ...orden,
+      modelos: modelo || null,
       talles: talles || []
     })
 
   } catch (err) {
-    console.error("Error obteniendo orden:", err)
+    console.error("💥 ERROR GENERAL:", err)
     res.status(500).json({
-      error: "Error obteniendo orden"
+      error: err.message
     })
   }
 })
