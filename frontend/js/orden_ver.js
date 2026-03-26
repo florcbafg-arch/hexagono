@@ -96,23 +96,6 @@ async function cargarOrden() {
     }
 
     document.getElementById("numeroTarea").textContent = orden.numero_tarea || "-"
-    document.getElementById("modeloNombre").textContent = orden.modelos?.nombre || "-"
-    document.getElementById("codigoInterno").textContent = orden.modelos?.codigo || "-"
-    document.getElementById("marcaNombre").textContent = orden.modelos?.marca || "-"
-    document.getElementById("pares").textContent = orden.pares_plan || 0
-    document.getElementById("totalPares").textContent = orden.pares_plan || 0
-
-    document.getElementById("fechaEmision").textContent = formatearFecha(orden.fecha)
-    document.getElementById("fechaEntrega").textContent = formatearFecha(orden.fecha_entrega)
-
-    document.getElementById("pedido").textContent = "-"
-    document.getElementById("nroSeg").textContent = "0"
-    document.getElementById("articuloNombre").textContent = orden.modelos?.nombre || "-"
-
-    renderTalles(orden.talles, orden.pares_plan)
-
-    // estado inicial mientras buscamos ficha
-document.getElementById("numeroTarea").textContent = orden.numero_tarea || "-"
 document.getElementById("modeloNombre").textContent = orden.modelo || orden.modelos?.nombre || "-"
 document.getElementById("codigoInterno").textContent = orden.codigo || orden.modelos?.codigo || "-"
 document.getElementById("marcaNombre").textContent = orden.marca || orden.modelos?.marca || "-"
@@ -125,6 +108,13 @@ document.getElementById("fechaEntrega").textContent = formatearFecha(orden.fecha
 document.getElementById("pedido").textContent = "-"
 document.getElementById("nroSeg").textContent = "0"
 document.getElementById("articuloNombre").textContent = ficha?.nombre || orden.modelo || orden.modelos?.nombre || "-"
+    
+    renderTalles(orden.talles, orden.pares_plan)
+
+    // estado inicial mientras buscamos ficha
+    document.getElementById("temporada").textContent = "-"
+    document.getElementById("horma").textContent = "-"
+    document.getElementById("detalleTecnico").textContent = "Sin ficha técnica asociada"
 
     // segundo fetch: ficha por modelo_id
     if (orden.modelo_id) {
