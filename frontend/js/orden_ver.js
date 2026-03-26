@@ -11,29 +11,7 @@ function formatearFecha(valor) {
   return `${dia}/${mes}/${anio}`
 }
 
-function renderTalles(talles, totalPares) {
-  const head = document.getElementById("tallesHead")
-  const row = document.getElementById("tallesRow")
-
-  if (!head || !row) return
-
-  head.innerHTML = "<th>Total</th>"
-  row.innerHTML = `<td>${totalPares || 0}</td>`
-
-  if (!Array.isArray(talles) || !talles.length) return
-
-  talles.forEach(t => {
-    const th = document.createElement("th")
-    th.textContent = t.talle
-    head.appendChild(th)
-
-    const td = document.createElement("td")
-    td.textContent = t.cantidad
-    row.appendChild(td)
-  })
-}
-
-function renderMaterialesFicha(ficha) {
+function renderMaterialesFicha(ficha, sectorFiltro = null) {
   const body = document.getElementById("tablaMaterialesBody")
   if (!body) return
 
@@ -48,41 +26,127 @@ function renderMaterialesFicha(ficha) {
     return
   }
 
-  const materiales = []
+  const grupos = agruparFichaPorSector(ficha)
 
-  ficha.secciones.forEach(seccion => {
-    ;(seccion.piezas || []).forEach(pieza => {
-      ;(pieza.materiales || []).forEach(material => {
-        materiales.push(material)
+  const sectoresAmostrar = sectorFiltro
+    ? [sectorFiltro]
+    : ["corte", "aparado", "armado", "terminacion", "general"]
+
+  let hayContenido = false
+
+  sectoresAmostrar.forEach(sector => {
+    const secciones = grupos[sector] || []
+    if (!secciones.length) return
+
+    body.innerHTML += `
+      <tr class="sector-row">
+        <td colspan="4"><strong>${sector.toUpperCase()}</strong></td>
+      </tr>
+    `
+
+    secciones.forEach(seccion => {
+      const numero = seccion.numero_seccion_resuelto || "-"
+      const titulo = seccion.nombre || seccion.titulo || `Sección ${numero}`
+
+      body.innerHTML += `
+        <tr class="seccion-row">
+          <td colspan="4"><strong>Sección ${numero}: ${titulo}</strong></td>
+        </tr>
+      `
+
+      const materiales = []
+
+      ;(seccion.piezas || []).forEach(pieza => {
+        ;(pieza.materiales || []).forEach(material => {
+          materiales.push(material)
+        })
+      })
+
+      if (!materiales.length) {
+        body.innerHTML += `
+          <tr>
+            <td colspan="4">Sin materiales en esta sección</td>
+          </tr>
+        `
+        return
+      }
+
+      materiales.forEach(m => {
+        hayContenido = true
+
+        body.innerHTML += `
+          <tr>
+            <td>${m.material || m.nombre || "-"}</td>
+            <td>${m.color || "-"}</td>
+            <td>${m.unidad_medida || m.unidad || "-"}</td>
+            <td>${m.consumo ?? m.cantidad ?? "-"}</td>
+          </tr>
+        `
       })
     })
   })
 
-  if (!materiales.length) {
+  if (!hayContenido) {
     body.innerHTML = `
       <tr>
         <td colspan="4">No hay materiales cargados en la ficha técnica</td>
       </tr>
     `
-    return
   }
-
-  materiales.forEach(m => {
-    body.innerHTML += `
-      <tr>
-        <td>${m.material || m.nombre || "-"}</td>
-        <td>${m.color || "-"}</td>
-        <td>${m.unidad_medida || m.unidad || "-"}</td>
-        <td>${m.consumo ?? m.cantidad ?? "-"}</td>
-      </tr>
-    `
-  })
 }
 
 function limpiarFichaVisual() {
   document.getElementById("temporada").textContent = "-"
   document.getElementById("horma").textContent = "-"
   document.getElementById("detalleTecnico").textContent = "Sin ficha técnica asociada"
+}
+
+function obtenerNumeroSeccion(seccion, index) {
+  if (typeof seccion?.numero === "number") return seccion.numero
+
+  if (typeof seccion?.numero_seccion === "number") return seccion.numero_seccion
+
+  if (typeof seccion?.orden === "number") return seccion.orden
+
+  return index + 1
+}
+
+function obtenerSectorPorSeccion(numeroSeccion) {
+  const mapa = {
+    1: "corte",
+    2: "aparado",
+    3: "armado",
+    4: "terminacion",
+    5: "terminacion",
+    6: "terminacion"
+  }
+
+  return mapa[numeroSeccion] || "general"
+}
+
+function agruparFichaPorSector(ficha) {
+  const grupos = {
+    corte: [],
+    aparado: [],
+    armado: [],
+    terminacion: [],
+    general: []
+  }
+
+  if (!ficha?.secciones?.length) return grupos
+
+  ficha.secciones.forEach((seccion, index) => {
+    const numeroSeccion = obtenerNumeroSeccion(seccion, index)
+    const sector = obtenerSectorPorSeccion(numeroSeccion)
+
+    grupos[sector].push({
+      ...seccion,
+      numero_seccion_resuelto: numeroSeccion,
+      sector_resuelto: sector
+    })
+  })
+
+  return grupos
 }
 
 async function cargarOrden() {
@@ -124,7 +188,7 @@ document.getElementById("marcaNombre").textContent = orden.marca || "-"
 
     // IMPORTANTE: acá NO usamos ficha todavía
    document.getElementById("articuloNombre").textContent =
-  ficha.nombre || orden.modelo_nombre || "-"
+  orden.modelo_nombre || "-"
 
     renderTalles(orden.talles, orden.pares_plan || orden.pares || 0)
 
