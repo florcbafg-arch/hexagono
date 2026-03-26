@@ -757,6 +757,80 @@ app.get("/api/ordenes/:id", async (req, res) => {
 
     if (errorOrden) throw errorOrden
 
+    let ficha = null
+
+const { data: fichaBase, error: errorFichaBase } = await supabase
+  .from("fichas_tecnicas")
+  .select("*")
+  .eq("modelo_id", orden.modelo_id)
+  .maybeSingle()
+
+if (errorFichaBase) throw errorFichaBase
+
+if (fichaBase) {
+  const { data: secciones, error: errorSecciones } = await supabase
+    .from("fichas_secciones")
+    .select("*")
+    .eq("ficha_id", fichaBase.id)
+    .order("orden", { ascending: true })
+
+  if (errorSecciones) throw errorSecciones
+
+  const seccionIds = (secciones || []).map(s => s.id)
+
+  let piezas = []
+  if (seccionIds.length > 0) {
+    const { data: piezasData, error: errorPiezas } = await supabase
+      .from("fichas_piezas")
+      .select("*")
+      .in("seccion_id", seccionIds)
+      .order("orden", { ascending: true })
+
+    if (errorPiezas) throw errorPiezas
+    piezas = piezasData || []
+  }
+
+  const piezaIds = piezas.map(p => p.id)
+
+  let materiales = []
+  if (piezaIds.length > 0) {
+    const { data: materialesData, error: errorMateriales } = await supabase
+      .from("fichas_materiales")
+      .select("*")
+      .in("pieza_id", piezaIds)
+      .order("orden", { ascending: true })
+
+    if (errorMateriales) throw errorMateriales
+    materiales = materialesData || []
+  }
+
+  let operaciones = []
+  if (piezaIds.length > 0) {
+    const { data: operacionesData, error: errorOperaciones } = await supabase
+      .from("fichas_operaciones")
+      .select("*")
+      .in("pieza_id", piezaIds)
+      .order("orden", { ascending: true })
+
+    if (errorOperaciones) throw errorOperaciones
+    operaciones = operacionesData || []
+  }
+
+  ficha = {
+    ...fichaBase,
+    secciones: (secciones || []).map(seccion => ({
+      ...seccion,
+      piezas: piezas
+        .filter(p => p.seccion_id === seccion.id)
+        .map(pieza => ({
+          ...pieza,
+          materiales: materiales.filter(m => m.pieza_id === pieza.id),
+          operaciones: operaciones.filter(o => o.pieza_id === pieza.id)
+        }))
+    }))
+  }
+}
+
     const { data: talles, error: errorTalles } = await supabase
       .from("order_talles")
       .select("talle, cantidad")
@@ -766,9 +840,10 @@ app.get("/api/ordenes/:id", async (req, res) => {
     if (errorTalles) throw errorTalles
 
     res.json({
-      ...orden,
-      talles: talles || []
-    })
+  ...orden,
+  talles: talles || [],
+  ficha: ficha
+})
 
   } catch (err) {
     console.error("Error obteniendo orden:", err)
