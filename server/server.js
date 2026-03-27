@@ -741,10 +741,15 @@ app.get("/api/ordenes/:id", async (req, res) => {
 
     // 1. traer orden
     const { data: orden, error: errorOrden } = await supabase
-      .from("ordenes")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle()
+     .from("ordenes")
+.select(`
+  *,
+  modelos (
+    nombre,
+    marca,
+    codigo
+  )
+`)
 
     if (errorOrden) {
       console.error("❌ error orden:", errorOrden)
@@ -825,10 +830,13 @@ app.get("/api/ordenes/:id", async (req, res) => {
 
     // 6. responder todo junto
     res.json({
-      ...orden,
-      talles,
-      ficha
-    })
+  ...orden,
+  modelo_nombre: orden.modelos?.nombre || orden.modelo || "-",
+  marca: orden.modelos?.marca || orden.marca || "-",
+  codigo: orden.modelos?.codigo || orden.codigo || "-",
+  talles,
+  ficha
+})
 
   } catch (err) {
     console.error("💥 ERROR GENERAL /api/ordenes/:id:", err)
@@ -875,12 +883,11 @@ puestos(nombre,orden)
 if(errProd) throw errProd
 
 res.json({
-  ...orden,
-  modelo_nombre: orden.modelos?.nombre || "-",
-  marca: orden.modelos?.marca || "-",
-  codigo: orden.modelos?.codigo || "-",
-  talles,
-  ficha
+  ...tarea,
+  modelo_nombre: tarea.modelos?.nombre || "-",
+  marca: tarea.modelos?.marca || "-",
+  codigo: tarea.modelos?.codigo || "-",
+  produccion
 })
 
 }catch(err){
