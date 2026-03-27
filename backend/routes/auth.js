@@ -153,19 +153,26 @@ router.post("/login", async (req, res) => {
 
   // si por alguna razón no existe usuario sincronizado, crearlo bien
   if (!userData) {
-    const { data: empresaNueva, error: errorEmpresa } = await supabase
-      .from("empresas")
-      .insert([
-        {
-          nombre: `${emailLimpio} - empresa`
-        }
-      ])
-      .select()
-      .single()
+    const nuevaEmpresaId = crypto.randomUUID()
 
-    if (errorEmpresa || !empresaNueva) {
-      return res.status(500).json({ error: "No se pudo crear empresa para el usuario" })
+const { data: empresaNueva, error: errorEmpresa } = await supabase
+  .from("empresas")
+  .insert([
+    {
+      id: nuevaEmpresaId,
+      nombre: `${emailLimpio} - empresa`
     }
+  ])
+  .select()
+  .single()
+
+   if (errorEmpresa || !empresaNueva) {
+  console.log("❌ ERROR CREANDO EMPRESA LOGIN:", errorEmpresa)
+  return res.status(500).json({
+    error: "No se pudo crear empresa para el usuario",
+    detalle: errorEmpresa?.message || "Sin detalle"
+  })
+}
 
     const { error: errorInsertUsuario } = await supabase
       .from("usuarios")
