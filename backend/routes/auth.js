@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { supabase } = require("../../config/supabase");
+const crypto = require("crypto")
 
 // 🔐 REGISTRO
 router.post("/registro", async (req, res) => {
@@ -58,20 +59,26 @@ router.post("/registro", async (req, res) => {
 
     // 2. si no tiene empresa, crear empresa nueva
     if (!empresaIdFinal) {
-      const { data: empresaNueva, error: errorEmpresa } = await supabase
-        .from("empresas")
-        .insert([
-          {
-            nombre: `${nombreLimpio} - empresa`
-          }
-        ])
-        .select()
-        .single()
+      const nuevaEmpresaId = crypto.randomUUID()
+
+const { data: empresaNueva, error: errorEmpresa } = await supabase
+  .from("empresas")
+  .insert([
+    {
+      id: nuevaEmpresaId,
+      nombre: `${nombreLimpio} - empresa`
+    }
+  ])
+  .select()
+  .single()
 
       if (errorEmpresa || !empresaNueva) {
-        console.log("❌ ERROR CREANDO EMPRESA:", errorEmpresa)
-        return res.status(500).json({ error: "No se pudo crear la empresa" })
-      }
+  console.log("❌ ERROR CREANDO EMPRESA:", errorEmpresa)
+  return res.status(500).json({
+    error: "No se pudo crear la empresa",
+    detalle: errorEmpresa?.message || "Sin detalle"
+  })
+}
 
       empresaIdFinal = empresaNueva.id
     }
