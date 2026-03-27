@@ -11,6 +11,28 @@ function formatearFecha(valor) {
   return `${dia}/${mes}/${anio}`
 }
 
+function renderTalles(talles, totalPares) {
+  const head = document.getElementById("tallesHead")
+  const row = document.getElementById("tallesRow")
+
+  if (!head || !row) return
+
+  head.innerHTML = "<th>Total</th>"
+  row.innerHTML = `<td>${totalPares || 0}</td>`
+
+  if (!Array.isArray(talles) || !talles.length) return
+
+  talles.forEach(t => {
+    const th = document.createElement("th")
+    th.textContent = t.talle
+    head.appendChild(th)
+
+    const td = document.createElement("td")
+    td.textContent = t.cantidad
+    row.appendChild(td)
+  })
+}
+
 function renderMaterialesFicha(ficha, sectorFiltro = null) {
   const body = document.getElementById("tablaMaterialesBody")
   if (!body) return
@@ -227,6 +249,36 @@ async function cargarOrden() {
     actualizarTituloSector(null)
     renderMaterialesFicha(null)
 
+    // usar ficha ya incluida en la orden
+    const ficha = normalizarFicha(orden.ficha || null)
+
+    fichaActual = ficha
+
+if (ficha) {
+  document.getElementById("temporada").textContent = ficha.temporada || "-"
+  document.getElementById("horma").textContent = ficha.horma || "-"
+  document.getElementById("articuloNombre").textContent =
+    ficha.nombre || orden.modelo_nombre || "-"
+  document.getElementById("detalleTecnico").textContent =
+    ficha.detalle_general || "Sin detalle técnico"
+ 
+  sectorActual = null
+  actualizarTituloSector(null)
+  renderMaterialesFicha(ficha)
+} else {
+  limpiarFichaVisual()
+  renderMaterialesFicha(null)
+}
+  } catch (err) {
+  console.error("Error en orden_ver:", err)
+  alert("Error inesperado al cargar la orden: " + err.message)
+}
+}
+
+  let ordenActual = null
+   let fichaActual = null
+   let sectorActual = null
+
    function actualizarTituloSector(sector = null) {
   const titulo = document.getElementById("tituloSector")
   if (!titulo) return
@@ -272,36 +324,5 @@ function imprimirSector(sector) {
   actualizarTituloSector(null)
   renderMaterialesFicha(fichaActual, null)
 }
-
-    // usar ficha ya incluida en la orden
-    const ficha = normalizarFicha(orden.ficha || null)
-
-    fichaActual = ficha
-
-if (ficha) {
-  document.getElementById("temporada").textContent = ficha.temporada || "-"
-  document.getElementById("horma").textContent = ficha.horma || "-"
-  document.getElementById("articuloNombre").textContent =
-    ficha.nombre || orden.modelo_nombre || "-"
-  document.getElementById("detalleTecnico").textContent =
-    ficha.detalle_general || "Sin detalle técnico"
-
-  renderMaterialesFicha(ficha)
-} else {
-  limpiarFichaVisual()
-  renderMaterialesFicha(null)
-}
-  } catch (err) {
-    console.error("Error en orden_ver:", err)
-    alert("Error inesperado al cargar la orden")
-  }
-}
-
-
-
-  let ordenActual = null
-   let fichaActual = null
-   let sectorActual = null
-
 
 cargarOrden()
