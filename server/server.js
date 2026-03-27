@@ -31,10 +31,9 @@ app.use("/api/auth", authRoutes);
 
 // 🔐 SOLO proteger producción
 app.use('/api/produccion', authMiddleware)
-// app.use('/api/dashboard', authMiddleware)
-// 🔐 opcional: proteger dashboard
-app.use('/api/dashboard', authMiddleware)
 
+app.use('/api/dashboard', authMiddleware)
+// app.use('/api/dashboard', authMiddleware)
 app.use("/api/programacion", programacionRoutes)
 app.use("/api", fichasRoutes);
 
@@ -49,9 +48,6 @@ const { data, error } = await supabase.rpc("produccion_resumen")
   res.json(data)
 
 })
-
-
-
 
 // =======================
 // CONFIGURAR SUBIDA ARCHIVOS
@@ -751,6 +747,8 @@ app.get("/api/ordenes/:id", async (req, res) => {
     codigo
   )
 `)
+.eq("id", id)
+  .maybeSingle()
 
     if (errorOrden) {
       console.error("❌ error orden:", errorOrden)

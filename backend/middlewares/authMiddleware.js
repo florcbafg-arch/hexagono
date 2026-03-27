@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js")
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SECRET_KEY
-)
+const { supabase } = require("../../config/supabase")
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -21,7 +16,32 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: "Token inválido" })
     }
 
-    req.user = data.user
+    const authUser = data.user
+
+    const { data: usuarioDb, error: errorUsuario } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("auth_id", authUser.id)
+      .maybeSingle()
+
+    if (errorUsuario) {
+      console.error("Error buscando usuario DB:", errorUsuario)
+      return res.status(500).json({ error: "Error validando usuario" })
+    }
+
+    if (!usuarioDb) {
+      return res.status(401).json({ error: "Usuario no sincronizado" })
+    }
+
+    req.user = {
+      id: usuarioDb.id,
+      auth_id: authUser.id,
+      email: authUser.email,
+      nombre: usuarioDb.nombre,
+      rol: usuarioDb.rol,
+      puesto_id: usuarioDb.puesto_id,
+      empresa_id: usuarioDb.empresa_id
+    }
 
     next()
   } catch (err) {

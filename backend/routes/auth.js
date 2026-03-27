@@ -3,151 +3,194 @@ const router = express.Router();
 const { supabase } = require("../../config/supabase");
 
 // 🔐 REGISTRO
-// 🔐 REGISTRO (MODO PRO SIN EMAIL)
 router.post("/registro", async (req, res) => {
-  const { email, password, nombre } = req.body;
+  const { email, password, nombre } = req.body
 
-  // 🔒 VALIDACIÓN BACKEND (CRÍTICA)
-if (!email || !password) {
-  return res.status(400).json({ error: "Email y password requeridos" });
-}
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email y password requeridos" })
+  }
 
-// 🧠 NORMALIZACIÓN (PRO)
-const emailLimpio = email.trim().toLowerCase();
-const nombreLimpio = nombre?.trim() || "Usuario";
+  const emailLimpio = email.trim().toLowerCase()
+  const nombreLimpio = nombre?.trim() || "Usuario"
 
   try {
+    let { data, error } = await supabase.auth.signUp({
+      email: emailLimpio,
+      password
+    })
 
-    // 🔥 1. intentar registro normal
-     let { data, error } = await supabase.auth.signUp({
-  email: emailLimpio,
-  password
-});
-
-    // 🔁 2. si ya existe → intentar login automático
     if (error && error.message.includes("already registered")) {
-
       const loginRes = await supabase.auth.signInWithPassword({
-        email,
+        email: emailLimpio,
         password
-      });
+      })
 
       if (loginRes.error) {
-        return res.status(400).json({ error: "Usuario ya existe, pero contraseña incorrecta" });
+        return res.status(400).json({
+          error: "Usuario ya existe, pero contraseña incorrecta"
+        })
       }
 
-      data = loginRes.data;
+      data = loginRes.data
     }
 
-    const authUser = data.user;
-    console.log("🔥 AUTH USER:", authUser);
-console.log("🔥 EMAIL INPUT:", email);
+    const authUser = data.user
+    if (!authUser) {
+      return res.status(500).json({ error: "No se pudo crear usuario auth" })
+    }
 
-    // 🔥 3. sincronizar SIEMPRE tabla usuarios
-    await supabase
+    // 1. buscar si ya existe usuario sincronizado
+    let { data: usuarioExistente, error: errorUsuarioExistente } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("auth_id", authUser.id)
+      .maybeSingle()
+
+    if (errorUsuarioExistente) {
+      return res.status(500).json({ error: errorUsuarioExistente.message })
+    }
+
+    let empresaIdFinal = usuarioExistente?.empresa_id || null
+
+    // 2. si no tiene empresa, crear empresa nueva
+    if (!empresaIdFinal) {
+      const { data: empresaNueva, error: errorEmpresa } = await supabase
+        .from("empresas")
+        .insert([
+          {
+            nombre: `${nombreLimpio} - empresa`
+          }
+        ])
+        .select()
+        .single()
+
+      if (errorEmpresa || !empresaNueva) {
+        console.log("❌ ERROR CREANDO EMPRESA:", errorEmpresa)
+        return res.status(500).json({ error: "No se pudo crear la empresa" })
+      }
+
+      empresaIdFinal = empresaNueva.id
+    }
+
+    // 3. sincronizar usuario con su empresa real
+    const { error: errorUpsertUsuario } = await supabase
       .from("usuarios")
       .upsert({
         auth_id: authUser.id,
         email: emailLimpio,
         nombre: nombreLimpio,
-        empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
+        empresa_id: empresaIdFinal,
         rol: "admin"
       }, {
-       onConflict: "auth_id"
-      });
+        onConflict: "auth_id"
+      })
 
-    res.json({ ok: true });
+    if (errorUpsertUsuario) {
+      console.log("❌ ERROR UPSERT USUARIO:", errorUpsertUsuario)
+      return res.status(500).json({ error: errorUpsertUsuario.message })
+    }
+
+    res.json({
+      ok: true,
+      empresa_id: empresaIdFinal
+    })
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Error en registro" });
+    console.log(err)
+    res.status(500).json({ error: "Error en registro" })
   }
-});
-
+})
 // 🔐 LOGIN
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body
 
-  // 🔥 LOGIN OPERARIO (ANTES DE AUTH)
-const { data: operario } = await supabase
-  .from("usuarios")
-  .select("*")
-  .eq("username", email) // usamos el campo email como username
-  .eq("password", password)
-  .maybeSingle();
+  const emailLimpio = email.trim().toLowerCase()
 
-if(operario){
-  return res.json({
-    ok: true,
-    token: null,
-    usuario: {
-      id: operario.id,
-      nombre: operario.nombre,
-      rol: operario.rol,
-      puesto_id: operario.puesto_id
-    }
-  });
-}
-
-  // 🔐 login con supabase
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: emailLimpio,
     password
-  });
+  })
 
   if (error) {
-    return res.json({ ok: false, error: "Usuario o contraseña incorrectos" });
+    return res.json({ ok: false, error: "Usuario o contraseña incorrectos" })
   }
 
-  const authUser = data.user;
+  const authUser = data.user
+  if (!authUser) {
+    return res.status(500).json({ ok: false, error: "Auth inválido" })
+  }
 
-  // 🔍 1. buscar usuario en tabla
   let { data: userData } = await supabase
     .from("usuarios")
     .select("*")
     .eq("auth_id", authUser.id)
-    .maybeSingle();
+    .maybeSingle()
 
-  // 🔁 2. fallback por email
   if (!userData) {
     const { data: userByEmail } = await supabase
       .from("usuarios")
       .select("*")
-      .eq("email", email.trim().toLowerCase())
-      .maybeSingle();
+      .eq("email", emailLimpio)
+      .maybeSingle()
 
-    userData = userByEmail;
+    userData = userByEmail
   }
 
-  // 🔥 3. upsert SIEMPRE (ahora sí seguro)
-  const { error: insertError } = await supabase
-    .from("usuarios")
-    .upsert({
-      auth_id: authUser.id,
-      email: email.trim().toLowerCase(),
-      nombre: userData?.nombre || "Usuario",
-      empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4",
-    }, {
-      onConflict: "email"
-    });
+  // si por alguna razón no existe usuario sincronizado, crearlo bien
+  if (!userData) {
+    const { data: empresaNueva, error: errorEmpresa } = await supabase
+      .from("empresas")
+      .insert([
+        {
+          nombre: `${emailLimpio} - empresa`
+        }
+      ])
+      .select()
+      .single()
 
-  if (insertError) {
-    console.log("❌ ERROR INSERT USUARIO:", insertError);
-    return res.status(500).json({ error: insertError.message });
+    if (errorEmpresa || !empresaNueva) {
+      return res.status(500).json({ error: "No se pudo crear empresa para el usuario" })
+    }
+
+    const { error: errorInsertUsuario } = await supabase
+      .from("usuarios")
+      .insert([
+        {
+          auth_id: authUser.id,
+          email: emailLimpio,
+          nombre: "Usuario",
+          empresa_id: empresaNueva.id,
+          rol: "admin"
+        }
+      ])
+
+    if (errorInsertUsuario) {
+      return res.status(500).json({ error: errorInsertUsuario.message })
+    }
+  } else {
+    // re-sincronizar auth_id si hiciera falta
+    const { error: errorUpdateUsuario } = await supabase
+      .from("usuarios")
+      .update({
+        auth_id: authUser.id
+      })
+      .eq("email", emailLimpio)
+
+    if (errorUpdateUsuario) {
+      return res.status(500).json({ error: errorUpdateUsuario.message })
+    }
   }
 
-  // 🔁 4. volver a buscar ya actualizado
-  const { data: finalUser } = await supabase
+  const { data: finalUser, error: errorFinalUser } = await supabase
     .from("usuarios")
     .select("*")
-    .eq("email", email.trim().toLowerCase())
-    .single();
+    .eq("email", emailLimpio)
+    .single()
 
-  if (!finalUser) {
-    return res.json({ ok: false, error: "Usuario no encontrado" });
+  if (errorFinalUser || !finalUser) {
+    return res.json({ ok: false, error: "Usuario no encontrado" })
   }
 
-  // ✅ 5. respuesta final
   res.json({
     ok: true,
     token: data.session.access_token,
@@ -155,8 +198,9 @@ if(operario){
       id: finalUser.id,
       nombre: finalUser.nombre,
       rol: finalUser.rol,
-      puesto_id: finalUser.puesto_id
+      puesto_id: finalUser.puesto_id,
+      empresa_id: finalUser.empresa_id
     }
-  });
-});
+  })
+})
 module.exports = router;
