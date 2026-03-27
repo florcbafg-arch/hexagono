@@ -19,20 +19,24 @@ router.post("/registro", async (req, res) => {
       password
     })
 
-    if (error && error.message.includes("already registered")) {
-      const loginRes = await supabase.auth.signInWithPassword({
-        email: emailLimpio,
-        password
+    if (error) {
+  if (error.message.includes("already registered")) {
+    const loginRes = await supabase.auth.signInWithPassword({
+      email: emailLimpio,
+      password
+    })
+
+    if (loginRes.error) {
+      return res.status(400).json({
+        error: "Usuario ya existe, pero contraseña incorrecta"
       })
-
-      if (loginRes.error) {
-        return res.status(400).json({
-          error: "Usuario ya existe, pero contraseña incorrecta"
-        })
-      }
-
-      data = loginRes.data
     }
+
+    data = loginRes.data
+  } else {
+    return res.status(400).json({ error: error.message })
+  }
+}
 
     const authUser = data.user
     if (!authUser) {
@@ -104,6 +108,10 @@ router.post("/registro", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body
 
+  if (!email || !password) {
+  return res.status(400).json({ ok: false, error: "Email y password requeridos" })
+}
+
   const emailLimpio = email.trim().toLowerCase()
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -168,18 +176,38 @@ router.post("/login", async (req, res) => {
       return res.status(500).json({ error: errorInsertUsuario.message })
     }
   } else {
-    // re-sincronizar auth_id si hiciera falta
-    const { error: errorUpdateUsuario } = await supabase
-      .from("usuarios")
-      .update({
-        auth_id: authUser.id
-      })
-      .eq("email", emailLimpio)
+  let empresaIdFinal = userData.empresa_id
 
-    if (errorUpdateUsuario) {
-      return res.status(500).json({ error: errorUpdateUsuario.message })
+  if (!empresaIdFinal) {
+    const { data: empresaNueva, error: errorEmpresa } = await supabase
+      .from("empresas")
+      .insert([
+        {
+          nombre: `${emailLimpio} - empresa`
+        }
+      ])
+      .select()
+      .single()
+
+    if (errorEmpresa || !empresaNueva) {
+      return res.status(500).json({ error: "No se pudo crear empresa para usuario existente" })
     }
+
+    empresaIdFinal = empresaNueva.id
   }
+
+  const { error: errorUpdateUsuario } = await supabase
+    .from("usuarios")
+    .update({
+      auth_id: authUser.id,
+      empresa_id: empresaIdFinal
+    })
+    .eq("email", emailLimpio)
+
+  if (errorUpdateUsuario) {
+    return res.status(500).json({ error: errorUpdateUsuario.message })
+  }
+}
 
   const { data: finalUser, error: errorFinalUser } = await supabase
     .from("usuarios")
