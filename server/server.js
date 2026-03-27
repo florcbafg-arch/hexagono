@@ -31,7 +31,7 @@ app.use("/api/auth", authRoutes);
 
 // 🔐 SOLO proteger producción
 app.use('/api/produccion', authMiddleware)
-
+// app.use('/api/dashboard', authMiddleware)
 // 🔐 opcional: proteger dashboard
 app.use('/api/dashboard', authMiddleware)
 
@@ -204,6 +204,7 @@ modelo_id
 `)
 .eq("numero_tarea",numero)
 .single()
+.maybeSingle()
 
 if(error || !data){
 return res.status(404).send("no encontrada")
