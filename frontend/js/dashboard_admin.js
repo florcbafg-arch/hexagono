@@ -11,41 +11,51 @@ function actualizarTiempo(){
   }
 }
 
-function mostrarAlertas(data,faltantes){
+function mostrarAlertas(data, faltantes) {
   const panel = document.getElementById("panelAlertas")
-  if(!panel) return
+  if (!panel) return
 
   panel.innerHTML = ""
 
-  data.forEach(sector=>{
+  if (!Array.isArray(data)) return
+
+  data.forEach(sector => {
     const prod = sector.produccion || 0
     const obj = sector.objetivo || 100
 
-    if(prod === 0 && obj > 0){
+    if (prod === 0 && obj > 0) {
       panel.innerHTML += `<li>⚠ ${sector.nombre} sin producción</li>`
     }
 
-    if(prod > 0 && prod < obj*0.2){
+    if (prod > 0 && prod < obj * 0.2) {
       panel.innerHTML += `<li>⚠ ${sector.nombre} producción baja</li>`
     }
   })
 }
-
-async function actualizarDashboard(){
-
+async function actualizarDashboard() {
   let total = 0
   let peorPorcentaje = 100
   let sectorLento = "-"
 
-  try{
-
+  try {
     const res = await apiFetch("/api/dashboard")
     const data = await res.json()
 
+    if (!res.ok) {
+      console.error("Error dashboard:", data)
+      mostrarAlertas([], [])
+      return
+    }
+
+    if (!Array.isArray(data)) {
+      console.error("Dashboard inválido:", data)
+      mostrarAlertas([], [])
+      return
+    }
+
     const faltantes = []
 
-    for(let i=0;i<data.length;i++){
-
+    for (let i = 0; i < data.length; i++) {
       const sector = data[i]
 
       const produccion = sector.produccion || 0
@@ -54,37 +64,37 @@ async function actualizarDashboard(){
       total += produccion
 
       const porcentaje = objetivo > 0
-        ? Math.round((produccion/objetivo)*100)
+        ? Math.round((produccion / objetivo) * 100)
         : 0
 
-      if(objetivo > 0 && porcentaje < peorPorcentaje){
+      if (objetivo > 0 && porcentaje < peorPorcentaje) {
         peorPorcentaje = porcentaje
         sectorLento = String(sector.nombre)
       }
     }
 
-    mostrarAlertas(data,[])
+    mostrarAlertas(data, faltantes)
 
-  }catch(err){
-    console.error("Error dashboard",err)
+  } catch (err) {
+    console.error("Error dashboard", err)
   }
 
   const ahora = new Date()
   const inicio = new Date()
-  inicio.setHours(7,15,0,0)
+  inicio.setHours(7, 15, 0, 0)
 
   let horas = (ahora - inicio) / 3600000
-  if(horas < 1) horas = 1
+  if (horas < 1) horas = 1
 
   const ritmo = Math.round(total / horas)
 
-const ritmoEl = document.getElementById("ritmoProduccion")
-const totalEl = document.getElementById("totalProduccion")
-const sectorEl = document.getElementById("sectorLento")
+  const ritmoEl = document.getElementById("ritmoProduccion")
+  const totalEl = document.getElementById("totalProduccion")
+  const sectorEl = document.getElementById("sectorLento")
 
-if(ritmoEl) ritmoEl.innerText = ritmo
-if(totalEl) totalEl.innerText = total
-if(sectorEl) sectorEl.textContent = String(sectorLento)
+  if (ritmoEl) ritmoEl.innerText = ritmo
+  if (totalEl) totalEl.innerText = total
+  if (sectorEl) sectorEl.textContent = String(sectorLento)
 }
 
 async function cargarObjetivos(){
