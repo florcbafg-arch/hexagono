@@ -6,6 +6,9 @@ const { supabase } = require("../../config/supabase")
 // 📊 OBTENER PROGRAMACION 🔥🔥🔥
 router.get("/", async (req, res) => {
   try {
+
+    console.log("REQ.USER PROGRAMACION:", req.user)
+
     const empresaId = req.user?.empresa_id
 
     if (!empresaId) {
@@ -380,7 +383,8 @@ if (!empresaId) {
           const sectoresInsert = sectores.map(s => ({
             orden_id: orden.id,
             sector_id: s.id,
-            estado: "pendiente"
+            estado: "pendiente",
+            empresa_id: empresaId
           }))
 
           const { error: errorOrdenesSector } = await supabase
@@ -404,6 +408,7 @@ if (!empresaId) {
           .from("programacion")
           .update({ estado: "generado" })
           .eq("id", p.id)
+          .eq("empresa_id", empresaId)
 
         if (errorUpdate) {
           errores.push({
