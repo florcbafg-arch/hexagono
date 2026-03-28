@@ -35,8 +35,6 @@ app.use('/api/produccion', authMiddleware)
 app.use('/api/dashboard', authMiddleware)
 // app.use('/api/dashboard', authMiddleware)
 
-const { authMiddleware } = require("./middlewares/authMiddleware")
-
 app.use("/api/programacion", authMiddleware, require("./routes/programacion"))
 
 app.use("/api", fichasRoutes);
