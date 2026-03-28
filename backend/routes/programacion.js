@@ -6,9 +6,16 @@ const { supabase } = require("../../config/supabase")
 // 📊 OBTENER PROGRAMACION 🔥🔥🔥
 router.get("/", async (req, res) => {
   try {
+    const empresaId = req.user?.empresa_id
+
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
+
     const { data, error } = await supabase
       .from("programacion")
       .select("*")
+      .eq("empresa_id", empresaId)
       .order("fecha", { ascending: false })
 
     if (error) {
@@ -35,7 +42,14 @@ router.post("/importar", async (req, res) => {
     console.log("📥 Items recibidos:", items.length)
     console.log("📌 Primer item:", items[0])
 
+    const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
    const dataInsert = items.map((item) => ({
+  empresa_id: empresaId, 
   marca: item.MARCA ?? item.marca ?? null,
   estado: item.ESTADO ?? item.estado ?? "pendiente",
   fecha: item["FECHA DE INGRESO"] ?? item.fecha ?? item.Fecha ?? null,
@@ -95,11 +109,19 @@ router.post("/importar", async (req, res) => {
 
 // 🚀 GENERAR ÓRDENES
 router.post("/generar", async (req, res) => {
+
+  const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
   try {
     const { data: programaciones, error } = await supabase
-      .from("programacion")
-      .select("*")
-      .neq("estado", "generado")
+  .from("programacion")
+  .select("*")
+  .eq("empresa_id", empresaId)
+  .neq("estado", "generado")
 
     if (error) throw error
 
@@ -135,6 +157,7 @@ router.post("/generar", async (req, res) => {
         const { data: existe, error: errorExiste } = await supabase
           .from("ordenes")
           .select("id, numero_tarea")
+          .eq("empresa_id", empresaId)
           .eq("numero_tarea", numeroTarea)
           .maybeSingle()
 
@@ -255,7 +278,7 @@ router.post("/generar", async (req, res) => {
         // 7. CREAR ORDEN
         const { data: orden, error: errorOrden } = await supabase
           .from("ordenes")
-.insert([{
+          .insert([{
   numero_tarea: numeroTarea,
   modelo: p.modelo || modelo.nombre,
   marca: p.marca || modelo.marca || null,
@@ -271,7 +294,7 @@ router.post("/generar", async (req, res) => {
   id_programacion: p.id,
 
   // 🔥 CLAVE PARA QUE NO ROMPA
-  empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4"
+  empresa_id: empresaId
 }])
           .select()
           .single()
@@ -315,7 +338,7 @@ router.post("/generar", async (req, res) => {
             orden_id: orden.id,
             talle: item.talle,
             cantidad: cantidadTalle,
-            empresa_id: "a7e6f147-9c5f-4f69-8a67-355cb23033d4"
+            empresa_id: empresaId
           })
         }
 
