@@ -34,7 +34,11 @@ app.use('/api/produccion', authMiddleware)
 
 app.use('/api/dashboard', authMiddleware)
 // app.use('/api/dashboard', authMiddleware)
-app.use("/api/programacion", programacionRoutes)
+
+const { authMiddleware } = require("./middlewares/authMiddleware")
+
+app.use("/api/programacion", authMiddleware, require("./routes/programacion"))
+
 app.use("/api", fichasRoutes);
 
 app.get("/api/produccion/resumen", async (req, res) => {
@@ -748,7 +752,7 @@ app.get("/api/ordenes/:id", async (req, res) => {
   )
 `)
 .eq("id", id)
-  .maybeSingle()
+.maybeSingle()
 
     if (errorOrden) {
       console.error("❌ error orden:", errorOrden)
