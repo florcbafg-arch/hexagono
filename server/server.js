@@ -29,13 +29,10 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.use("/api/auth", authRoutes);
 
-// 🔐 SOLO proteger producción
-app.use('/api/produccion', authMiddleware)
+app.use("/api/produccion", authMiddleware);
+app.use("/api/dashboard", authMiddleware);
 
-app.use('/api/dashboard', authMiddleware)
-// app.use('/api/dashboard', authMiddleware)
-
-app.use("/api/programacion", authMiddleware, require("./routes/programacion"))
+app.use("/api/programacion", authMiddleware, programacionRoutes);
 
 app.use("/api", fichasRoutes);
 
