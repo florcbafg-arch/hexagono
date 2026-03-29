@@ -158,7 +158,21 @@
 
       document.querySelectorAll(".modulo-script").forEach(s => s.remove())
 
-      fetch(modulo + "_admin.html")
+      let nombreInit = "init" + modulo.charAt(0).toUpperCase() + modulo.slice(1)
+
+// 🔥 FIX para fichas_detalle
+if (modulo === "fichas_detalle") {
+  nombreInit = "initFichaDetalle"
+}
+
+// 🔥 limpiar init viejo si quedó en memoria
+if (window[nombreInit]) {
+  try {
+    delete window[nombreInit]
+  } catch (_) {}
+}
+
+      fetch(modulo + "_admin.html?v=" + Date.now())
         .then(res => {
           if (!res.ok) {
             throw new Error("No se pudo cargar " + modulo + "_admin.html")
@@ -173,11 +187,6 @@
           script.classList.add("modulo-script")
 
           script.onload = () => {
-            let nombreInit = "init" + modulo.charAt(0).toUpperCase() + modulo.slice(1)
-            // 🔥 FIX para fichas_detalle
-                 if (modulo === "fichas_detalle") {
-                 nombreInit = "initFichaDetalle"
-              }
 
             if (typeof window[nombreInit] === "function") {
               window[nombreInit]()
