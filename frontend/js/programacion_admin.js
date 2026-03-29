@@ -113,19 +113,61 @@ async function importarExcel() {
 }
 
 function convertirFecha(fecha) {
-  if (!fecha) return null
+  if (fecha === null || fecha === undefined || fecha === "") return null
+
+  // ✅ Caso 1: número serial de Excel
+  if (typeof fecha === "number" && !isNaN(fecha)) {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30))
+    const fechaConvertida = new Date(excelEpoch.getTime() + fecha * 86400000)
+
+    const y = fechaConvertida.getUTCFullYear()
+    const m = String(fechaConvertida.getUTCMonth() + 1).padStart(2, "0")
+    const d = String(fechaConvertida.getUTCDate()).padStart(2, "0")
+
+    return `${y}-${m}-${d}`
+  }
 
   const texto = String(fecha).trim()
-  const match = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
 
-  if (match) {
-    const [, d, m, y] = match
+  // ✅ Caso 2: viene como texto numérico serial de Excel: "46111"
+  if (/^\d{5}$/.test(texto)) {
+    const serial = Number(texto)
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30))
+    const fechaConvertida = new Date(excelEpoch.getTime() + serial * 86400000)
+
+    const y = fechaConvertida.getUTCFullYear()
+    const m = String(fechaConvertida.getUTCMonth() + 1).padStart(2, "0")
+    const d = String(fechaConvertida.getUTCDate()).padStart(2, "0")
+
+    return `${y}-${m}-${d}`
+  }
+
+  // ✅ Caso 3: formato dd/mm/yyyy
+  const matchLatino = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (matchLatino) {
+    const [, d, m, y] = matchLatino
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`
   }
 
-  return fecha
-}
+  // ✅ Caso 4: ya viene tipo yyyy-mm-dd
+  const matchISO = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (matchISO) {
+    return texto
+  }
 
+  // ✅ Caso 5: intentar parsear con Date
+  const d = new Date(texto)
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, "0")
+    const dia = String(d.getDate()).padStart(2, "0")
+    return `${y}-${m}-${dia}`
+  }
+
+  // 🚨 Si no se pudo convertir, mejor null que romper backend
+  console.warn("Fecha no reconocida:", fecha)
+  return null
+}
   const reader = new FileReader()
 
   reader.onload = async (e) => {
@@ -141,8 +183,8 @@ console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
   .map(row => ({
     marca: row["MARCA"] || row["Marca"] || row["marca"] || null,
     estado: row["ESTADO"] || row["Estado"] || row["estado"] || "pendiente",
-   fecha: convertirFecha(
-  row["FECHA DE INGRESO"] || row["Fecha de ingreso"] || row["fecha"] || null
+ fecha: convertirFecha(
+  row["FECHA DE INGRESO"] ?? row["Fecha de ingreso"] ?? row["fecha"] ?? null
 ),
     numero_tarea: row["Nº DE TAREA"] || row["N° DE TAREA"] || row["N DE TAREA"] || row["numero_tarea"] || null,
     curva: row["CURVA"] || row["Curva"] || row["curva"] || null,
