@@ -1,3 +1,4 @@
+(() => {
 let fichas = []
 
 async function cargarFichas() {
@@ -90,4 +91,9 @@ function initFichas() {
   cargarFichas()
 }
 
-cargarFichas()
+window.initFichas = initFichas
+window.crearFicha = crearFicha
+window.verFicha = verFicha
+window.verPDF = verPDF
+window.filtrarFichas = filtrarFichas
+})()
