@@ -41,7 +41,7 @@ app.use("/api/modelos", authMiddleware);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 
-app.use("/api", fichasRoutes);
+app.use("/api", authMiddleware, fichasRoutes);
 
 app.get("/api/produccion/resumen", async (req, res) => {
 

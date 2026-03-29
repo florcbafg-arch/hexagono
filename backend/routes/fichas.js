@@ -55,31 +55,32 @@ router.post("/fichas/upload-pdf", upload.single("pdf"), async (req, res) => {
 
 // CREAR FICHA
 router.post("/fichas", async (req, res) => {
-  const {
-    modelo_id,
-    codigo,
-    nombre,
-    marca,
-    horma,
-    temporada,
-    detalle_general,
-    observaciones_generales,
-    imagen_modelo_url,
-    pdf_url,
-    fuente,
-    secciones = [],
-    imagenes = []
-  } = req.body;
+ const {
+  modelo_id,
+  modelo,
+  codigo,
+  nombre,
+  marca,
+  horma,
+  temporada,
+  detalle_general,
+  observaciones_generales,
+  imagen_modelo_url,
+  pdf_url,
+  fuente,
+  secciones = [],
+  imagenes = []
+} = req.body;
 
   const tieneSecciones = Array.isArray(secciones) && secciones.length > 0;
   const tienePDF = !!pdf_url;
 
-  if (!modelo_id) {
-    return res.status(400).json({
-      ok: false,
-      error: "Modelo obligatorio"
-    });
-  }
+  if (!modelo_id && !modelo) {
+  return res.status(400).json({
+    ok: false,
+    error: "Modelo obligatorio"
+  });
+}
 
   if (!tieneSecciones && !tienePDF) {
     return res.status(400).json({
@@ -89,37 +90,93 @@ router.post("/fichas", async (req, res) => {
   }
 
   try {
-    const { data: modelo, error: modeloError } = await supabase
+    let modeloData = null;
+let modeloIdFinal = null;
+let empresa_id = null;
+
+// ✅ Caso 1: viene modelo_id (compatibilidad con flujo viejo)
+if (modelo_id) {
+  const { data, error } = await supabase
+    .from("modelos")
+    .select("id, empresa_id, nombre, marca, codigo")
+    .eq("id", modelo_id)
+    .single();
+
+  if (error || !data) {
+    throw new Error("Modelo no encontrado");
+  }
+
+  modeloData = data;
+  modeloIdFinal = data.id;
+  empresa_id = data.empresa_id;
+}
+
+// ✅ Caso 2: viene modelo por nombre (flujo nuevo)
+if (!modeloData && modelo) {
+  const empresaIdUsuario = req.user?.empresa_id;
+
+  if (!empresaIdUsuario) {
+    throw new Error("No se pudo determinar la empresa del usuario");
+  }
+
+  const nombreModelo = String(modelo).trim();
+
+  const { data: existente, error: existenteError } = await supabase
+    .from("modelos")
+    .select("id, empresa_id, nombre, marca, codigo")
+    .eq("empresa_id", empresaIdUsuario)
+    .ilike("nombre", nombreModelo)
+    .maybeSingle();
+
+  if (existenteError) throw existenteError;
+
+  if (existente) {
+    modeloData = existente;
+    modeloIdFinal = existente.id;
+    empresa_id = existente.empresa_id;
+  } else {
+    const { data: nuevoModelo, error: nuevoModeloError } = await supabase
       .from("modelos")
-      .select("id, empresa_id, nombre")
-      .eq("id", modelo_id)
+      .insert([{
+        nombre: nombreModelo,
+        marca: marca || "",
+        codigo: codigo || "",
+        empresa_id: empresaIdUsuario
+      }])
+      .select("id, empresa_id, nombre, marca, codigo")
       .single();
 
-    if (modeloError || !modelo) {
-      throw new Error("Modelo no encontrado");
-    }
+    if (nuevoModeloError) throw nuevoModeloError;
 
-    const empresa_id = modelo.empresa_id;
+    modeloData = nuevoModelo;
+    modeloIdFinal = nuevoModelo.id;
+    empresa_id = nuevoModelo.empresa_id;
+  }
+}
 
-    const { data: fichaExistente } = await supabase
-      .from("fichas_tecnicas")
-      .select("id")
-      .eq("modelo_id", modelo_id)
-      .maybeSingle();
+if (!modeloIdFinal || !empresa_id) {
+  throw new Error("No se pudo resolver el modelo");
+}
 
-    if (fichaExistente) {
-      return res.status(400).json({
-        ok: false,
-        error: "Ya existe una ficha técnica para este modelo"
-      });
-    }
+const { data: fichaExistente } = await supabase
+  .from("fichas_tecnicas")
+  .select("id")
+  .eq("modelo_id", modeloIdFinal)
+  .maybeSingle();
+
+if (fichaExistente) {
+  return res.status(400).json({
+    ok: false,
+    error: "Ya existe una ficha técnica para este modelo"
+  });
+}
 
     const { data: ficha, error: fichaError } = await supabase
       .from("fichas_tecnicas")
       .insert([{
-        modelo_id,
-        codigo: codigo || "",
-        nombre: nombre || modelo.nombre || "",
+       modelo_id: modeloIdFinal,
+       codigo: codigo || modeloData.codigo || "",
+       nombre: nombre || modeloData.nombre || "",
         marca: marca || "",
         horma: horma || "",
         temporada: temporada || "",
