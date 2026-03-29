@@ -1,23 +1,6 @@
 let pdfUrl = ""
 let secciones = []
 
-async function cargarModelos() {
-  try {
-    const res = await apiFetch("/api/modelos")
-    const data = await res.json()
-
-    const select = document.getElementById("modelo")
-    select.innerHTML = `<option value="">Seleccionar modelo</option>`
-
-    data.forEach(m => {
-      select.innerHTML += `<option value="${m.id}">${m.nombre}</option>`
-    })
-  } catch (error) {
-    console.error("Error cargando modelos:", error)
-    alert("Error cargando modelos")
-  }
-}
-
 async function subirPDF() {
   const input = document.getElementById("pdf_file")
   const estado = document.getElementById("estado_pdf")
@@ -355,7 +338,7 @@ function normalizarSeccionesParaGuardar() {
 }
 
 async function guardarFichaCompleta() {
-  const modelo_id = document.getElementById("modelo").value
+  const modelo = document.getElementById("modelo").value.trim()
   const codigo = document.getElementById("codigo").value.trim()
   const nombre = document.getElementById("nombre").value.trim()
   const marca = document.getElementById("marca").value.trim()
@@ -363,7 +346,7 @@ async function guardarFichaCompleta() {
   const temporada = document.getElementById("temporada").value.trim()
   const detalle_general = document.getElementById("detalle_general").value.trim()
 
-  if (!modelo_id) return alert("Seleccionar modelo")
+  if (!modelo) return alert("Ingresar modelo")
   if (!codigo) return alert("Ingresar código")
   if (!nombre) return alert("Ingresar nombre")
 
@@ -388,7 +371,7 @@ async function guardarFichaCompleta() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        modelo_id: Number(modelo_id),
+        modelo,
         codigo,
         nombre,
         marca,
@@ -429,7 +412,6 @@ function escapeHtml(valor) {
 }
 
 async function init() {
-  await cargarModelos()
   renderSecciones()
 }
 
