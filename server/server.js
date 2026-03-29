@@ -31,6 +31,12 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/produccion", authMiddleware);
 app.use("/api/dashboard", authMiddleware);
+app.use("/api/ordenes", authMiddleware);
+app.use("/api/tarea", authMiddleware);
+app.use("/api/usuarios", authMiddleware);
+app.use("/api/patrones", authMiddleware);
+app.use("/api/sector", authMiddleware);
+app.use("/api/objetivos", authMiddleware);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 
@@ -189,6 +195,12 @@ try{
 
 const numero=req.params.numero
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 const {data,error}=await supabase
 .from("ordenes")
 .select(`
@@ -198,6 +210,7 @@ pares_plan,
 modelo_id
 `)
 .eq("numero_tarea",numero)
+.eq("empresa_id", empresaId)
 .single()
 .maybeSingle()
 
@@ -211,6 +224,7 @@ const {data:talles,error:errorTalles} = await supabase
 .from("tarea_talles")
 .select("talle,cantidad")
 .eq("tarea_id",data.id)
+.eq("empresa_id", empresaId)
 
 if(errorTalles){
 throw errorTalles
@@ -270,6 +284,12 @@ try{
 const numero = req.params.numero
 const puesto = req.query.puesto
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 if(!puesto){
  return res.json({registrado:false})
 }
@@ -278,6 +298,7 @@ if(!puesto){
 const {data:tarea,error:errTarea} = await supabase
 .from("ordenes")
 .select("id")
+.eq("empresa_id", empresaId)
 .eq("numero_tarea", numero)
 .single()
 
@@ -291,6 +312,7 @@ const {data,error} = await supabase
 .select("*")
 .eq("orden_id", tarea.id)
 .eq("puesto_id", puesto)
+.eq("empresa_id", empresaId)
 
 if(error){
 console.log(error)
@@ -369,6 +391,12 @@ try{
 
 const {nombre,username,password,puesto_id} = req.body
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 // 🔒 VALIDAR DATOS
 if(!nombre || !username || !password || !puesto_id){
 
@@ -387,7 +415,8 @@ nombre,
 username,
 password,
 puesto_id,
-activo:true
+activo:true,
+empresa_id: empresaId
 }
 ])
 
@@ -433,6 +462,7 @@ sector_id,
 sectores(nombre)
 )
 `)
+.eq("empresa_id", empresaId)
 
 if(errProd) throw errProd
 
@@ -444,6 +474,7 @@ objetivo,
 sectores(nombre)
 `)
 .eq("fecha",hoy)
+.eq("empresa_id", empresaId)
 
 if(errObj) throw errObj
 
@@ -560,6 +591,12 @@ app.post("/api/ordenes", async (req, res) => {
 
     const { numero, modelo_id, total_pares, talles, usuario_id } = req.body
 
+    const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
     if (!numero || !numero.trim()) {
       return res.status(400).json({ mensaje: "Falta número de tarea" })
     }
@@ -588,7 +625,7 @@ const { data: usuarioDb, error: errorUsuario } = await supabase
   .eq("id", usuario_id)
   .single()
 
-if (errorUsuario || !usuarioDb?.empresa_id) {
+if (errorUsuario) {
   return res.status(400).json({ mensaje: "No se pudo obtener empresa_id del usuario" })
 }
 
@@ -615,7 +652,7 @@ console.log("Insertando orden...")
     estado: "pendiente",
     fecha: new Date().toISOString(),
     prioridad: "media",
-    empresa_id: usuarioDb.empresa_id
+    empresa_id: empresaId
   }])
       .select()
       .single()
@@ -630,10 +667,11 @@ console.log("Insertando orden...")
 
     if (sectores && sectores.length > 0) {
       const sectoresInsert = sectores.map(s => ({
-        orden_id: tarea.id,
-        sector_id: s.id,
-        estado: "pendiente"
-      }))
+  orden_id: tarea.id,
+  sector_id: s.id,
+  estado: "pendiente",
+  empresa_id: empresaId
+}))
 
       console.log("Insertando sectores...")
 
@@ -650,7 +688,7 @@ console.log("Insertando orden...")
     orden_id: tarea.id,
     talle: Number(t.talle),
     cantidad: Number(t.cantidad),
-    empresa_id: usuarioDb.empresa_id
+    empresa_id: empresaId
   }))
 
 if (tallesInsert.length === 0) {
@@ -692,6 +730,12 @@ app.get("/api/ordenes", async (req,res)=>{
 
 try{
 
+  const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 const { data, error } = await supabase
 .from("ordenes")
 .select(`
@@ -703,6 +747,7 @@ fecha_entrega,
 prioridad,
 modelos(nombre, marca, codigo)
 `)
+.eq("empresa_id", empresaId)
 .order("id",{ascending:false})
 
 if(error) throw error
@@ -735,6 +780,12 @@ app.get("/api/ordenes/:id", async (req, res) => {
   try {
     const id = req.params.id
 
+    const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
     // 1. traer orden
     const { data: orden, error: errorOrden } = await supabase
      .from("ordenes")
@@ -747,6 +798,7 @@ app.get("/api/ordenes/:id", async (req, res) => {
   )
 `)
 .eq("id", id)
+.eq("empresa_id", empresaId)
 .maybeSingle()
 
     if (errorOrden) {
@@ -765,6 +817,7 @@ app.get("/api/ordenes/:id", async (req, res) => {
       .from("order_talles")
       .select("talle, cantidad")
       .eq("orden_id", id)
+      .eq("empresa_id", empresaId)
       .order("talle", { ascending: true })
 
     if (!errorTalles) {
@@ -795,6 +848,7 @@ app.get("/api/ordenes/:id", async (req, res) => {
         .from("fichas_tecnicas")
         .select("id")
         .eq("modelo_id", orden.modelo_id)
+        .eq("empresa_id", empresaId)
         .maybeSingle()
 
       if (!errorFichaBase && fichaBase?.id) {
@@ -811,6 +865,7 @@ app.get("/api/ordenes/:id", async (req, res) => {
             )
           `)
           .eq("id", fichaBase.id)
+          .eq("empresa_id", empresaId)
           .single()
 
         if (!errorFichaCompleta && fichaCompleta) {
@@ -847,9 +902,16 @@ app.get("/api/ordenes/:id", async (req, res) => {
 
 app.get("/api/produccion/tarea/:numero", async (req,res)=>{
 
+  try{
+
 const numero = req.params.numero
 
-try{
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 
 // traer tarea
 const { data:tarea, error:errTarea } = await supabase
@@ -863,6 +925,7 @@ const { data:tarea, error:errTarea } = await supabase
   )
 `)
 .eq("numero_tarea", numero)
+.eq("empresa_id", empresaId)
 .single()
 
 if(errTarea) throw errTarea
@@ -877,6 +940,7 @@ puesto_id,
 puestos(nombre,orden)
 `)
 .eq("orden_id", tarea.id)
+.eq("empresa_id", empresaId)
 
 if(errProd) throw errProd
 
@@ -905,9 +969,19 @@ app.put("/api/produccion", async (req,res)=>{
 
 const registros = req.body
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
+const registrosConEmpresa = Array.isArray(registros)
+  ? registros.map(r => ({ ...r, empresa_id: empresaId }))
+  : []
+
 const {data,error} = await supabase
 .from("produccion")
-.upsert(registros)
+.upsert(registrosConEmpresa)
 
 if(error){
 console.log(error)
@@ -952,6 +1026,12 @@ app.get("/api/usuarios", async (req,res)=>{
 
 try{
 
+  const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 const { data, error } = await supabase
 .from("usuarios")
 .select(`
@@ -961,6 +1041,7 @@ username,
 puesto_id,
 puestos(nombre)
 `)
+.eq("empresa_id", empresaId)
 
 if(error) throw error
 
@@ -1049,11 +1130,18 @@ try{
 
 const {sector,objetivo} = req.body
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 // buscar id del sector
 const {data:sec,error:err1} = await supabase
 .from("sectores")
 .select("id")
 .eq("nombre",sector)
+.eq("empresa_id", empresaId)
 .single()
 
 if(err1) throw err1
@@ -1064,7 +1152,8 @@ const {error:err2} = await supabase
 .upsert({
 sector_id: sec.id,
 objetivo: objetivo,
-fecha: new Date().toISOString().slice(0,10)
+fecha: new Date().toISOString().slice(0,10),
+empresa_id: empresaId
 })
 
 if(err2) throw err2
@@ -1090,6 +1179,12 @@ try{
 
 const hoy = new Date().toISOString().slice(0,10)
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 const { data, error } = await supabase
 .from("objetivos_sector")
 .select(`
@@ -1098,6 +1193,7 @@ sector_id,
 sectores(nombre)
 `)
 .eq("fecha",hoy)
+.eq("empresa_id", empresaId)
 
 if(error) throw error
 
@@ -1122,6 +1218,12 @@ app.post("/api/patrones", async (req, res) => {
 
     const { modelo_id, patrones } = req.body
 
+    const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
     if (!modelo_id || !patrones) {
       return res.status(400).json({ error: "Datos incompletos" })
     }
@@ -1131,8 +1233,10 @@ app.post("/api/patrones", async (req, res) => {
       .from("patrones")
       .delete()
       .eq("modelo_id", modelo_id)
+      .eq("empresa_id", empresaId)
 
     const dataInsert = patrones.map(p => ({
+      empresa_id: empresaId,
       modelo_id,
       bloque: p.bloque || null,
       pieza: p.pieza,
@@ -1161,10 +1265,17 @@ app.post("/api/patrones/calcular", async (req, res) => {
 
     const { modelo_id, cantidad } = req.body
 
+    const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
     const { data, error } = await supabase
       .from("patrones")
       .select("*")
       .eq("modelo_id", modelo_id)
+      .eq("empresa_id", empresaId)
 
     if (error) throw error
 
