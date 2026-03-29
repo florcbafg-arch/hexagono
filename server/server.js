@@ -89,6 +89,12 @@ app.post(
 
       const { marca, codigo, nombre, descripcion } = req.body
 
+      const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
       let ficha = null
       let imagen = null
 
@@ -109,7 +115,8 @@ app.post(
             nombre,
             descripcion,
             ficha_pdf: ficha,
-            imagen
+            imagen,
+            empresa_id: empresaId
           }
         ])
 
@@ -452,6 +459,12 @@ try{
 
 const hoy = new Date().toISOString().slice(0,10)
 
+const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 // obtener produccion con sector
 const { data:produccion, error:errProd } = await supabase
 .from("produccion")
@@ -541,9 +554,16 @@ error:"error dashboard"
 
 app.get("/api/modelos", async (req, res) => {
 
+  const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
   const { data, error } = await supabase
     .from("modelos")
     .select("*")
+    .eq("empresa_id", empresaId)
     .order("id", { ascending: false })
 
   if (error) {
@@ -564,10 +584,17 @@ app.get("/api/modelos/:id/curva", async (req, res) => {
 
     const modeloId = req.params.id
 
+    const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
     const { data, error } = await supabase
       .from("curvas_talles")
       .select("talle, porcentaje")
       .eq("modelo_id", modeloId)
+      .eq("empresa_id", empresaId)
       .order("talle", { ascending: true })
 
     if (error) throw error
@@ -632,6 +659,7 @@ if (errorUsuario) {
     const { data: existente, error: errorExistente } = await supabase
       .from("ordenes")
       .select("id")
+      .eq("empresa_id", empresaId)
       .eq("numero_tarea", numero)
       .maybeSingle()
 
@@ -1073,9 +1101,16 @@ app.get("/api/objetivos", async (req,res)=>{
 
 try{
 
+  const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+}
+
 const {data,error} = await supabase
 .from("sectores")
 .select("nombre,objetivo_diario")
+.eq("empresa_id", empresaId)
 
 if(error) throw error
 
@@ -1097,6 +1132,12 @@ app.get("/api/dashboard/sectores", async (req,res)=>{
 
 try{
 
+ const empresaId = req.user?.empresa_id
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" })
+} 
+
 const {data,error} = await supabase
 .from("sectores")
 .select(`
@@ -1107,6 +1148,7 @@ produccion (
 cantidad
 )
 `)
+.eq("empresa_id", empresaId)
 
 if(error) return res.json({ok:false})
 
