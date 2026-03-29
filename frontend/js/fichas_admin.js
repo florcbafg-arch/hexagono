@@ -86,7 +86,7 @@ function verPDF(pdf_url) {
 function filtrarFichas() {
   renderFichas()
 }
-
+ 
 function initFichas() {
   cargarFichas()
 }
