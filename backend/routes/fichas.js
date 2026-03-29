@@ -72,6 +72,15 @@ router.post("/fichas", async (req, res) => {
   imagenes = []
 } = req.body;
 
+console.log("BODY /api/fichas:", req.body);
+console.log("MODELO_ID /api/fichas:", req.body.modelo_id);
+console.log("MODELO /api/fichas:", req.body.modelo);
+console.log("REQ.USER /api/fichas:", req.user);
+console.log("VALIDANDO MODELO...", {
+  modelo_id,
+  modelo
+});
+
   const tieneSecciones = Array.isArray(secciones) && secciones.length > 0;
   const tienePDF = !!pdf_url;
 
