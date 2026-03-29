@@ -37,6 +37,7 @@ app.use("/api/usuarios", authMiddleware);
 app.use("/api/patrones", authMiddleware);
 app.use("/api/sector", authMiddleware);
 app.use("/api/objetivos", authMiddleware);
+app.use("/api/modelos", authMiddleware);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 
@@ -726,7 +727,7 @@ if (tallesInsert.length === 0) {
 console.log("Insertando talles...", tallesInsert)
 
 const { data: dataTalles, error: errorTalles } = await supabase
-  .from("order_talles")
+  .from("orden_talles")
   .insert(tallesInsert)
   .select()
 
@@ -842,7 +843,7 @@ if (!empresaId) {
     let talles = []
 
     const { data: tallesData, error: errorTalles } = await supabase
-      .from("order_talles")
+      .from("orden_talles")
       .select("talle, cantidad")
       .eq("orden_id", id)
       .eq("empresa_id", empresaId)
@@ -863,6 +864,7 @@ if (!empresaId) {
         .from("modelos")
         .select("id")
         .eq("nombre", orden.modelo)
+        .eq("empresa_id", empresaId)
         .maybeSingle()
 
       if (!errorModelo && modeloEncontrado?.id) {
