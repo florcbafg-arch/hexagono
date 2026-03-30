@@ -288,23 +288,24 @@ if (!curva || curva.length === 0) {
 }
 
         // 6. VALIDAR SUMA DE CURVA (acepta 1 o 100)
-        const sumaPorcentajes = curva.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
+        const sumaPorcentajes = curvaFinal.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
 
         const sumaValida =
           Math.abs(sumaPorcentajes - 1) <= 0.001 ||
           Math.abs(sumaPorcentajes - 100) <= 0.001
 
         if (!sumaValida) {
-          errores.push({
-            fila: p.id,
-            numero_tarea: numeroTarea,
-            modelo: p.modelo,
-            modelo_id: modelo.id,
-            suma_porcentajes: sumaPorcentajes,
-            error: `La curva tiene suma inválida`
-          })
-          continue
-        }
+  console.warn("⚠️ Curva inválida, usando fallback automático")
+
+  curvaFinal = [
+    { talle: 39, porcentaje: 0.15 },
+    { talle: 40, porcentaje: 0.20 },
+    { talle: 41, porcentaje: 0.25 },
+    { talle: 42, porcentaje: 0.20 },
+    { talle: 43, porcentaje: 0.10 },
+    { talle: 44, porcentaje: 0.10 }
+  ]
+}
 
         const usaPorcentajeEntero = Math.abs(sumaPorcentajes - 100) <= 0.001
 
