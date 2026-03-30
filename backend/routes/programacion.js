@@ -3,6 +3,64 @@ const router = express.Router()
 
 const { supabase } = require("../../config/supabase")
 
+async function obtenerOCrearModelo({ empresaId, nombreModelo, marca = null, codigo = null }) {
+  const normalizarTexto = (valor) =>
+    String(valor || "")
+      .trim()
+      .replace(/\s+/g, " ")
+
+  const nombreLimpio = normalizarTexto(nombreModelo)
+  const marcaLimpia = normalizarTexto(marca) || null
+  const codigoLimpio = normalizarTexto(codigo) || null
+
+  if (!empresaId) {
+    throw new Error("Empresa no identificada")
+  }
+
+  if (!nombreLimpio) {
+    throw new Error("Nombre de modelo vacío")
+  }
+
+  // 1. Traer modelos de la empresa y comparar en memoria de forma exacta, ignorando mayúsculas
+  const { data: modelosEmpresa, error: errorBuscar } = await supabase
+    .from("modelos")
+    .select("id, nombre, marca, codigo")
+    .eq("empresa_id", empresaId)
+
+  if (errorBuscar) {
+    throw errorBuscar
+  }
+
+  const nombreNormalizado = nombreLimpio.toLowerCase()
+
+  const modeloExistente = (modelosEmpresa || []).find(
+    (m) => normalizarTexto(m.nombre).toLowerCase() === nombreNormalizado
+  )
+
+  if (modeloExistente?.id) {
+    return modeloExistente
+  }
+
+  // 2. Crear si no existe
+  const { data: modeloNuevo, error: errorCrear } = await supabase
+    .from("modelos")
+    .insert([{
+      empresa_id: empresaId,
+      nombre: nombreLimpio,
+      marca: marcaLimpia,
+      codigo: codigoLimpio,
+      descripcion: "Modelo creado automáticamente desde programación"
+    }])
+    .select("id, nombre, marca, codigo")
+    .single()
+
+  if (errorCrear) {
+    throw errorCrear
+  }
+
+  return modeloNuevo
+}
+
 // 📊 OBTENER PROGRAMACION 🔥🔥🔥
 router.get("/", async (req, res) => {
   try {
@@ -177,49 +235,13 @@ if (!empresaId) {
           continue
         }
 
-        // 4. BUSCAR MODELO: exacto primero, parcial después
-        let modelo = null
-
-        const { data: modeloExacto, error: errorModeloExacto } = await supabase
-          .from("modelos")
-          .select("id, nombre, marca")
-          .eq("nombre", p.modelo)
-          .maybeSingle()
-
-        if (errorModeloExacto) throw errorModeloExacto
-
-        if (modeloExacto) {
-          modelo = modeloExacto
-        } else {
-          const { data: modelosParecidos, error: errorModeloParecido } = await supabase
-            .from("modelos")
-            .select("id, nombre, marca")
-            .ilike("nombre", `%${p.modelo}%`)
-
-          if (errorModeloParecido) throw errorModeloParecido
-
-          if (!modelosParecidos || modelosParecidos.length === 0) {
-            errores.push({
-              fila: p.id,
-              numero_tarea: numeroTarea,
-              modelo: p.modelo,
-              error: `Modelo no encontrado en tabla modelos`
-            })
-            continue
-          }
-
-          if (modelosParecidos.length > 1) {
-            errores.push({
-              fila: p.id,
-              numero_tarea: numeroTarea,
-              modelo: p.modelo,
-              error: `Modelo ambiguo: se encontraron ${modelosParecidos.length} coincidencias`
-            })
-            continue
-          }
-
-          modelo = modelosParecidos[0]
-        }
+        // 4. BUSCAR O CREAR MODELO
+const modelo = await obtenerOCrearModelo({
+  empresaId,
+  nombreModelo: p.modelo,
+  marca: p.marca || null,
+  codigo: p.codigo || null
+})
 
         console.log("✅ Modelo resuelto:", {
           programacion_id: p.id,
@@ -229,12 +251,12 @@ if (!empresaId) {
         })
 
         // 5. BUSCAR CURVA DEL MODELO
-        const { data: curva, error: errorCurva } = await supabase
-          .from("curvas_talles")
-          .select("talle, porcentaje")
-          .eq("modelo_id", modelo.id)
-          .order("talle", { ascending: true })
-
+       const { data: curva, error: errorCurva } = await supabase
+  .from("curvas_talles")
+  .select("talle, porcentaje")
+  .eq("modelo_id", modelo.id)
+  .eq("empresa_id", empresaId)
+  .order("talle", { ascending: true })
         if (errorCurva) throw errorCurva
 
         if (!curva || curva.length === 0) {
@@ -365,8 +387,9 @@ if (!empresaId) {
 
         // 10. CREAR SECTORES AUTOMÁTICOS
         const { data: sectores, error: errorSectores } = await supabase
-          .from("sectores")
-          .select("id")
+  .from("sectores")
+  .select("id")
+  .eq("empresa_id", empresaId)
 
         if (errorSectores) {
           errores.push({
