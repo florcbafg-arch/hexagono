@@ -815,6 +815,14 @@ if (!empresaId) {
   return res.status(401).json({ error: "Empresa no identificada" })
 }
 
+console.log("🔎 ORDEN CARGADA", {
+  id: orden.id,
+  numero_tarea: orden.numero_tarea,
+  modelo_id: orden.modelo_id,
+  empresa_id: empresaId,
+  modelo_relacion: orden.modelos
+})
+
     // 1. traer orden
     const { data: orden, error: errorOrden } = await supabase
      .from("ordenes")
@@ -872,6 +880,11 @@ if (!empresaId) {
       }
     }
 
+    console.log("🔎 BUSCANDO FICHA", {
+  modelo_id: orden.modelo_id,
+  empresa_id: empresaId
+})
+
     // 5. buscar ficha por modelo_id
     if (orden.modelo_id) {
       const { data: fichaBase, error: errorFichaBase } = await supabase
@@ -880,6 +893,11 @@ if (!empresaId) {
         .eq("modelo_id", orden.modelo_id)
         .eq("empresa_id", empresaId)
         .maybeSingle()
+
+        console.log("🔎 RESULTADO fichaBase", {
+  fichaBase,
+  errorFichaBase: errorFichaBase?.message || null
+})
 
       if (!errorFichaBase && fichaBase?.id) {
         const { data: fichaCompleta, error: errorFichaCompleta } = await supabase
@@ -897,6 +915,11 @@ if (!empresaId) {
           .eq("id", fichaBase.id)
           .eq("empresa_id", empresaId)
           .single()
+
+          console.log("🔎 RESULTADO fichaCompleta", {
+  fichaCompleta: !!fichaCompleta,
+  errorFichaCompleta: errorFichaCompleta?.message || null
+})
 
         if (!errorFichaCompleta && fichaCompleta) {
           ficha = fichaCompleta
