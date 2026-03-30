@@ -186,6 +186,19 @@ if (!empresaId) {
 
     if (error) throw error
 
+    if (!programaciones || programaciones.length === 0) {
+
+      console.log("ℹ️ No hay programaciones pendientes para generar")
+
+  return res.json({
+    ok: true,
+    creadas: 0,
+    saltadas: 0,
+    errores: [],
+    mensaje: "No hay programaciones pendientes para generar"
+  })
+}
+
     let creadas = 0
     let saltadas = 0
     let errores = []
