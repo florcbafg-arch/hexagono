@@ -30,6 +30,16 @@ const upload = multer({
 
 // SUBIR PDF
 router.post("/fichas/upload-pdf", upload.single("pdf"), async (req, res) => {
+
+  const empresaId = req.user?.empresa_id;
+
+if (!empresaId) {
+  return res.status(401).json({
+    ok: false,
+    error: "Empresa no identificada"
+  });
+}
+
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -72,6 +82,15 @@ router.post("/fichas", async (req, res) => {
   imagenes = []
 } = req.body;
 
+const empresaIdUsuario = req.user?.empresa_id;
+
+if (!empresaIdUsuario) {
+  return res.status(401).json({
+    ok: false,
+    error: "Empresa no identificada"
+  });
+}
+
 console.log("BODY /api/fichas:", req.body);
 console.log("MODELO_ID /api/fichas:", req.body.modelo_id);
 console.log("MODELO /api/fichas:", req.body.modelo);
@@ -109,6 +128,7 @@ if (modelo_id) {
     .from("modelos")
     .select("id, empresa_id, nombre, marca, codigo")
     .eq("id", modelo_id)
+    .eq("empresa_id", empresaIdUsuario)
     .single();
 
   if (error || !data) {
@@ -122,8 +142,6 @@ if (modelo_id) {
 
 // ✅ Caso 2: viene modelo por nombre (flujo nuevo)
 if (!modeloData && modelo) {
-  const empresaIdUsuario = req.user?.empresa_id;
-
   if (!empresaIdUsuario) {
     throw new Error("No se pudo determinar la empresa del usuario");
   }
@@ -167,11 +185,14 @@ if (!modeloIdFinal || !empresa_id) {
   throw new Error("No se pudo resolver el modelo");
 }
 
-const { data: fichaExistente } = await supabase
+const { data: fichaExistente, error: fichaExistenteError } = await supabase
   .from("fichas_tecnicas")
   .select("id")
   .eq("modelo_id", modeloIdFinal)
+  .eq("empresa_id", empresa_id)
   .maybeSingle();
+
+if (fichaExistenteError) throw fichaExistenteError;
 
 if (fichaExistente) {
   return res.status(400).json({
@@ -318,6 +339,16 @@ if (fichaExistente) {
 
 // TRAER FICHA POR MODELO
 router.get("/fichas/:modelo_id", async (req, res) => {
+
+  const empresaId = req.user?.empresa_id;
+
+if (!empresaId) {
+  return res.status(401).json({
+    ok: false,
+    error: "Empresa no identificada"
+  });
+}
+
   const { modelo_id } = req.params;
 
   try {
@@ -325,6 +356,7 @@ router.get("/fichas/:modelo_id", async (req, res) => {
       .from("fichas_tecnicas")
       .select("*")
       .eq("modelo_id", modelo_id)
+      .eq("empresa_id", empresaId)
       .single();
 
     if (fichaError) throw fichaError;
@@ -333,6 +365,7 @@ router.get("/fichas/:modelo_id", async (req, res) => {
       .from("fichas_secciones")
       .select("*")
       .eq("ficha_id", ficha.id)
+      .eq("empresa_id", empresaId)
       .order("orden", { ascending: true });
 
     if (secError) throw secError;
@@ -345,6 +378,7 @@ router.get("/fichas/:modelo_id", async (req, res) => {
         .from("fichas_piezas")
         .select("*")
         .in("seccion_id", seccionIds)
+        .eq("empresa_id", empresaId)
         .order("orden", { ascending: true });
 
       if (piezasError) throw piezasError;
@@ -359,6 +393,7 @@ router.get("/fichas/:modelo_id", async (req, res) => {
         .from("fichas_materiales")
         .select("*")
         .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId)
         .order("orden", { ascending: true });
 
       if (matError) throw matError;
@@ -371,6 +406,7 @@ router.get("/fichas/:modelo_id", async (req, res) => {
         .from("fichas_operaciones")
         .select("*")
         .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId)
         .order("orden", { ascending: true });
 
       if (opError) throw opError;
@@ -381,6 +417,7 @@ router.get("/fichas/:modelo_id", async (req, res) => {
       .from("fichas_imagenes")
       .select("*")
       .eq("ficha_id", ficha.id)
+      .eq("empresa_id", empresaId)
       .order("orden", { ascending: true });
 
     if (imgError) throw imgError;
@@ -417,6 +454,13 @@ router.get("/fichas/:modelo_id", async (req, res) => {
 
 // LISTAR FICHAS
 router.get("/fichas", async (req, res) => {
+
+  const empresaId = req.user?.empresa_id;
+
+if (!empresaId) {
+  return res.status(401).json({ error: "Empresa no identificada" });
+}
+
   try {
     const { data, error } = await supabase
       .from("fichas_tecnicas")
@@ -432,6 +476,7 @@ router.get("/fichas", async (req, res) => {
         fuente,
         modelos(nombre)
       `)
+      .eq("empresa_id", empresaId)
       .order("id", { ascending: false });
 
     if (error) throw error;
