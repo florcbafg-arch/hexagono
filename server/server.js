@@ -815,14 +815,6 @@ if (!empresaId) {
   return res.status(401).json({ error: "Empresa no identificada" })
 }
 
-console.log("🔎 ORDEN CARGADA", {
-  id: orden.id,
-  numero_tarea: orden.numero_tarea,
-  modelo_id: orden.modelo_id,
-  empresa_id: empresaId,
-  modelo_relacion: orden.modelos
-})
-
     // 1. traer orden
     const { data: orden, error: errorOrden } = await supabase
      .from("ordenes")
@@ -838,6 +830,7 @@ console.log("🔎 ORDEN CARGADA", {
 .eq("empresa_id", empresaId)
 .maybeSingle()
 
+
     if (errorOrden) {
       console.error("❌ error orden:", errorOrden)
       return res.status(500).json({ error: errorOrden.message })
@@ -846,6 +839,14 @@ console.log("🔎 ORDEN CARGADA", {
     if (!orden) {
       return res.status(404).json({ error: "Orden no encontrada" })
     }
+
+console.log("🔎 ORDEN CARGADA", {
+  id: orden.id,
+  numero_tarea: orden.numero_tarea,
+  modelo_id: orden.modelo_id,
+  empresa_id: empresaId,
+  modelo_relacion: orden.modelos
+})
 
     // 2. traer talles
     let talles = []
