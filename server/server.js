@@ -886,49 +886,112 @@ console.log("🔎 ORDEN CARGADA", {
   empresa_id: empresaId
 })
 
-    // 5. buscar ficha por modelo_id
-    if (orden.modelo_id) {
-      const { data: fichaBase, error: errorFichaBase } = await supabase
-        .from("fichas_tecnicas")
-        .select("id")
-        .eq("modelo_id", orden.modelo_id)
+   // 5. buscar ficha por modelo_id
+if (orden.modelo_id) {
+  const { data: fichaBase, error: errorFichaBase } = await supabase
+    .from("fichas_tecnicas")
+    .select("*")
+    .eq("modelo_id", orden.modelo_id)
+    .eq("empresa_id", empresaId)
+    .maybeSingle()
+
+  console.log("🔎 RESULTADO fichaBase", {
+    fichaBase,
+    errorFichaBase: errorFichaBase?.message || null
+  })
+
+  if (!errorFichaBase && fichaBase?.id) {
+    const { data: secciones, error: secError } = await supabase
+      .from("fichas_secciones")
+      .select("*")
+      .eq("ficha_id", fichaBase.id)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (secError) {
+      console.warn("⚠️ error secciones:", secError.message)
+    }
+
+    const seccionIds = (secciones || []).map(s => s.id)
+
+    let piezas = []
+    if (seccionIds.length > 0) {
+      const { data: piezasData, error: piezasError } = await supabase
+        .from("fichas_piezas")
+        .select("*")
+        .in("seccion_id", seccionIds)
         .eq("empresa_id", empresaId)
-        .maybeSingle()
+        .order("orden", { ascending: true })
 
-        console.log("🔎 RESULTADO fichaBase", {
-  fichaBase,
-  errorFichaBase: errorFichaBase?.message || null
-})
-
-      if (!errorFichaBase && fichaBase?.id) {
-        const { data: fichaCompleta, error: errorFichaCompleta } = await supabase
-          .from("fichas_tecnicas")
-          .select(`
-            *,
-            ficha_secciones (
-              *,
-              ficha_materiales (*),
-              ficha_operaciones (*),
-              ficha_piezas (*),
-              ficha_imagenes (*)
-            )
-          `)
-          .eq("id", fichaBase.id)
-          .eq("empresa_id", empresaId)
-          .single()
-
-          console.log("🔎 RESULTADO fichaCompleta", {
-  fichaCompleta: !!fichaCompleta,
-  errorFichaCompleta: errorFichaCompleta?.message || null
-})
-
-        if (!errorFichaCompleta && fichaCompleta) {
-          ficha = fichaCompleta
-        } else {
-          console.warn("⚠️ no se pudo cargar ficha completa:", errorFichaCompleta?.message)
-        }
+      if (piezasError) {
+        console.warn("⚠️ error piezas:", piezasError.message)
+      } else {
+        piezas = piezasData || []
       }
     }
+
+    const piezaIds = piezas.map(p => p.id)
+
+    let materiales = []
+    if (piezaIds.length > 0) {
+      const { data: materialesData, error: matError } = await supabase
+        .from("fichas_materiales")
+        .select("*")
+        .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId)
+        .order("orden", { ascending: true })
+
+      if (matError) {
+        console.warn("⚠️ error materiales:", matError.message)
+      } else {
+        materiales = materialesData || []
+      }
+    }
+
+    let operaciones = []
+    if (piezaIds.length > 0) {
+      const { data: operacionesData, error: opError } = await supabase
+        .from("fichas_operaciones")
+        .select("*")
+        .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId)
+        .order("orden", { ascending: true })
+
+      if (opError) {
+        console.warn("⚠️ error operaciones:", opError.message)
+      } else {
+        operaciones = operacionesData || []
+      }
+    }
+
+    const { data: imagenes, error: imgError } = await supabase
+      .from("fichas_imagenes")
+      .select("*")
+      .eq("ficha_id", fichaBase.id)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (imgError) {
+      console.warn("⚠️ error imagenes:", imgError.message)
+    }
+
+    ficha = {
+      ...fichaBase,
+      imagenes: imagenes || [],
+      secciones: (secciones || []).map(seccion => ({
+        ...seccion,
+        imagenes: (imagenes || []).filter(img => img.seccion_id === seccion.id),
+        piezas: piezas
+          .filter(p => p.seccion_id === seccion.id)
+          .map(pieza => ({
+            ...pieza,
+            materiales: materiales.filter(m => m.pieza_id === pieza.id),
+            operaciones: operaciones.filter(o => o.pieza_id === pieza.id)
+          }))
+      }))
+    }
+  }
+}
 
     // debug temporal
     console.log("✅ orden cargada:", orden.id)
