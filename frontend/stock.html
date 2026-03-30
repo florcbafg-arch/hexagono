@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hexaflow | Stock</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f4f6f8;
+      color: #1f1f1f;
+    }
+
+    .placeholder-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .placeholder-card {
+      width: 100%;
+      max-width: 760px;
+      background: #ffffff;
+      border: 1px solid #dcdcdc;
+      border-radius: 18px;
+      padding: 42px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .placeholder-icon {
+      font-size: 52px;
+      margin-bottom: 16px;
+    }
+
+    .placeholder-card h1 {
+      font-size: 32px;
+      margin-bottom: 12px;
+      color: #111;
+    }
+
+    .placeholder-card p {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 26px;
+    }
+
+    .placeholder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .placeholder-list .item {
+      background: #f7f7f7;
+      border: 1px solid #ececec;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .placeholder-badge {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      margin-bottom: 18px;
+    }
+
+    .placeholder-footer {
+      margin-top: 18px;
+      font-size: 14px;
+      color: #7a7a7a;
+      line-height: 1.6;
+    }
+
+    .highlight {
+      color: #111;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .placeholder-card {
+        padding: 30px 22px;
+      }
+
+      .placeholder-card h1 {
+        font-size: 26px;
+      }
+
+      .placeholder-card p {
+        font-size: 15px;
+      }
+
+      .placeholder-icon {
+        font-size: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="placeholder-wrap">
+    <div class="placeholder-card">
+      <div class="placeholder-icon">📦</div>
+      <h1>Módulo de Stock en construcción</h1>
+      <p>
+        Estamos desarrollando esta sección para darte un control total sobre los materiales,
+        movimientos y disponibilidad de insumos dentro de tu operación.
+      </p>
+
+      <div class="placeholder-list">
+        <div class="item">✔ Control de ingresos y egresos de materiales</div>
+        <div class="item">✔ Alertas automáticas de faltantes y stock crítico</div>
+        <div class="item">✔ Trazabilidad por material y vínculo con producción</div>
+      </div>
+
+      <span class="placeholder-badge">Próximamente</span>
+
+      <div class="placeholder-footer">
+        Muy pronto vas a poder saber <span class="highlight">exactamente qué tenés</span>,
+        <span class="highlight">qué te falta</span> y <span class="highlight">qué necesitás para producir sin frenar</span>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
