@@ -272,17 +272,20 @@ const modelo = await obtenerOCrearModelo({
   .order("talle", { ascending: true })
         if (errorCurva) throw errorCurva
 
-        if (!curva || curva.length === 0) {
-          errores.push({
-            fila: p.id,
-            numero_tarea: numeroTarea,
-            modelo: p.modelo,
-            modelo_id: modelo.id,
-            curva_programacion: p.curva || null,
-            error: `El modelo no tiene curva cargada en curvas_talles`
-          })
-          continue
-        }
+        let curvaFinal = curva
+
+if (!curva || curva.length === 0) {
+  console.warn("⚠️ Modelo sin curva, usando fallback automático")
+
+  curvaFinal = [
+    { talle: 39, porcentaje: 0.15 },
+    { talle: 40, porcentaje: 0.20 },
+    { talle: 41, porcentaje: 0.25 },
+    { talle: 42, porcentaje: 0.20 },
+    { talle: 43, porcentaje: 0.10 },
+    { talle: 44, porcentaje: 0.10 }
+  ]
+}
 
         // 6. VALIDAR SUMA DE CURVA (acepta 1 o 100)
         const sumaPorcentajes = curva.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
@@ -357,8 +360,8 @@ const modelo = await obtenerOCrearModelo({
         const tallesCalculados = []
         let acumulado = 0
 
-        for (let i = 0; i < curva.length; i++) {
-          const item = curva[i]
+        for (let i = 0; i < curvaFinal.length; i++) {
+          const item = curvaFinal[i]
           const porcentajeNormalizado = usaPorcentajeEntero
             ? Number(item.porcentaje) / 100
             : Number(item.porcentaje)
