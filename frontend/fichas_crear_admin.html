@@ -66,11 +66,32 @@
       <h2>Estructura técnica</h2>
       <p>Completá secciones, piezas, materiales y operaciones para alimentar órdenes e impresión.</p>
 
-      <div id="secciones"></div>
+      <div class="layout-ficha">
 
-      <div style="margin-top: 12px;">
-        <button type="button" onclick="agregarSeccion()">➕ Agregar Sección</button>
-      </div>
+  <!-- IZQUIERDA -->
+  <div class="panel-secciones">
+    <h3>Secciones</h3>
+    <div id="listaSecciones"></div>
+
+    <button type="button" onclick="agregarSeccion()">➕ Agregar sección</button>
+  </div>
+
+  <!-- CENTRO -->
+  <div class="panel-contenido">
+    <h3>Contenido técnico</h3>
+    <div id="secciones"></div>
+  </div>
+
+  <!-- DERECHA -->
+  <div class="panel-preview">
+    <h3>Vista previa</h3>
+    <div id="previewFicha">
+      <p>Imagen modelo</p>
+      <p>Resumen ficha</p>
+    </div>
+  </div>
+
+</div>
 
       <br>
 

@@ -141,6 +141,7 @@ function renderSecciones() {
 
   secciones.forEach((seccion, sIndex) => {
     const divSeccion = document.createElement("div")
+    divSeccion.id = "seccion_" + sIndex
     divSeccion.style.border = "1px solid #999"
     divSeccion.style.padding = "12px"
     divSeccion.style.marginBottom = "16px"
@@ -190,6 +191,41 @@ function renderSecciones() {
     contenedor.appendChild(divSeccion)
     renderPiezas(sIndex)
   })
+}
+
+function renderListaSecciones() {
+  const cont = document.getElementById("listaSecciones")
+  if (!cont) return
+
+  cont.innerHTML = ""
+
+  if (secciones.length === 0) {
+    cont.innerHTML = "<p>Sin secciones</p>"
+    return
+  }
+
+  secciones.forEach((s, i) => {
+    cont.innerHTML += `
+      <div 
+        onclick="scrollASeccion(${i})" 
+        style="
+          padding:8px;
+          margin-bottom:6px;
+          background:#222;
+          border-radius:6px;
+          cursor:pointer;
+        ">
+        ${i + 1}. ${s.nombre || "Sin nombre"}
+      </div>
+    `
+  })
+}
+
+function scrollASeccion(index) {
+  const el = document.getElementById("seccion_" + index)
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 }
 
 function renderPiezas(seccionIndex) {
@@ -455,5 +491,5 @@ function escapeHtml(valor) {
 async function init() {
   renderSecciones()
 }
-
+renderListaSecciones()
 init()

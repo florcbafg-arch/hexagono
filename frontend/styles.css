@@ -1159,3 +1159,31 @@ body.admin-page #contenido {
   overflow: auto;
   border: none;
 }
+
+.layout-ficha {
+  display: grid;
+  grid-template-columns: 250px 1fr 300px;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.panel-secciones {
+  background: #111;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.panel-contenido {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.panel-preview {
+  background: #0f172a;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+}
