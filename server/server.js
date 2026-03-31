@@ -999,8 +999,10 @@ if (orden.modelo_id) {
     console.log("✅ ficha encontrada:", !!ficha)
 
     // 6. responder todo junto
-    res.json({
+   res.json({
   ...orden,
+  numero: orden.numero_tarea || "-",
+  numero_tarea: orden.numero_tarea || "-",
   modelo_nombre: orden.modelos?.nombre || orden.modelo || "-",
   marca: orden.modelos?.marca || orden.marca || "-",
   codigo: orden.modelos?.codigo || orden.codigo || "-",

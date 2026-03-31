@@ -226,6 +226,12 @@ async function cargarOrden() {
     limpiarFichaVisual()
 
     // cabecera base desde orden
+
+   const numeroTareaEl = document.getElementById("numeroTarea")
+if (numeroTareaEl) {
+  numeroTareaEl.textContent = orden.numero_tarea || orden.numero || "-"
+}
+
     document.getElementById("modeloNombre").textContent = orden.modelo_nombre || "-"
     document.getElementById("codigoInterno").textContent = orden.codigo || "-"
     document.getElementById("marcaNombre").textContent = orden.marca || "-"
