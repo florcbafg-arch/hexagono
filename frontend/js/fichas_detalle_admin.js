@@ -31,6 +31,10 @@ async function cargarDetalleFicha() {
 function renderCabecera(ficha) {
   const cont = document.getElementById("cabeceraFicha")
 
+  const imagenHtml = ficha.imagen_modelo_url
+    ? `<p><strong>Imagen modelo:</strong> <a href="${ficha.imagen_modelo_url}" target="_blank">Ver imagen</a></p>`
+    : ""
+
   cont.innerHTML = `
     <div style="border:1px solid #999; padding:12px;">
       <p><strong>Modelo ID:</strong> ${ficha.modelo_id || "-"}</p>
@@ -40,7 +44,9 @@ function renderCabecera(ficha) {
       <p><strong>Horma:</strong> ${ficha.horma || "-"}</p>
       <p><strong>Temporada:</strong> ${ficha.temporada || "-"}</p>
       <p><strong>Detalle general:</strong> ${ficha.detalle_general || "-"}</p>
+      <p><strong>Observaciones generales:</strong> ${ficha.observaciones_generales || "-"}</p>
       <p><strong>Fuente:</strong> ${ficha.fuente || "-"}</p>
+      ${imagenHtml}
     </div>
   `
 }
@@ -68,7 +74,6 @@ function renderPDF(ficha) {
   `
 }
 
-
 function renderEstructura(ficha) {
   const cont = document.getElementById("estructuraFicha")
 
@@ -82,6 +87,21 @@ function renderEstructura(ficha) {
   ficha.secciones.forEach((seccion, sIndex) => {
     let htmlPiezas = ""
 
+    const imagenesSeccionHtml = (seccion.imagenes && seccion.imagenes.length > 0)
+      ? `
+        <div style="margin:10px 0;">
+          <p><strong>Imágenes de la sección:</strong></p>
+          ${seccion.imagenes.map(img => `
+            <div style="margin-bottom:8px;">
+              <a href="${img.url}" target="_blank">
+                ${img.descripcion || img.tipo || "Ver imagen"}
+              </a>
+            </div>
+          `).join("")}
+        </div>
+      `
+      : ""
+
     if (!seccion.piezas || seccion.piezas.length === 0) {
       htmlPiezas = `<p>Sin piezas en esta sección.</p>`
     } else {
@@ -92,8 +112,10 @@ function renderEstructura(ficha) {
                 <strong>${m.material || "-"}</strong>
                 | Esp: ${m.especificacion || "-"}
                 | Color: ${m.color || "-"}
+                | Categoría: ${m.categoria || "-"}
                 | UM: ${m.unidad_medida || "-"}
                 | Consumo: ${m.consumo ?? "-"}
+                | Obs: ${m.observacion || "-"}
               </li>
             `).join("")
           : `<li>Sin materiales</li>`
@@ -102,7 +124,9 @@ function renderEstructura(ficha) {
           ? pieza.operaciones.map(o => `
               <li>
                 <strong>${o.tipo || "-"}</strong>
-                | ${o.detalle || "-"}
+                | Detalle: ${o.detalle || "-"}
+                | Valor técnico: ${o.valor_tecnico || "-"}
+                | Obs: ${o.observacion || "-"}
               </li>
             `).join("")
           : `<li>Sin operaciones</li>`
@@ -110,6 +134,7 @@ function renderEstructura(ficha) {
         return `
           <div style="border:1px dashed #666; padding:10px; margin:10px 0 10px 20px;">
             <h4>Pieza ${pIndex + 1}: ${pieza.nombre || "-"}</h4>
+            <p><strong>Tipo pieza:</strong> ${pieza.tipo_pieza || "-"}</p>
             <p><strong>Observación:</strong> ${pieza.observacion || "-"}</p>
 
             <p><strong>Materiales:</strong></p>
@@ -126,13 +151,17 @@ function renderEstructura(ficha) {
       <div style="border:1px solid #999; padding:12px; margin-bottom:16px;">
         <h3>Sección ${sIndex + 1}: ${seccion.nombre || "-"}</h3>
         <p><strong>Sector:</strong> ${seccion.sector || "-"}</p>
+        <p><strong>Tipo sección:</strong> ${seccion.tipo_seccion || "-"}</p>
         <p><strong>Título impresión:</strong> ${seccion.titulo_impresion || "-"}</p>
         <p><strong>Observaciones:</strong> ${seccion.observaciones || "-"}</p>
+
+        ${imagenesSeccionHtml}
         ${htmlPiezas}
       </div>
     `
   })
 }
+
 
 function volver() {
   window.location.href = "fichas_admin.html"

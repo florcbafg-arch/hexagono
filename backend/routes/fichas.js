@@ -229,15 +229,16 @@ if (fichaExistente) {
       for (const [index, seccion] of secciones.entries()) {
         const { data: sec, error: secError } = await supabase
           .from("fichas_secciones")
-          .insert([{
-            ficha_id,
-            nombre: seccion.nombre?.trim() || `Sección ${index + 1}`,
-            orden: seccion.orden || index + 1,
-            sector: seccion.sector || "",
-            titulo_impresion: seccion.titulo_impresion || seccion.nombre || "",
-            observaciones: seccion.observaciones || "",
-            empresa_id
-          }])
+.insert([{
+  ficha_id,
+  nombre: seccion.nombre?.trim() || `Sección ${index + 1}`,
+  orden: seccion.orden || index + 1,
+  sector: seccion.sector || "",
+  tipo_seccion: seccion.tipo_seccion || "proceso",
+  titulo_impresion: seccion.titulo_impresion || seccion.nombre || "",
+  observaciones: seccion.observaciones || "",
+  empresa_id
+}])
           .select()
           .single();
 
@@ -249,13 +250,14 @@ if (fichaExistente) {
         for (const [piezaIndex, pieza] of piezas.entries()) {
           const { data: piezaData, error: piezaError } = await supabase
             .from("fichas_piezas")
-            .insert([{
-              seccion_id,
-              nombre: pieza.nombre?.trim() || `Pieza ${piezaIndex + 1}`,
-              orden: pieza.orden || piezaIndex + 1,
-              observacion: pieza.observacion || "",
-              empresa_id
-            }])
+.insert([{
+  seccion_id,
+  nombre: pieza.nombre?.trim() || `Pieza ${piezaIndex + 1}`,
+  tipo_pieza: pieza.tipo_pieza || "estructural",
+  orden: pieza.orden || piezaIndex + 1,
+  observacion: pieza.observacion || "",
+  empresa_id
+}])
             .select()
             .single();
 
@@ -265,16 +267,17 @@ if (fichaExistente) {
 
           if (Array.isArray(pieza.materiales) && pieza.materiales.length > 0) {
             const materialesInsert = pieza.materiales.map((m, matIndex) => ({
-              pieza_id,
-              material: m.material || "",
-              especificacion: m.especificacion || "",
-              color: m.color || "",
-              unidad_medida: m.unidad_medida || "",
-              consumo: m.consumo ?? null,
-              orden: m.orden || matIndex + 1,
-              observacion: m.observacion || "",
-              empresa_id
-            }));
+  pieza_id,
+  material: m.material || "",
+  especificacion: m.especificacion || "",
+  color: m.color || "",
+  categoria: m.categoria || "materia_prima",
+  unidad_medida: m.unidad_medida || "",
+  consumo: m.consumo ?? null,
+  orden: m.orden || matIndex + 1,
+  observacion: m.observacion || "",
+  empresa_id
+}));
 
             const { error: matError } = await supabase
               .from("fichas_materiales")
@@ -285,13 +288,14 @@ if (fichaExistente) {
 
           if (Array.isArray(pieza.operaciones) && pieza.operaciones.length > 0) {
             const operacionesInsert = pieza.operaciones.map((o, opIndex) => ({
-              pieza_id,
-              tipo: o.tipo || "",
-              detalle: o.detalle || "",
-              orden: o.orden || opIndex + 1,
-              observacion: o.observacion || "",
-              empresa_id
-            }));
+  pieza_id,
+  tipo: o.tipo || "",
+  detalle: o.detalle || "",
+  valor_tecnico: o.valor_tecnico || "",
+  orden: o.orden || opIndex + 1,
+  observacion: o.observacion || "",
+  empresa_id
+}));
 
             const { error: opError } = await supabase
               .from("fichas_operaciones")

@@ -53,6 +53,7 @@ function agregarSeccion() {
   secciones.push({
     nombre: "",
     sector: "",
+    tipo_seccion: "proceso",
     titulo_impresion: "",
     observaciones: "",
     piezas: []
@@ -68,6 +69,7 @@ function eliminarSeccion(index) {
 function agregarPieza(seccionIndex) {
   secciones[seccionIndex].piezas.push({
     nombre: "",
+    tipo_pieza: "estructural",
     observacion: "",
     materiales: [],
     operaciones: []
@@ -85,6 +87,7 @@ function agregarMaterial(seccionIndex, piezaIndex) {
     material: "",
     especificacion: "",
     color: "",
+    categoria: "materia_prima",
     unidad_medida: "",
     consumo: "",
     observacion: ""
@@ -101,11 +104,11 @@ function agregarOperacion(seccionIndex, piezaIndex) {
   secciones[seccionIndex].piezas[piezaIndex].operaciones.push({
     tipo: "",
     detalle: "",
+    valor_tecnico: "",
     observacion: ""
   })
   renderSecciones()
 }
-
 function eliminarOperacion(seccionIndex, piezaIndex, operacionIndex) {
   secciones[seccionIndex].piezas[piezaIndex].operaciones.splice(operacionIndex, 1)
   renderSecciones()
@@ -146,18 +149,29 @@ function renderSecciones() {
       <h3>Sección ${sIndex + 1}</h3>
 
       <div class="form-row">
-        <label>Nombre sección</label>
-        <input value="${escapeHtml(seccion.nombre)}"
-          oninput="actualizarSeccion(${sIndex}, 'nombre', this.value)">
+  <label>Nombre sección</label>
+  <input value="${escapeHtml(seccion.nombre)}"
+    oninput="actualizarSeccion(${sIndex}, 'nombre', this.value)">
 
-        <label>Sector</label>
-        <input value="${escapeHtml(seccion.sector)}"
-          oninput="actualizarSeccion(${sIndex}, 'sector', this.value)">
+  <label>Sector</label>
+  <input value="${escapeHtml(seccion.sector)}"
+    oninput="actualizarSeccion(${sIndex}, 'sector', this.value)">
 
-        <label>Título impresión</label>
-        <input value="${escapeHtml(seccion.titulo_impresion)}"
-          oninput="actualizarSeccion(${sIndex}, 'titulo_impresion', this.value)">
-      </div>
+  <label>Tipo sección</label>
+  <select onchange="actualizarSeccion(${sIndex}, 'tipo_seccion', this.value)">
+    <option value="materia_prima" ${seccion.tipo_seccion === "materia_prima" ? "selected" : ""}>Materia prima</option>
+    <option value="proceso" ${seccion.tipo_seccion === "proceso" ? "selected" : ""}>Proceso</option>
+    <option value="agregado" ${seccion.tipo_seccion === "agregado" ? "selected" : ""}>Agregado</option>
+    <option value="packaging" ${seccion.tipo_seccion === "packaging" ? "selected" : ""}>Packaging</option>
+    <option value="armado" ${seccion.tipo_seccion === "armado" ? "selected" : ""}>Armado</option>
+    <option value="parametro_tecnico" ${seccion.tipo_seccion === "parametro_tecnico" ? "selected" : ""}>Parámetro técnico</option>
+    <option value="refuerzo_interno" ${seccion.tipo_seccion === "refuerzo_interno" ? "selected" : ""}>Refuerzo interno</option>
+  </select>
+
+  <label>Título impresión</label>
+  <input value="${escapeHtml(seccion.titulo_impresion)}"
+    oninput="actualizarSeccion(${sIndex}, 'titulo_impresion', this.value)">
+</div>
 
       <div class="form-row">
         <label>Observaciones sección</label>
@@ -198,14 +212,21 @@ function renderPiezas(seccionIndex) {
       <h4>Pieza ${pIndex + 1}</h4>
 
       <div class="form-row">
-        <label>Nombre pieza</label>
-        <input value="${escapeHtml(pieza.nombre)}"
-          oninput="actualizarPieza(${seccionIndex}, ${pIndex}, 'nombre', this.value)">
+  <label>Nombre pieza</label>
+  <input value="${escapeHtml(pieza.nombre)}"
+    oninput="actualizarPieza(${seccionIndex}, ${pIndex}, 'nombre', this.value)">
 
-        <label>Observación pieza</label>
-        <input value="${escapeHtml(pieza.observacion)}"
-          oninput="actualizarPieza(${seccionIndex}, ${pIndex}, 'observacion', this.value)">
-      </div>
+  <label>Tipo pieza</label>
+  <select onchange="actualizarPieza(${seccionIndex}, ${pIndex}, 'tipo_pieza', this.value)">
+    <option value="estructural" ${pieza.tipo_pieza === "estructural" ? "selected" : ""}>Estructural</option>
+    <option value="visual" ${pieza.tipo_pieza === "visual" ? "selected" : ""}>Visual</option>
+    <option value="refuerzo" ${pieza.tipo_pieza === "refuerzo" ? "selected" : ""}>Refuerzo</option>
+  </select>
+
+  <label>Observación pieza</label>
+  <input value="${escapeHtml(pieza.observacion)}"
+    oninput="actualizarPieza(${seccionIndex}, ${pIndex}, 'observacion', this.value)">
+</div>
 
       <div style="margin: 8px 0;">
         <button type="button" onclick="agregarMaterial(${seccionIndex}, ${pIndex})">➕ Material</button>
@@ -251,18 +272,26 @@ function renderMateriales(seccionIndex, piezaIndex) {
         </div>
 
         <div class="form-row">
-          <label>Unidad medida</label>
-          <input value="${escapeHtml(material.unidad_medida)}"
-            oninput="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'unidad_medida', this.value)">
+  <label>Categoría</label>
+  <select onchange="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'categoria', this.value)">
+    <option value="materia_prima" ${material.categoria === "materia_prima" ? "selected" : ""}>Materia prima</option>
+    <option value="agregado" ${material.categoria === "agregado" ? "selected" : ""}>Agregado</option>
+    <option value="refuerzo" ${material.categoria === "refuerzo" ? "selected" : ""}>Refuerzo</option>
+    <option value="packaging" ${material.categoria === "packaging" ? "selected" : ""}>Packaging</option>
+  </select>
 
-          <label>Consumo</label>
-          <input type="number" step="0.0001" value="${escapeHtml(material.consumo)}"
-            oninput="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'consumo', this.value)">
+  <label>Unidad medida</label>
+  <input value="${escapeHtml(material.unidad_medida)}"
+    oninput="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'unidad_medida', this.value)">
 
-          <label>Observación</label>
-          <input value="${escapeHtml(material.observacion)}"
-            oninput="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'observacion', this.value)">
-        </div>
+  <label>Consumo</label>
+  <input type="number" step="0.0001" value="${escapeHtml(material.consumo)}"
+    oninput="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'consumo', this.value)">
+
+  <label>Observación</label>
+  <input value="${escapeHtml(material.observacion)}"
+    oninput="actualizarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex}, 'observacion', this.value)">
+</div>
 
         <button type="button" onclick="eliminarMaterial(${seccionIndex}, ${piezaIndex}, ${mIndex})">🗑 Eliminar Material</button>
       </div>
@@ -284,18 +313,22 @@ function renderOperaciones(seccionIndex, piezaIndex) {
     contenedor.innerHTML += `
       <div style="border:1px solid #ccc; padding:8px; margin:6px 0 6px 20px;">
         <div class="form-row">
-          <label>Tipo</label>
-          <input value="${escapeHtml(operacion.tipo)}"
-            oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'tipo', this.value)">
+  <label>Tipo</label>
+  <input value="${escapeHtml(operacion.tipo)}"
+    oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'tipo', this.value)">
 
-          <label>Detalle</label>
-          <input value="${escapeHtml(operacion.detalle)}"
-            oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'detalle', this.value)">
+  <label>Detalle</label>
+  <input value="${escapeHtml(operacion.detalle)}"
+    oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'detalle', this.value)">
 
-          <label>Observación</label>
-          <input value="${escapeHtml(operacion.observacion)}"
-            oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'observacion', this.value)">
-        </div>
+  <label>Valor técnico</label>
+  <input value="${escapeHtml(operacion.valor_tecnico)}"
+    oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'valor_tecnico', this.value)">
+
+  <label>Observación</label>
+  <input value="${escapeHtml(operacion.observacion)}"
+    oninput="actualizarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex}, 'observacion', this.value)">
+</div>
 
         <button type="button" onclick="eliminarOperacion(${seccionIndex}, ${piezaIndex}, ${oIndex})">🗑 Eliminar Operación</button>
       </div>
@@ -307,11 +340,13 @@ function normalizarSeccionesParaGuardar() {
   return secciones.map((seccion, sIndex) => ({
     nombre: (seccion.nombre || "").trim(),
     sector: (seccion.sector || "").trim(),
+    tipo_seccion: (seccion.tipo_seccion || "proceso").trim(),
     titulo_impresion: (seccion.titulo_impresion || "").trim(),
     observaciones: (seccion.observaciones || "").trim(),
     orden: sIndex + 1,
     piezas: (seccion.piezas || []).map((pieza, pIndex) => ({
       nombre: (pieza.nombre || "").trim(),
+      tipo_pieza: (pieza.tipo_pieza || "estructural").trim(),
       observacion: (pieza.observacion || "").trim(),
       orden: pIndex + 1,
       materiales: (pieza.materiales || [])
@@ -320,16 +355,22 @@ function normalizarSeccionesParaGuardar() {
           material: (m.material || "").trim(),
           especificacion: (m.especificacion || "").trim(),
           color: (m.color || "").trim(),
+          categoria: (m.categoria || "materia_prima").trim(),
           unidad_medida: (m.unidad_medida || "").trim(),
           consumo: m.consumo !== "" ? Number(m.consumo) : null,
           observacion: (m.observacion || "").trim(),
           orden: mIndex + 1
         })),
       operaciones: (pieza.operaciones || [])
-        .filter(o => (o.tipo || "").trim() !== "" || (o.detalle || "").trim() !== "")
+        .filter(o =>
+          (o.tipo || "").trim() !== "" ||
+          (o.detalle || "").trim() !== "" ||
+          (o.valor_tecnico || "").trim() !== ""
+        )
         .map((o, oIndex) => ({
           tipo: (o.tipo || "").trim(),
           detalle: (o.detalle || "").trim(),
+          valor_tecnico: (o.valor_tecnico || "").trim(),
           observacion: (o.observacion || "").trim(),
           orden: oIndex + 1
         }))
