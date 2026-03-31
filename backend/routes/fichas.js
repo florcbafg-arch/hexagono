@@ -74,6 +74,7 @@ router.post("/fichas", async (req, res) => {
   horma,
   temporada,
   detalle_general,
+  tipo_calzado,
   observaciones_generales,
   imagen_modelo_url,
   pdf_url,
@@ -215,6 +216,7 @@ if (fichaExistente) {
         imagen_modelo_url: imagen_modelo_url || "",
         pdf_url: pdf_url || "",
         fuente: fuente || (tienePDF ? "PDF" : "MANUAL"),
+        tipo_calzado: tipo_calzado || "",
         empresa_id
       }])
       .select()
