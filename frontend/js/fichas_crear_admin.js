@@ -596,45 +596,38 @@ function renderOperaciones(seccionIndex, piezaIndex) {
 }
 
 function normalizarSeccionesParaGuardar() {
-  return secciones.map((seccion, sIndex) => ({
-    nombre: (seccion.nombre || "").trim(),
-    sector: (seccion.sector || "").trim(),
-    tipo_seccion: (seccion.tipo_seccion || "proceso").trim(),
-    titulo_impresion: (seccion.titulo_impresion || "").trim(),
-    observaciones: (seccion.observaciones || "").trim(),
-    orden: sIndex + 1,
-    piezas: (seccion.piezas || []).map((pieza, pIndex) => ({
-      nombre: (pieza.nombre || "").trim(),
-      tipo_pieza: (pieza.tipo_pieza || "estructural").trim(),
-      observacion: (pieza.observacion || "").trim(),
-      orden: pIndex + 1,
-      materiales: (pieza.materiales || [])
-        .filter(m => (m.material || "").trim() !== "")
-        .map((m, mIndex) => ({
-          material: (m.material || "").trim(),
-          especificacion: (m.especificacion || "").trim(),
-          color: (m.color || "").trim(),
-          categoria: (m.categoria || "materia_prima").trim(),
-          unidad_medida: (m.unidad_medida || "").trim(),
-          consumo: m.consumo !== "" ? Number(m.consumo) : null,
-          observacion: (m.observacion || "").trim(),
-          orden: mIndex + 1
-        })),
-      operaciones: (pieza.operaciones || [])
-        .filter(o =>
-          (o.tipo || "").trim() !== "" ||
-          (o.detalle || "").trim() !== "" ||
-          (o.valor_tecnico || "").trim() !== ""
-        )
-        .map((o, oIndex) => ({
-          tipo: (o.tipo || "").trim(),
-          detalle: (o.detalle || "").trim(),
-          valor_tecnico: (o.valor_tecnico || "").trim(),
-          observacion: (o.observacion || "").trim(),
-          orden: oIndex + 1
-        }))
-    }))
-  })).filter(seccion => seccion.nombre !== "")
+  return secciones.map((seccion, sIndex) => {
+    return {
+      nombre: seccion.nombre,
+      sector: "",
+      tipo_seccion: "proceso",
+      titulo_impresion: seccion.titulo_impresion || "",
+      observaciones: seccion.observaciones || "",
+      orden: sIndex + 1,
+
+      piezas: (seccion.items || []).map((item, iIndex) => ({
+        nombre: item.label || "ITEM",
+        tipo_pieza: item.es_extra ? "visual" : "estructural",
+        observacion: "",
+        orden: iIndex + 1,
+
+        materiales: [
+          {
+            material: item.no_aplica ? "NO APLICA" : (item.valor || ""),
+            especificacion: "",
+            color: "",
+            categoria: "materia_prima",
+            unidad_medida: "",
+            consumo: null,
+            observacion: "",
+            orden: 1
+          }
+        ],
+
+        operaciones: []
+      }))
+    }
+  })
 }
 
 async function guardarFichaCompleta() {
@@ -645,6 +638,7 @@ async function guardarFichaCompleta() {
   const horma = document.getElementById("horma").value.trim()
   const temporada = document.getElementById("temporada").value.trim()
   const detalle_general = document.getElementById("detalle_general").value.trim()
+  const tipo_calzado = document.getElementById("tipo_calzado").value
 
   if (!modelo) return alert("Ingresar modelo")
   if (!codigo) return alert("Ingresar código")
@@ -660,9 +654,9 @@ async function guardarFichaCompleta() {
 
   const seccionesNormalizadas = normalizarSeccionesParaGuardar()
 
-  if (seccionesNormalizadas.length === 0 && !finalPdfUrl) {
-    return alert("Debes subir un PDF o cargar al menos una sección")
-  }
+ if (seccionesNormalizadas.length === 0) {
+  return alert("La ficha no tiene estructura")
+}
 
   try {
     const res = await apiFetch("/api/fichas", {
@@ -678,8 +672,9 @@ async function guardarFichaCompleta() {
         horma,
         temporada,
         detalle_general,
+        tipo_calzado,
         pdf_url: finalPdfUrl,
-        fuente: seccionesNormalizadas.length > 0 ? "MANUAL" : "PDF",
+        fuente: "MANUAL",
         secciones: seccionesNormalizadas
       })
     })
@@ -715,18 +710,58 @@ function renderPreviewFicha() {
   const cont = document.getElementById("previewFicha")
   if (!cont) return
 
-  const totalSecciones = secciones.length
-  const totalPiezas = secciones.reduce((acc, s) => acc + (s.piezas?.length || 0), 0)
+  const modelo = document.getElementById("modelo")?.value || "-"
+  const codigo = document.getElementById("codigo")?.value || "-"
+  const nombre = document.getElementById("nombre")?.value || "-"
+  const tipoCalzado = document.getElementById("tipo_calzado")?.value || "-"
+
+  const resumenSecciones = secciones.map((seccion) => {
+    const primerosItems = (seccion.items || []).slice(0, 3).map(item => `
+      <div style="display:flex; justify-content:space-between; gap:8px; font-size:12px; margin-bottom:4px;">
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(item.valor || "")}</span>
+      </div>
+    `).join("")
+
+    return `
+      <div style="margin-bottom:16px; border:1px solid #333;">
+        <div style="background:#000; color:#fff; padding:6px 8px; display:flex; justify-content:space-between;">
+          <span>${escapeHtml(seccion.nombre)}</span>
+          <span>${escapeHtml(seccion.titulo_impresion || "")}</span>
+        </div>
+        <div style="padding:8px;">
+          ${primerosItems || "<small>Sin datos aún</small>"}
+        </div>
+      </div>
+    `
+  }).join("")
 
   cont.innerHTML = `
-    <p><strong>Secciones:</strong> ${totalSecciones}</p>
-    <p><strong>Piezas:</strong> ${totalPiezas}</p>
+    <div style="border:1px solid #999; padding:12px; background:#fff; color:#000;">
+      <div style="background:#000; color:#fff; padding:8px; margin-bottom:12px;">
+        <div><strong>Código:</strong> ${escapeHtml(codigo)}</div>
+        <div><strong>Nombre:</strong> ${escapeHtml(nombre)}</div>
+        <div><strong>Modelo:</strong> ${escapeHtml(modelo)}</div>
+        <div><strong>Tipo:</strong> ${escapeHtml(tipoCalzado)}</div>
+      </div>
+      ${resumenSecciones}
+    </div>
   `
 }
 
 async function init() {
+  construirSeccionesFijas()
   renderSecciones()
 
+  const tipoCalzado = document.getElementById("tipo_calzado")
+  if (tipoCalzado) {
+    tipoCalzado.addEventListener("change", cambiarTipoCalzado)
+  }
+
+  ;["modelo", "codigo", "nombre"].forEach((id) => {
+    const el = document.getElementById(id)
+    if (el) el.addEventListener("input", renderPreviewFicha)
+  })
 }
 
 init()
