@@ -644,13 +644,7 @@ async function guardarFichaCompleta() {
   if (!codigo) return alert("Ingresar código")
   if (!nombre) return alert("Ingresar nombre")
 
-  let finalPdfUrl = pdfUrl
-  const input = document.getElementById("pdf_file")
-
-  if (input.files && input.files.length > 0 && !finalPdfUrl) {
-    finalPdfUrl = await subirPDF()
-    if (!finalPdfUrl) return
-  }
+  let finalPdfUrl = ""
 
   const seccionesNormalizadas = normalizarSeccionesParaGuardar()
 
@@ -673,7 +667,7 @@ async function guardarFichaCompleta() {
         temporada,
         detalle_general,
         tipo_calzado,
-        pdf_url: finalPdfUrl,
+        pdf_url: "",
         fuente: "MANUAL",
         secciones: seccionesNormalizadas
       })
@@ -764,4 +758,4 @@ async function init() {
   })
 }
 
-init()
+window.addEventListener("DOMContentLoaded", init)
