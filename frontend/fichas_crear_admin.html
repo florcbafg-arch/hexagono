@@ -25,47 +25,51 @@
     <div id="contenido">
       <h1>Crear / Importar Ficha Técnica</h1>
 
-      <div class="form-row">
-       <label>Modelo</label>
-<input id="modelo" placeholder="Nombre del modelo">
+     <div class="form-row">
+  <label>Modelo</label>
+  <input id="modelo" placeholder="Nombre del modelo">
 
-        <label>Código</label>
-        <input id="codigo" placeholder="Código de ficha o modelo">
+  <label>Código</label>
+  <input id="codigo" placeholder="Código de ficha o modelo">
 
-        <label>Nombre</label>
-        <input id="nombre" placeholder="Nombre de la ficha">
-      </div>
+  <label>Nombre</label>
+  <input id="nombre" placeholder="Nombre de la ficha">
+</div>
 
-      <div class="form-row">
-        <label>Marca</label>
-        <input id="marca" placeholder="Marca">
+<div class="form-row">
+  <label>Marca</label>
+  <input id="marca" placeholder="Marca">
 
-        <label>Horma</label>
-        <input id="horma" placeholder="Horma">
+  <label>Horma</label>
+  <input id="horma" placeholder="Horma">
 
-        <label>Temporada</label>
-        <input id="temporada" placeholder="Temporada">
-      </div>
+  <label>Temporada</label>
+  <input id="temporada" placeholder="Temporada">
+</div>
 
-      <div class="form-row">
-        <label>Detalle general</label>
-        <textarea id="detalle_general" rows="4" placeholder="Detalle general de la ficha"></textarea>
-      </div>
+<div class="form-row">
+  <label>Tipo de calzado</label>
+  <select id="tipo_calzado">
+    <option value="vulcanizada">Vulcanizada</option>
+    <option value="pegada">Pegada</option>
+  </select>
 
-      <div class="form-row">
-        <label>PDF de ficha técnica</label>
-        <input id="pdf_file" type="file" accept="application/pdf">
-      </div>
+  <label>Imagen del modelo</label>
+  <input id="imagen_modelo" type="file" accept="image/*">
 
-      <div class="form-row">
-        <small id="estado_pdf"></small>
-      </div>
+  <label>Logo marca</label>
+  <input id="logo_marca" type="file" accept="image/*">
+</div>
 
-      <hr>
+<div class="form-row">
+  <label>Detalle general</label>
+  <textarea id="detalle_general" rows="4" placeholder="Detalle general de la ficha"></textarea>
+</div>
 
-      <h2>Estructura técnica</h2>
-      <p>Completá secciones, piezas, materiales y operaciones para alimentar órdenes e impresión.</p>
+<hr>
 
+<h2>Estructura técnica</h2>
+<p>Completá la ficha técnica con las 6 secciones fijas del modelo.</p> 
       <div class="layout-ficha">
 
   <!-- IZQUIERDA -->

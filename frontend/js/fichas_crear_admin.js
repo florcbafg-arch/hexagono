@@ -1,6 +1,100 @@
 let pdfUrl = ""
 let secciones = []
 
+const ESTRUCTURA_BASE = {
+  seccion1: {
+    titulo: "SECCION N° 1",
+    subtitulo: "SACABOCADO",
+    items: [
+      "CAÑA",
+      "CAPELLADA",
+      "CORDONERA",
+      "FORRO",
+      "FRANJA TALON",
+      "LENGUA SUPERIOR",
+      "LENGUA INFERIOR",
+      "PUNTERA",
+      "RELLENO DE CUELLO",
+      "RELLENO DE LENGUA",
+      "TALON/CORDONERA",
+      "TALONCITO"
+    ]
+  },
+  seccion2: {
+    titulo: "SECCION N° 2",
+    subtitulo: "",
+    items: [
+      "COSTURA FIGURADA",
+      "COSTURAS",
+      "ETIQ. DE LENGUA",
+      "GRIFA DE CAÑA EXT",
+      "INSTRUCTIVO LENGUA",
+      "PERFORACIONES",
+      "SERIGRAFIA ETIQ LENGUA",
+      "SERIGRAFIA GRIFA"
+    ]
+  },
+  seccion3: {
+    titulo: "SECCION N° 3",
+    subtitulo: "",
+    items: [
+      "CAJA",
+      "CALCOMANIA",
+      "CORDONES",
+      "EMBALADO",
+      "ETIQ CAJA MADRE",
+      "ETIQ COMPOSICION",
+      "PLANTILLA",
+      "SERIGRAFIA PLANTILLA",
+      "SULFITO"
+    ]
+  },
+  seccion4_vulcanizada: {
+    titulo: "SECCION N° 4",
+    subtitulo: "",
+    items: [
+      "BANDA",
+      "BUMPER DELANTERO",
+      "HORMA",
+      "SUELIN",
+      "TAPA TRASERA"
+    ]
+  },
+  seccion4_pegada: {
+  titulo: "SECCION N° 4",
+  subtitulo: "",
+  items: [
+    "BASE",
+    "HORMA",
+    "COSTURA"
+  ]
+},
+  seccion5: {
+    titulo: "SECCION N° 5",
+    subtitulo: "",
+    items: [
+      "NUM. HORMA",
+      "NUM. SACABOCADO",
+      "NUM. GOM",
+      "SACABOCADO",
+      "TRANSFER DE CAPELL."
+    ]
+  },
+  seccion6: {
+    titulo: "SECCION N° 6",
+    subtitulo: "SACABOCADO",
+    items: [
+      "PLANTILLA DE STROBEL",
+      "REFUERZO CAÑA",
+      "REFUERZO CAPELLADA",
+      "REFUERZO CORDONERA",
+      "REFUERZO PUNTERA",
+      "REFUERZO TALON",
+      "RELLENO CAÑA"
+    ]
+  }
+}
+
 async function subirPDF() {
   const input = document.getElementById("pdf_file")
   const estado = document.getElementById("estado_pdf")
@@ -49,16 +143,103 @@ async function subirPDF() {
   }
 }
 
-function agregarSeccion() {
-  secciones.push({
-    nombre: "",
+function crearItemFijo(label, orden) {
+  return {
+    label,
+    valor: "",
+    no_aplica: false,
+    orden,
+    es_extra: false
+  }
+}
+
+function crearItemExtra(orden) {
+  return {
+    label: "",
+    valor: "",
+    no_aplica: false,
+    orden,
+    es_extra: true
+  }
+}
+
+function crearSeccionFija(titulo, subtitulo, items) {
+  return {
+    nombre: titulo,
     sector: "",
     tipo_seccion: "proceso",
-    titulo_impresion: "",
+    titulo_impresion: subtitulo || "",
     observaciones: "",
-    piezas: []
+    fija: true,
+    items: items.map((label, index) => crearItemFijo(label, index + 1))
+  }
+}
+
+function construirSeccionesFijas() {
+  const tipoCalzado = document.getElementById("tipo_calzado")?.value || "vulcanizada"
+
+  const seccion4 =
+    tipoCalzado === "pegada"
+      ? ESTRUCTURA_BASE.seccion4_pegada
+      : ESTRUCTURA_BASE.seccion4_vulcanizada
+
+  secciones = [
+    crearSeccionFija(
+      ESTRUCTURA_BASE.seccion1.titulo,
+      ESTRUCTURA_BASE.seccion1.subtitulo,
+      ESTRUCTURA_BASE.seccion1.items
+    ),
+    crearSeccionFija(
+      ESTRUCTURA_BASE.seccion2.titulo,
+      ESTRUCTURA_BASE.seccion2.subtitulo,
+      ESTRUCTURA_BASE.seccion2.items
+    ),
+    crearSeccionFija(
+      ESTRUCTURA_BASE.seccion3.titulo,
+      ESTRUCTURA_BASE.seccion3.subtitulo,
+      ESTRUCTURA_BASE.seccion3.items
+    ),
+    crearSeccionFija(
+      seccion4.titulo,
+      seccion4.subtitulo,
+      seccion4.items
+    ),
+    crearSeccionFija(
+      ESTRUCTURA_BASE.seccion5.titulo,
+      ESTRUCTURA_BASE.seccion5.subtitulo,
+      ESTRUCTURA_BASE.seccion5.items
+    ),
+    crearSeccionFija(
+      ESTRUCTURA_BASE.seccion6.titulo,
+      ESTRUCTURA_BASE.seccion6.subtitulo,
+      ESTRUCTURA_BASE.seccion6.items
+    )
+  ]
+}
+
+function cambiarTipoCalzado() {
+  const valoresActuales = JSON.parse(JSON.stringify(secciones))
+
+  construirSeccionesFijas()
+
+  secciones.forEach((seccionNueva, sIndex) => {
+    const seccionVieja = valoresActuales[sIndex]
+    if (!seccionVieja || !Array.isArray(seccionVieja.items)) return
+
+    seccionNueva.items.forEach((itemNuevo) => {
+      const itemViejo = seccionVieja.items.find(i => i.label === itemNuevo.label)
+      if (itemViejo) {
+        itemNuevo.valor = itemViejo.valor || ""
+        itemNuevo.no_aplica = !!itemViejo.no_aplica
+      }
+    })
   })
+
   renderSecciones()
+}
+
+function agregarSeccion() {
+  return
 }
 
 function eliminarSeccion(index) {
@@ -130,16 +311,41 @@ function actualizarOperacion(seccionIndex, piezaIndex, operacionIndex, campo, va
   secciones[seccionIndex].piezas[piezaIndex].operaciones[operacionIndex][campo] = valor
 }
 
+function actualizarItem(seccionIndex, itemIndex, campo, valor) {
+  secciones[seccionIndex].items[itemIndex][campo] = valor
+  renderPreviewFicha()
+}
+
+function toggleNoAplica(seccionIndex, itemIndex) {
+  const item = secciones[seccionIndex].items[itemIndex]
+  item.no_aplica = !item.no_aplica
+  item.valor = item.no_aplica ? "NO APLICA" : ""
+  renderSecciones()
+}
+
+function agregarItemExtra(seccionIndex) {
+  const items = secciones[seccionIndex].items || []
+  items.push(crearItemExtra(items.length + 1))
+  renderSecciones()
+}
+
+function eliminarItemExtra(seccionIndex, itemIndex) {
+  const item = secciones[seccionIndex].items[itemIndex]
+  if (!item?.es_extra) return
+  secciones[seccionIndex].items.splice(itemIndex, 1)
+  renderSecciones()
+}
+
 function renderSecciones() {
   const contenedor = document.getElementById("secciones")
   contenedor.innerHTML = ""
 
-if (secciones.length === 0) {
-  contenedor.innerHTML = `<p>No hay secciones cargadas todavía.</p>`
-  renderListaSecciones()
-  renderPreviewFicha()
-  return
-}
+  if (secciones.length === 0) {
+    contenedor.innerHTML = `<p>No hay secciones cargadas todavía.</p>`
+    renderListaSecciones()
+    renderPreviewFicha()
+    return
+  }
 
   secciones.forEach((seccion, sIndex) => {
     const divSeccion = document.createElement("div")
@@ -147,34 +353,48 @@ if (secciones.length === 0) {
     divSeccion.style.border = "1px solid #999"
     divSeccion.style.padding = "12px"
     divSeccion.style.marginBottom = "16px"
+    divSeccion.style.background = "#111"
+    divSeccion.style.borderRadius = "8px"
+
+    const itemsHtml = (seccion.items || []).map((item, iIndex) => `
+      <div style="margin-bottom:12px; padding:10px; background:#1c1c1c; border-radius:6px;">
+        <label style="display:block; font-weight:bold; margin-bottom:6px;">
+          ${escapeHtml(item.label || "Nuevo ítem")}
+        </label>
+
+        ${item.es_extra ? `
+          <input
+            placeholder="Título del ítem extra"
+            value="${escapeHtml(item.label)}"
+            oninput="actualizarItem(${sIndex}, ${iIndex}, 'label', this.value)"
+            style="margin-bottom:8px;"
+          >
+        ` : ""}
+
+        <textarea
+          rows="2"
+          ${item.no_aplica ? "disabled" : ""}
+          oninput="actualizarItem(${sIndex}, ${iIndex}, 'valor', this.value)"
+          style="width:100%; margin-bottom:8px;"
+        >${escapeHtml(item.valor)}</textarea>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" onclick="toggleNoAplica(${sIndex}, ${iIndex})">
+            ${item.no_aplica ? "✅ No aplica" : "No aplica"}
+          </button>
+
+          ${item.es_extra ? `
+            <button type="button" onclick="eliminarItemExtra(${sIndex}, ${iIndex})">🗑 Eliminar ítem</button>
+          ` : ""}
+        </div>
+      </div>
+    `).join("")
 
     divSeccion.innerHTML = `
-      <h3>Sección ${sIndex + 1}</h3>
-
-      <div class="form-row">
-  <label>Nombre sección</label>
-  <input value="${escapeHtml(seccion.nombre)}"
-    oninput="actualizarSeccion(${sIndex}, 'nombre', this.value)">
-
-  <label>Sector</label>
-  <input value="${escapeHtml(seccion.sector)}"
-    oninput="actualizarSeccion(${sIndex}, 'sector', this.value)">
-
-  <label>Tipo sección</label>
-  <select onchange="actualizarSeccion(${sIndex}, 'tipo_seccion', this.value)">
-    <option value="materia_prima" ${seccion.tipo_seccion === "materia_prima" ? "selected" : ""}>Materia prima</option>
-    <option value="proceso" ${seccion.tipo_seccion === "proceso" ? "selected" : ""}>Proceso</option>
-    <option value="agregado" ${seccion.tipo_seccion === "agregado" ? "selected" : ""}>Agregado</option>
-    <option value="packaging" ${seccion.tipo_seccion === "packaging" ? "selected" : ""}>Packaging</option>
-    <option value="armado" ${seccion.tipo_seccion === "armado" ? "selected" : ""}>Armado</option>
-    <option value="parametro_tecnico" ${seccion.tipo_seccion === "parametro_tecnico" ? "selected" : ""}>Parámetro técnico</option>
-    <option value="refuerzo_interno" ${seccion.tipo_seccion === "refuerzo_interno" ? "selected" : ""}>Refuerzo interno</option>
-  </select>
-
-  <label>Título impresión</label>
-  <input value="${escapeHtml(seccion.titulo_impresion)}"
-    oninput="actualizarSeccion(${sIndex}, 'titulo_impresion', this.value)">
-</div>
+      <div style="background:#000; color:#fff; padding:10px; font-weight:bold; margin-bottom:12px; display:flex; justify-content:space-between;">
+        <span>${escapeHtml(seccion.nombre)}</span>
+        <span>${escapeHtml(seccion.titulo_impresion || "")}</span>
+      </div>
 
       <div class="form-row">
         <label>Observaciones sección</label>
@@ -182,21 +402,18 @@ if (secciones.length === 0) {
           oninput="actualizarSeccion(${sIndex}, 'observaciones', this.value)">${escapeHtml(seccion.observaciones)}</textarea>
       </div>
 
-      <div style="margin: 8px 0;">
-        <button type="button" onclick="agregarPieza(${sIndex})">➕ Agregar Pieza</button>
-        <button type="button" onclick="eliminarSeccion(${sIndex})">🗑 Eliminar Sección</button>
-      </div>
+      ${itemsHtml}
 
-      <div id="piezas_${sIndex}"></div>
+      <div style="margin-top:12px;">
+        <button type="button" onclick="agregarItemExtra(${sIndex})">➕ Agregar ítem extra</button>
+      </div>
     `
 
     contenedor.appendChild(divSeccion)
-    renderPiezas(sIndex)
   })
 
   renderListaSecciones()
-renderPreviewFicha()
-
+  renderPreviewFicha()
 }
 
 function renderListaSecciones() {
@@ -212,8 +429,8 @@ function renderListaSecciones() {
 
   secciones.forEach((s, i) => {
     cont.innerHTML += `
-      <div 
-        onclick="scrollASeccion(${i})" 
+      <div
+        onclick="scrollASeccion(${i})"
         style="
           padding:8px;
           margin-bottom:6px;
@@ -221,7 +438,7 @@ function renderListaSecciones() {
           border-radius:6px;
           cursor:pointer;
         ">
-        ${i + 1}. ${s.nombre || "Sin nombre"}
+        ${i + 1}. ${escapeHtml(s.nombre || "Sin nombre")}
       </div>
     `
   })
