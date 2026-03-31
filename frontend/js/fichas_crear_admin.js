@@ -134,10 +134,12 @@ function renderSecciones() {
   const contenedor = document.getElementById("secciones")
   contenedor.innerHTML = ""
 
-  if (secciones.length === 0) {
-    contenedor.innerHTML = `<p>No hay secciones cargadas todavía.</p>`
-    return
-  }
+if (secciones.length === 0) {
+  contenedor.innerHTML = `<p>No hay secciones cargadas todavía.</p>`
+  renderListaSecciones()
+  renderPreviewFicha()
+  return
+}
 
   secciones.forEach((seccion, sIndex) => {
     const divSeccion = document.createElement("div")
@@ -191,6 +193,10 @@ function renderSecciones() {
     contenedor.appendChild(divSeccion)
     renderPiezas(sIndex)
   })
+
+  renderListaSecciones()
+renderPreviewFicha()
+
 }
 
 function renderListaSecciones() {
@@ -488,8 +494,22 @@ function escapeHtml(valor) {
     .replace(/'/g, "&#039;")
 }
 
+function renderPreviewFicha() {
+  const cont = document.getElementById("previewFicha")
+  if (!cont) return
+
+  const totalSecciones = secciones.length
+  const totalPiezas = secciones.reduce((acc, s) => acc + (s.piezas?.length || 0), 0)
+
+  cont.innerHTML = `
+    <p><strong>Secciones:</strong> ${totalSecciones}</p>
+    <p><strong>Piezas:</strong> ${totalPiezas}</p>
+  `
+}
+
 async function init() {
   renderSecciones()
+
 }
-renderListaSecciones()
+
 init()
