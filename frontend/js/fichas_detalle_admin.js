@@ -100,13 +100,13 @@ function renderHojaBase(contenido, conSalto = false) {
   return `
     <div style="
       max-width:1000px;
-      margin:0 auto 20px auto;
+      margin:0 auto;
       background:#fff;
       color:#000;
-      padding:20px;
+      padding:16px;
       border:1px solid #999;
-      page-break-after:${conSalto ? "always" : "auto"};
-      break-after:${conSalto ? "page" : "auto"};
+      page-break-after:${conSalto ? "always" : "avoid"};
+      break-after:${conSalto ? "page" : "avoid"};
     ">
       ${contenido}
     </div>

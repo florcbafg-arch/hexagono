@@ -42,17 +42,23 @@
   }
 
   #hojaFicha {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    background: #fff !important;
-    color: #000 !important;
-  }
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  background: #fff !important;
+  color: #000 !important;
+  overflow: visible !important;
+}
 
   #hojaFicha > div {
     page-break-inside: avoid;
     break-inside: avoid;
   }
+
+  #hojaFicha,
+#hojaFicha * {
+  overflow: visible !important;
+}
 
   #hojaFicha * {
     -webkit-print-color-adjust: exact !important;
