@@ -19,6 +19,8 @@
     margin: 0;
     padding: 0;
     background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .header,
@@ -35,12 +37,21 @@
     border: none !important;
     box-shadow: none !important;
     background: #fff !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   #hojaFicha {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  #hojaFicha * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   @page {
