@@ -74,9 +74,11 @@ router.post("/fichas", async (req, res) => {
   horma,
   temporada,
   detalle_general,
-  tipo_calzado,
   observaciones_generales,
+  tipo_calzado,
   imagen_modelo_url,
+  imagen_secundaria_url,
+  logo_marca_url,
   pdf_url,
   fuente,
   secciones = [],
@@ -203,25 +205,27 @@ if (fichaExistente) {
 }
 
     const { data: ficha, error: fichaError } = await supabase
-      .from("fichas_tecnicas")
-      .insert([{
-       modelo_id: modeloIdFinal,
-       codigo: codigo || modeloData.codigo || "",
-       nombre: nombre || modeloData.nombre || "",
-        marca: marca || "",
-        horma: horma || "",
-        temporada: temporada || "",
-        detalle_general: detalle_general || "",
-        observaciones_generales: observaciones_generales || "",
-        imagen_modelo_url: imagen_modelo_url || "",
-        pdf_url: pdf_url || "",
-        fuente: fuente || (tienePDF ? "PDF" : "MANUAL"),
-        tipo_calzado: tipo_calzado || "",
-        empresa_id
-      }])
-      .select()
-      .single();
-
+  .from("fichas_tecnicas")
+  .insert([{
+    modelo_id: modeloIdFinal,
+    codigo: codigo || modeloData.codigo || "",
+    nombre: nombre || modeloData.nombre || "",
+    marca: marca || "",
+    horma: horma || "",
+    temporada: temporada || "",
+    detalle_general: detalle_general || "",
+    observaciones_generales: observaciones_generales || "",
+    tipo_calzado: tipo_calzado || "vulcanizada",
+    imagen_modelo_url: imagen_modelo_url || "",
+    imagen_secundaria_url: imagen_secundaria_url || "",
+    logo_marca_url: logo_marca_url || "",
+    pdf_url: pdf_url || "",
+    fuente: fuente || (tienePDF ? "PDF" : "MANUAL"),
+    empresa_id
+  }])
+  .select()
+  .single();
+  
     if (fichaError) throw fichaError;
 
     const ficha_id = ficha.id;

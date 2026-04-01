@@ -658,19 +658,22 @@ async function guardarFichaCompleta() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        modelo,
-        codigo,
-        nombre,
-        marca,
-        horma,
-        temporada,
-        detalle_general,
-        tipo_calzado,
-        pdf_url: "",
-        fuente: "MANUAL",
-        secciones: seccionesNormalizadas
-      })
+     body: JSON.stringify({
+  modelo,
+  codigo,
+  nombre,
+  marca,
+  horma,
+  temporada,
+  detalle_general,
+  tipo_calzado,
+  imagen_modelo_url: "",
+  imagen_secundaria_url: "",
+  logo_marca_url: "",
+  pdf_url: "",
+  fuente: "MANUAL",
+  secciones: seccionesNormalizadas
+})
     })
 
     const data = await res.json()
