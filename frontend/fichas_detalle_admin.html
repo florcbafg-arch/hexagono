@@ -13,6 +13,42 @@
   <script>
     checkAuth("admin")
   </script>
+  <style>
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+  }
+
+  .header,
+  h1,
+  button {
+    display: none !important;
+  }
+
+  .container,
+  .main,
+  #contenido {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  #hojaFicha {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+}
+</style>
 </head>
 
 <body>

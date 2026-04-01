@@ -1,5 +1,6 @@
 let pdfUrl = ""
 let secciones = []
+let guardandoFicha = false
 
 const inputImagenModelo = document.getElementById("imagen_modelo")
 const inputImagenSecundaria = document.getElementById("imagen_secundaria")
@@ -682,6 +683,16 @@ function normalizarSeccionesParaGuardar() {
 }
 
 async function guardarFichaCompleta() {
+  if (guardandoFicha) return
+
+guardandoFicha = true
+
+const btnGuardar = document.getElementById("btnGuardarFicha")
+if (btnGuardar) {
+  btnGuardar.disabled = true
+  btnGuardar.textContent = "Guardando..."
+}
+
   const modelo = document.getElementById("modelo").value.trim()
   const codigo = document.getElementById("codigo").value.trim()
   const nombre = document.getElementById("nombre").value.trim()
@@ -745,15 +756,27 @@ logo_marca_url: logoMarcaUrl,
     const data = await res.json()
 
     if (data.ok) {
-      alert("Ficha técnica guardada correctamente")
-      window.location.href = "fichas_admin.html"
-    } else {
-      alert(data.error || "Error guardando ficha")
-    }
+  alert("Ficha técnica guardada correctamente")
+  window.location.href = "fichas_admin.html"
+} else {
+  guardandoFicha = false
+  alert(data.error || "Error guardando ficha")
+}
+
+if (btnGuardar) {
+  btnGuardar.disabled = false
+  btnGuardar.textContent = "💾 Guardar Ficha"
+}
+
   } catch (error) {
-    console.error("Error guardando ficha:", error)
-    alert("Error guardando ficha")
-  }
+  console.error("Error guardando ficha:", error)
+  guardandoFicha = false
+  alert(error.message || "Error guardando ficha")
+}
+if (btnGuardar) {
+  btnGuardar.disabled = false
+  btnGuardar.textContent = "💾 Guardar Ficha"
+}
 }
 
 function volver() {
