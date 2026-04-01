@@ -96,92 +96,223 @@ function renderBloqueSeccion(seccion, index) {
   `
 }
 
-function renderHojaFicha(ficha) {
-  const cont = document.getElementById("hojaFicha")
-
-  const imagenModelo = normalizarUrl(ficha.imagen_modelo_url)
-  const logoMarca = normalizarUrl(ficha.logo_marca_url)
-  const tipoCalzado = ficha.tipo_calzado || "-"
-
-  const seccionesHtml = (ficha.secciones || [])
-    .sort((a, b) => (a.orden || 0) - (b.orden || 0))
-    .map((seccion, index) => renderBloqueSeccion(seccion, index))
-    .join("")
-
-  cont.innerHTML = `
+function renderHojaBase(contenido, conSalto = false) {
+  return `
     <div style="
       max-width:1000px;
-      margin:0 auto;
+      margin:0 auto 20px auto;
       background:#fff;
       color:#000;
       padding:20px;
       border:1px solid #999;
+      page-break-after:${conSalto ? "always" : "auto"};
+      break-after:${conSalto ? "page" : "auto"};
     ">
-      <div style="margin-bottom:14px;">
-        <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:6px;">
-          Cod: ${escapeHtml(ficha.codigo || "-")}
-        </div>
-        <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold;">
-          ${escapeHtml(ficha.nombre || ficha.modelo_id || "-")}
-        </div>
-      </div>
+      ${contenido}
+    </div>
+  `
+}
 
+function renderImagenTecnica(img) {
+  const url = normalizarUrl(img?.url)
+
+  return `
+    <div style="
+      border:1px solid #000;
+      padding:10px;
+      background:#fff;
+      min-height:220px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    ">
       <div style="
-        position:relative;
-        border:2px solid #000;
-        min-height:280px;
-        margin-bottom:24px;
+        height:180px;
         display:flex;
         align-items:center;
         justify-content:center;
-        background:#fff;
         overflow:hidden;
+        margin-bottom:8px;
       ">
         ${
-          imagenModelo
+          url
             ? `<img
-                 src="${imagenModelo}"
-                 alt="Modelo"
-                 style="max-width:92%; max-height:240px; object-fit:contain;"
+                 src="${url}"
+                 alt="${escapeHtml(img?.descripcion || "Imagen técnica")}"
+                 style="max-width:100%; max-height:100%; object-fit:contain;"
                >`
-            : `<div style="color:#666;">Sin imagen del modelo</div>`
+            : `<span style="color:#666;">Sin imagen</span>`
         }
-
-        <div style="
-          position:absolute;
-          top:10px;
-          right:10px;
-          width:120px;
-          height:70px;
-          border:2px solid #000;
-          background:#fff;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          overflow:hidden;
-        ">
-          ${
-            logoMarca
-              ? `<img
-                   src="${logoMarca}"
-                   alt="Logo marca"
-                   style="max-width:90%; max-height:90%; object-fit:contain;"
-                 >`
-              : `<span style="font-size:12px; color:#666;">Sin logo</span>`
-          }
-        </div>
       </div>
 
-      <div style="margin-bottom:18px; font-size:14px;">
-        <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>
-        <div><strong>Horma:</strong> ${escapeHtml(ficha.horma || "-")}</div>
-        <div><strong>Temporada:</strong> ${escapeHtml(ficha.temporada || "-")}</div>
-        <div><strong>Tipo de calzado:</strong> ${escapeHtml(tipoCalzado)}</div>
+      <div style="font-size:12px;">
+        <div><strong>Tipo:</strong> ${escapeHtml(img?.tipo || "-")}</div>
+        <div><strong>Descripción:</strong> ${escapeHtml(img?.descripcion || "-")}</div>
       </div>
-
-      ${seccionesHtml}
     </div>
   `
+}
+
+function renderHojaFicha(ficha) {
+  const cont = document.getElementById("hojaFicha")
+
+  const imagenModelo = normalizarUrl(ficha.imagen_modelo_url)
+const imagenSecundaria = normalizarUrl(ficha.imagen_secundaria_url)
+const logoMarca = normalizarUrl(ficha.logo_marca_url)
+const tipoCalzado = ficha.tipo_calzado || "-"
+
+  const seccionesOrdenadas = (ficha.secciones || [])
+  .slice()
+  .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+
+const seccion1 = seccionesOrdenadas[0]
+const seccion2 = seccionesOrdenadas[1]
+const seccion3 = seccionesOrdenadas[2]
+const seccion4 = seccionesOrdenadas[3]
+const seccion5 = seccionesOrdenadas[4]
+const seccion6 = seccionesOrdenadas[5]
+
+const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
+  const tipo = String(img?.tipo || "").toLowerCase()
+  return tipo === "tecnica" || tipo === "detalle" || tipo === "referencia"
+})
+  const hoja1 = renderHojaBase(`
+  <div style="margin-bottom:14px;">
+    <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:6px; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+      Cod: ${escapeHtml(ficha.codigo || "-")}
+    </div>
+    <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+      ${escapeHtml(ficha.nombre || ficha.modelo_id || "-")}
+    </div>
+  </div>
+
+  <div style="
+    position:relative;
+    border:2px solid #000;
+    min-height:280px;
+    margin-bottom:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    overflow:hidden;
+  ">
+    ${
+      imagenModelo
+        ? `<img
+             src="${imagenModelo}"
+             alt="Modelo"
+             style="max-width:92%; max-height:240px; object-fit:contain;"
+           >`
+        : `<div style="color:#666;">Sin imagen del modelo</div>`
+    }
+
+    <div style="
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:120px;
+      height:70px;
+      border:2px solid #000;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    ">
+      ${
+        logoMarca
+          ? `<img
+               src="${logoMarca}"
+               alt="Logo marca"
+               style="max-width:90%; max-height:90%; object-fit:contain;"
+             >`
+          : `<span style="font-size:12px; color:#666;">Sin logo</span>`
+      }
+    </div>
+  </div>
+
+  <div style="margin-bottom:18px; font-size:14px;">
+    <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>
+    <div><strong>Horma:</strong> ${escapeHtml(ficha.horma || "-")}</div>
+    <div><strong>Temporada:</strong> ${escapeHtml(ficha.temporada || "-")}</div>
+    <div><strong>Tipo de calzado:</strong> ${escapeHtml(tipoCalzado)}</div>
+  </div>
+
+  ${seccion1 ? renderBloqueSeccion(seccion1, 0) : ""}
+`, true)
+
+const hoja2 = renderHojaBase(`
+  <div style="margin-bottom:18px;">
+    <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+      Imagen secundaria
+    </div>
+
+    <div style="
+      border:2px solid #000;
+      min-height:260px;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      padding:10px;
+    ">
+      ${
+        imagenSecundaria
+          ? `<img
+               src="${imagenSecundaria}"
+               alt="Imagen secundaria"
+               style="max-width:100%; max-height:240px; object-fit:contain;"
+             >`
+          : `<div style="color:#666;">Sin imagen secundaria</div>`
+      }
+    </div>
+  </div>
+
+  ${seccion2 ? renderBloqueSeccion(seccion2, 1) : ""}
+  ${seccion3 ? renderBloqueSeccion(seccion3, 2) : ""}
+  ${seccion4 ? renderBloqueSeccion(seccion4, 3) : ""}
+`, true)
+
+const hoja3 = renderHojaBase(`
+  <div style="margin-bottom:18px;">
+    <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+      Imágenes técnicas
+    </div>
+
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:12px;
+      margin-bottom:24px;
+    ">
+      ${
+        imagenesTecnicas.length > 0
+          ? imagenesTecnicas.map(renderImagenTecnica).join("")
+          : `
+            <div style="
+              border:1px solid #000;
+              padding:20px;
+              min-height:120px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              color:#666;
+              grid-column:1 / -1;
+            ">
+              Sin imágenes técnicas cargadas
+            </div>
+          `
+      }
+    </div>
+  </div>
+
+  ${seccion5 ? renderBloqueSeccion(seccion5, 4) : ""}
+  ${seccion6 ? renderBloqueSeccion(seccion6, 5) : ""}
+`, false)
+
+cont.innerHTML = hoja1 + hoja2 + hoja3
 }
 
 function escapeHtml(valor) {
