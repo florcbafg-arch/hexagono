@@ -23,18 +23,15 @@
     <div class="header">Panel Administrador</div>
 
     <div id="contenido">
-      <h1>Detalle Ficha Técnica</h1>
+  <h1>Detalle Ficha Técnica</h1>
 
-      <div id="cabeceraFicha" style="margin-bottom:20px;"></div>
+  <div style="margin-bottom:20px; display:flex; gap:10px;">
+    <button onclick="window.print()">🖨 Imprimir</button>
+    <button onclick="volver()">⬅ Volver</button>
+  </div>
 
-      <div style="margin-bottom:20px;">
-        <button onclick="volver()">⬅ Volver</button>
-      </div>
-
-      <div id="pdfFicha" style="margin-bottom:20px;"></div>
-
-      <div id="estructuraFicha"></div>
-    </div>
+  <div id="hojaFicha"></div>
+</div>
   </div>
 
 </div>

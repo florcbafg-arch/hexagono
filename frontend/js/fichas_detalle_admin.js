@@ -15,11 +15,7 @@ async function cargarDetalleFicha() {
       throw new Error(data.error || "No se pudo cargar la ficha")
     }
 
-    const ficha = data.ficha
-    renderCabecera(ficha)
-    renderPDF(ficha)
-    renderEstructura(ficha)
-
+    renderHojaFicha(data.ficha)
   } catch (error) {
     console.error("Error cargando detalle ficha:", error)
     document.getElementById("contenido").innerHTML += `
@@ -28,140 +24,174 @@ async function cargarDetalleFicha() {
   }
 }
 
-function renderCabecera(ficha) {
-  const cont = document.getElementById("cabeceraFicha")
+function normalizarUrl(url) {
+  if (!url) return ""
 
-  const imagenHtml = ficha.imagen_modelo_url
-    ? `<p><strong>Imagen modelo:</strong> <a href="${ficha.imagen_modelo_url}" target="_blank">Ver imagen</a></p>`
-    : ""
-
-  cont.innerHTML = `
-    <div style="border:1px solid #999; padding:12px;">
-      <p><strong>Modelo ID:</strong> ${ficha.modelo_id || "-"}</p>
-      <p><strong>Código:</strong> ${ficha.codigo || "-"}</p>
-      <p><strong>Nombre:</strong> ${ficha.nombre || "-"}</p>
-      <p><strong>Marca:</strong> ${ficha.marca || "-"}</p>
-      <p><strong>Horma:</strong> ${ficha.horma || "-"}</p>
-      <p><strong>Temporada:</strong> ${ficha.temporada || "-"}</p>
-      <p><strong>Detalle general:</strong> ${ficha.detalle_general || "-"}</p>
-      <p><strong>Observaciones generales:</strong> ${ficha.observaciones_generales || "-"}</p>
-      <p><strong>Fuente:</strong> ${ficha.fuente || "-"}</p>
-      ${imagenHtml}
-    </div>
-  `
-}
-
-function renderPDF(ficha) {
-  const cont = document.getElementById("pdfFicha")
-
-  if (!ficha.pdf_url) {
-    cont.innerHTML = ""
-    return
-  }
-
-  let ruta = ficha.pdf_url.trim()
+  let ruta = url.trim()
 
   if (!ruta.startsWith("http") && !ruta.startsWith("/")) {
     ruta = "/" + ruta
   }
 
-  const url = ruta.startsWith("http")
+  return ruta.startsWith("http")
     ? ruta
     : window.location.origin + ruta
+}
 
-  cont.innerHTML = `
-    <button onclick="window.location.href='${url}'">📄 Ver PDF</button>
+function obtenerValorDePieza(pieza) {
+  if (!pieza) return "-"
+
+  const materialPrincipal = pieza.materiales?.[0]?.material?.trim()
+  if (materialPrincipal) return materialPrincipal
+
+  const detalleOperacion = pieza.operaciones?.[0]?.detalle?.trim()
+  if (detalleOperacion) return detalleOperacion
+
+  return "-"
+}
+
+function renderBloqueSeccion(seccion, index) {
+  const piezas = Array.isArray(seccion.piezas) ? seccion.piezas : []
+
+  const filas = piezas.map((pieza) => {
+    return `
+      <div style="
+        display:grid;
+        grid-template-columns: 220px 1fr;
+        gap:12px;
+        margin-bottom:8px;
+        align-items:start;
+      ">
+        <div style="font-weight:bold;">${escapeHtml(pieza.nombre || "-")}</div>
+        <div style="white-space:pre-line;">${escapeHtml(obtenerValorDePieza(pieza))}</div>
+      </div>
+    `
+  }).join("")
+
+  return `
+    <div style="margin-bottom:24px;">
+      <div style="
+        background:#000;
+        color:#fff;
+        padding:6px 10px;
+        font-weight:bold;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+      ">
+        <span>${escapeHtml(seccion.nombre || `SECCION N° ${index + 1}`)}</span>
+        <span>${escapeHtml(seccion.titulo_impresion || "")}</span>
+      </div>
+
+      <div style="
+        border-left:1px solid #000;
+        border-right:1px solid #000;
+        border-bottom:1px solid #000;
+        padding:12px;
+        background:#fff;
+      ">
+        ${filas || "<p>Sin datos en esta sección.</p>"}
+      </div>
+    </div>
   `
 }
 
-function renderEstructura(ficha) {
-  const cont = document.getElementById("estructuraFicha")
+function renderHojaFicha(ficha) {
+  const cont = document.getElementById("hojaFicha")
 
-  if (!ficha.secciones || ficha.secciones.length === 0) {
-    cont.innerHTML = `<p>No hay estructura técnica cargada para esta ficha.</p>`
-    return
-  }
+  const imagenModelo = normalizarUrl(ficha.imagen_modelo_url)
+  const logoMarca = normalizarUrl(ficha.logo_marca_url)
+  const tipoCalzado = ficha.tipo_calzado || "-"
 
-  cont.innerHTML = ""
+  const seccionesHtml = (ficha.secciones || [])
+    .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+    .map((seccion, index) => renderBloqueSeccion(seccion, index))
+    .join("")
 
-  ficha.secciones.forEach((seccion, sIndex) => {
-    let htmlPiezas = ""
-
-    const imagenesSeccionHtml = (seccion.imagenes && seccion.imagenes.length > 0)
-      ? `
-        <div style="margin:10px 0;">
-          <p><strong>Imágenes de la sección:</strong></p>
-          ${seccion.imagenes.map(img => `
-            <div style="margin-bottom:8px;">
-              <a href="${img.url}" target="_blank">
-                ${img.descripcion || img.tipo || "Ver imagen"}
-              </a>
-            </div>
-          `).join("")}
+  cont.innerHTML = `
+    <div style="
+      max-width:1000px;
+      margin:0 auto;
+      background:#fff;
+      color:#000;
+      padding:20px;
+      border:1px solid #999;
+    ">
+      <div style="margin-bottom:14px;">
+        <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:6px;">
+          Cod: ${escapeHtml(ficha.codigo || "-")}
         </div>
-      `
-      : ""
-
-    if (!seccion.piezas || seccion.piezas.length === 0) {
-      htmlPiezas = `<p>Sin piezas en esta sección.</p>`
-    } else {
-      htmlPiezas = seccion.piezas.map((pieza, pIndex) => {
-        const materialesHtml = (pieza.materiales && pieza.materiales.length > 0)
-          ? pieza.materiales.map(m => `
-              <li>
-                <strong>${m.material || "-"}</strong>
-                | Esp: ${m.especificacion || "-"}
-                | Color: ${m.color || "-"}
-                | Categoría: ${m.categoria || "-"}
-                | UM: ${m.unidad_medida || "-"}
-                | Consumo: ${m.consumo ?? "-"}
-                | Obs: ${m.observacion || "-"}
-              </li>
-            `).join("")
-          : `<li>Sin materiales</li>`
-
-        const operacionesHtml = (pieza.operaciones && pieza.operaciones.length > 0)
-          ? pieza.operaciones.map(o => `
-              <li>
-                <strong>${o.tipo || "-"}</strong>
-                | Detalle: ${o.detalle || "-"}
-                | Valor técnico: ${o.valor_tecnico || "-"}
-                | Obs: ${o.observacion || "-"}
-              </li>
-            `).join("")
-          : `<li>Sin operaciones</li>`
-
-        return `
-          <div style="border:1px dashed #666; padding:10px; margin:10px 0 10px 20px;">
-            <h4>Pieza ${pIndex + 1}: ${pieza.nombre || "-"}</h4>
-            <p><strong>Tipo pieza:</strong> ${pieza.tipo_pieza || "-"}</p>
-            <p><strong>Observación:</strong> ${pieza.observacion || "-"}</p>
-
-            <p><strong>Materiales:</strong></p>
-            <ul>${materialesHtml}</ul>
-
-            <p><strong>Operaciones:</strong></p>
-            <ul>${operacionesHtml}</ul>
-          </div>
-        `
-      }).join("")
-    }
-
-    cont.innerHTML += `
-      <div style="border:1px solid #999; padding:12px; margin-bottom:16px;">
-        <h3>Sección ${sIndex + 1}: ${seccion.nombre || "-"}</h3>
-        <p><strong>Sector:</strong> ${seccion.sector || "-"}</p>
-        <p><strong>Tipo sección:</strong> ${seccion.tipo_seccion || "-"}</p>
-        <p><strong>Título impresión:</strong> ${seccion.titulo_impresion || "-"}</p>
-        <p><strong>Observaciones:</strong> ${seccion.observaciones || "-"}</p>
-
-        ${imagenesSeccionHtml}
-        ${htmlPiezas}
+        <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold;">
+          ${escapeHtml(ficha.nombre || ficha.modelo_id || "-")}
+        </div>
       </div>
-    `
-  })
+
+      <div style="
+        position:relative;
+        border:2px solid #000;
+        min-height:280px;
+        margin-bottom:24px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#fff;
+        overflow:hidden;
+      ">
+        ${
+          imagenModelo
+            ? `<img
+                 src="${imagenModelo}"
+                 alt="Modelo"
+                 style="max-width:92%; max-height:240px; object-fit:contain;"
+               >`
+            : `<div style="color:#666;">Sin imagen del modelo</div>`
+        }
+
+        <div style="
+          position:absolute;
+          top:10px;
+          right:10px;
+          width:120px;
+          height:70px;
+          border:2px solid #000;
+          background:#fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          overflow:hidden;
+        ">
+          ${
+            logoMarca
+              ? `<img
+                   src="${logoMarca}"
+                   alt="Logo marca"
+                   style="max-width:90%; max-height:90%; object-fit:contain;"
+                 >`
+              : `<span style="font-size:12px; color:#666;">Sin logo</span>`
+          }
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px; font-size:14px;">
+        <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>
+        <div><strong>Horma:</strong> ${escapeHtml(ficha.horma || "-")}</div>
+        <div><strong>Temporada:</strong> ${escapeHtml(ficha.temporada || "-")}</div>
+        <div><strong>Tipo de calzado:</strong> ${escapeHtml(tipoCalzado)}</div>
+      </div>
+
+      ${seccionesHtml}
+    </div>
+  `
 }
 
+function escapeHtml(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
 
 function volver() {
   window.location.href = "fichas_admin.html"
