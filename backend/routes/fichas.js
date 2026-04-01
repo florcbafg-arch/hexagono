@@ -3,7 +3,47 @@ const router = express.Router();
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const uploadImage = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  },
+  fileFilter: function (req, file, cb) {
+    const tiposPermitidos = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (!tiposPermitidos.includes(file.mimetype)) {
+      return cb(new Error("Solo imágenes JPG, PNG o WEBP"));
+    }
+
+    cb(null, true);
+  }
+});
 const { supabase } = require("../../config/supabase");
+const BUCKET = "fichas-tecnicas";
+
+function limpiarNombre(nombre = "") {
+  return nombre
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9.\-_]/g, "")
+    .toLowerCase();
+}
+
+function carpetaPorTipo(tipo = "") {
+  const t = tipo.toLowerCase();
+
+  if (t === "modelo") return "modelos";
+  if (t === "secundaria") return "secundarias";
+  if (t === "logo") return "logos";
+
+  return "general";
+}
 
 const uploadDir = path.join(__dirname, "../../uploads/fichas");
 fs.mkdirSync(uploadDir, { recursive: true });
@@ -57,6 +97,67 @@ if (!empresaId) {
   } catch (error) {
     console.error("Error subiendo PDF:", error);
     res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+// SUBIR IMAGEN A SUPABASE STORAGE
+router.post("/fichas/upload-imagen", uploadImage.single("imagen"), async (req, res) => {
+  const empresaId = req.user?.empresa_id;
+
+  if (!empresaId) {
+    return res.status(401).json({
+      ok: false,
+      error: "Empresa no identificada"
+    });
+  }
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        ok: false,
+        error: "No se recibió imagen"
+      });
+    }
+
+    const tipo = req.body?.tipo || "general";
+    const carpeta = carpetaPorTipo(tipo);
+
+    const extension = req.file.originalname.split(".").pop();
+    const nombreLimpio = limpiarNombre(
+      req.file.originalname.replace(/\.[^/.]+$/, "")
+    );
+
+    const nombreFinal = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${nombreLimpio}.${extension}`;
+
+    const path = `${carpeta}/${empresaId}/${nombreFinal}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(path);
+
+    return res.json({
+      ok: true,
+      url: data.publicUrl,
+      path,
+      tipo
+    });
+
+  } catch (error) {
+    console.error("ERROR SUBIENDO IMAGEN:", error);
+
+    return res.status(500).json({
       ok: false,
       error: error.message
     });
@@ -225,7 +326,7 @@ if (fichaExistente) {
   }])
   .select()
   .single();
-  
+
     if (fichaError) throw fichaError;
 
     const ficha_id = ficha.id;
@@ -502,6 +603,22 @@ if (!empresaId) {
     console.error(err);
     res.status(500).json({ error: "error fichas" });
   }
+});
+
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        ok: false,
+        error: "Máximo 5MB"
+      });
+    }
+  }
+
+  return res.status(400).json({
+    ok: false,
+    error: err.message || "Error archivo"
+  });
 });
 
 module.exports = router;

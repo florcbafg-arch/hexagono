@@ -1,6 +1,14 @@
 let pdfUrl = ""
 let secciones = []
 
+const inputImagenModelo = document.getElementById("imagen_modelo")
+const inputImagenSecundaria = document.getElementById("imagen_secundaria")
+const inputLogoMarca = document.getElementById("logo_marca")
+
+const previewModelo = document.getElementById("preview_modelo")
+const previewSecundaria = document.getElementById("preview_secundaria")
+const previewLogo = document.getElementById("preview_logo")
+
 const ESTRUCTURA_BASE = {
   seccion1: {
     titulo: "SECCION N° 1",
@@ -95,6 +103,8 @@ const ESTRUCTURA_BASE = {
   }
 }
 
+
+
 async function subirPDF() {
   const input = document.getElementById("pdf_file")
   const estado = document.getElementById("estado_pdf")
@@ -141,6 +151,47 @@ async function subirPDF() {
     alert(error.message || "Error subiendo PDF")
     return ""
   }
+}
+
+async function subirImagen(file, tipo) {
+  const formData = new FormData()
+  formData.append("imagen", file)
+  formData.append("tipo", tipo)
+
+  const token = localStorage.getItem("token")
+
+  const res = await fetch("/api/fichas/upload-imagen", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    },
+    body: formData
+  })
+
+  const data = await res.json()
+
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || "Error subiendo imagen")
+  }
+
+  return data.url
+}
+
+function activarPreview(input, preview) {
+  if (!input || !preview) return
+
+  input.addEventListener("change", () => {
+    const file = input.files?.[0]
+
+    if (!file) {
+      preview.src = ""
+      preview.style.display = "none"
+      return
+    }
+
+    preview.src = URL.createObjectURL(file)
+    preview.style.display = "block"
+  })
 }
 
 function crearItemFijo(label, orden) {
@@ -645,7 +696,9 @@ async function guardarFichaCompleta() {
   if (!nombre) return alert("Ingresar nombre")
 
   let finalPdfUrl = ""
-
+  let imagenModeloUrl = ""
+  let imagenSecundariaUrl = ""
+  let logoMarcaUrl = ""
   const seccionesNormalizadas = normalizarSeccionesParaGuardar()
 
  if (seccionesNormalizadas.length === 0) {
@@ -653,6 +706,19 @@ async function guardarFichaCompleta() {
 }
 
   try {
+
+    if (inputImagenModelo?.files?.[0]) {
+  imagenModeloUrl = await subirImagen(inputImagenModelo.files[0], "modelo")
+}
+
+if (inputImagenSecundaria?.files?.[0]) {
+  imagenSecundariaUrl = await subirImagen(inputImagenSecundaria.files[0], "secundaria")
+}
+
+if (inputLogoMarca?.files?.[0]) {
+  logoMarcaUrl = await subirImagen(inputLogoMarca.files[0], "logo")
+}
+
     const res = await apiFetch("/api/fichas", {
       method: "POST",
       headers: {
@@ -667,9 +733,9 @@ async function guardarFichaCompleta() {
   temporada,
   detalle_general,
   tipo_calzado,
-  imagen_modelo_url: "",
-  imagen_secundaria_url: "",
-  logo_marca_url: "",
+  imagen_modelo_url: imagenModeloUrl,
+imagen_secundaria_url: imagenSecundariaUrl,
+logo_marca_url: logoMarcaUrl,
   pdf_url: "",
   fuente: "MANUAL",
   secciones: seccionesNormalizadas
@@ -760,5 +826,9 @@ async function init() {
     if (el) el.addEventListener("input", renderPreviewFicha)
   })
 }
+
+activarPreview(inputImagenModelo, previewModelo)
+activarPreview(inputImagenSecundaria, previewSecundaria)
+activarPreview(inputLogoMarca, previewLogo)
 
 window.addEventListener("DOMContentLoaded", init)
