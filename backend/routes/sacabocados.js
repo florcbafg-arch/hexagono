@@ -366,7 +366,7 @@ router.post("/sacabocados/upload-imagen", async (req, res) => {
     const filePath = `sacabocados/${empresaId}/${Date.now()}_${fileName}`
 
     const { error } = await supabase.storage
-      .from("fichas") // usamos mismo bucket
+     .from("fichas-tecnicas") // usamos mismo bucket
       .upload(filePath, buffer, {
         contentType: "image/png",
         upsert: false
@@ -376,7 +376,7 @@ router.post("/sacabocados/upload-imagen", async (req, res) => {
 
     const { data } = supabase
       .storage
-      .from("fichas")
+      .from("fichas-tecnicas")
       .getPublicUrl(filePath)
 
     return res.json({
