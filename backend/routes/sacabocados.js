@@ -99,21 +99,23 @@ router.post("/sacabocados", async (req, res) => {
     })
   }
 
-  const {
-    marca,
-    modelo_referencia,
-    pieza,
-    subpieza,
-    descripcion,
-    ancho,
-    alto,
-    area_base,
-    consumo_referencia,
-    unidad_medida,
-    imagen_url,
-    observaciones,
-    activo
-  } = req.body
+const {
+  marca,
+  modelo_referencia,
+  pieza,
+  subpieza,
+  material_base,
+  descripcion,
+  ancho,
+  alto,
+  area_base,
+  consumo_referencia,
+  unidad_medida,
+  imagen_url,
+  observaciones,
+  activo
+} = req.body
+  
 
   if (!marca?.trim()) {
     return res.status(400).json({
@@ -145,6 +147,7 @@ router.post("/sacabocados", async (req, res) => {
         modelo_referencia: modelo_referencia?.trim() || "",
         pieza: pieza?.trim() || "",
         subpieza: subpieza?.trim() || "",
+        material_base: material_base?.trim() || "",
         descripcion: descripcion?.trim() || "",
         ancho: ancho ?? null,
         alto: alto ?? null,
@@ -260,20 +263,21 @@ router.put("/sacabocados/:id", async (req, res) => {
 
   try {
     const {
-      marca,
-      modelo_referencia,
-      pieza,
-      subpieza,
-      descripcion,
-      ancho,
-      alto,
-      area_base,
-      consumo_referencia,
-      unidad_medida,
-      imagen_url,
-      observaciones,
-      activo
-    } = req.body
+  marca,
+  modelo_referencia,
+  pieza,
+  subpieza,
+  material_base,
+  descripcion,
+  ancho,
+  alto,
+  area_base,
+  consumo_referencia,
+  unidad_medida,
+  imagen_url,
+  observaciones,
+  activo
+} = req.body
 
     const { data, error } = await supabase
       .from("sacabocados")
@@ -282,6 +286,7 @@ router.put("/sacabocados/:id", async (req, res) => {
         modelo_referencia,
         pieza,
         subpieza,
+        material_base,
         descripcion,
         ancho,
         alto,
