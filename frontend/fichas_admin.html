@@ -26,15 +26,29 @@
       <h1>Fichas Técnicas</h1>
 
       <div style="margin-bottom:20px;">
-        <input
-          type="text"
-          id="buscador"
-          placeholder="Buscar modelo, código o nombre"
-          oninput="filtrarFichas()"
-        >
-        <button onclick="crearFicha()">➕ Nueva Ficha</button>
-      </div>
+  <input
+    type="text"
+    id="buscador"
+    placeholder="Buscar modelo, código o nombre"
+    oninput="filtrarFichas()"
+  >
 
+  <button onclick="crearFicha()">➕ Nueva Ficha</button>
+
+  <!-- 🔥 BOTÓN NUEVO -->
+  <button onclick="document.getElementById('inputExcelFicha').click()">
+    📥 Importar Excel
+  </button>
+
+  <!-- 🔥 INPUT OCULTO -->
+  <input
+    type="file"
+    id="inputExcelFicha"
+    accept=".xlsx,.xls"
+    style="display:none"
+    onchange="importarExcelFicha(event)"
+  >
+</div>
       <table border="1" width="100%">
         <thead>
           <tr>
