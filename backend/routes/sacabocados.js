@@ -340,4 +340,57 @@ router.delete("/sacabocados/:id", async (req, res) => {
   }
 })
 
+// SUBIR IMAGEN SACABOCADO
+router.post("/sacabocados/upload-imagen", async (req, res) => {
+  const empresaId = req.user?.empresa_id
+
+  if (!empresaId) {
+    return res.status(401).json({
+      ok: false,
+      error: "Empresa no identificada"
+    })
+  }
+
+  try {
+    const { fileBase64, fileName } = req.body
+
+    if (!fileBase64) {
+      return res.status(400).json({
+        ok: false,
+        error: "Archivo requerido"
+      })
+    }
+
+    const buffer = Buffer.from(fileBase64, "base64")
+
+    const filePath = `sacabocados/${empresaId}/${Date.now()}_${fileName}`
+
+    const { error } = await supabase.storage
+      .from("fichas") // usamos mismo bucket
+      .upload(filePath, buffer, {
+        contentType: "image/png",
+        upsert: false
+      })
+
+    if (error) throw error
+
+    const { data } = supabase
+      .storage
+      .from("fichas")
+      .getPublicUrl(filePath)
+
+    return res.json({
+      ok: true,
+      url: data.publicUrl
+    })
+
+  } catch (error) {
+    console.error("Error subiendo imagen sacabocado:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
 module.exports = router
