@@ -474,23 +474,26 @@ function renderSecciones() {
           style="width:100%; margin-bottom:8px;"
         >${escapeHtml(item.valor)}</textarea>
 
-        <div style="margin-bottom:8px;">
-  <label style="display:block; font-weight:bold; margin-bottom:6px;">
-    Sacabocado
-  </label>
-  <select
-    onchange="actualizarSacabocadoItem(${sIndex}, ${iIndex}, this.value)"
-    style="width:100%;"
-  >
-    ${renderOpcionesSacabocadosSeleccionado(item.sacabocado_id)}
-  </select>
+    ${seccionPermiteSacabocado(seccion) ? `
+  <div style="margin-bottom:8px;">
+    <label style="display:block; font-weight:bold; margin-bottom:6px;">
+      Sacabocado
+    </label>
+    <select
+      onchange="actualizarSacabocadoItem(${sIndex}, ${iIndex}, this.value)"
+      style="width:100%;"
+    >
+      ${renderOpcionesSacabocadosSeleccionado(item.sacabocado_id)}
+    </select>
 
-  ${item.sacabocado_codigo ? `
-    <div style="margin-top:6px; font-size:12px; color:#aaa;">
-      Código seleccionado: ${escapeHtml(item.sacabocado_codigo)}
-    </div>
-  ` : ""}
-</div>
+    ${item.sacabocado_codigo ? `
+      <div style="margin-top:6px; font-size:12px; color:#aaa;">
+        Código seleccionado: ${escapeHtml(item.sacabocado_codigo)}
+      </div>
+    ` : ""}
+  </div>
+` : ""}
+    
 
         <div style="display:flex; gap:8px; align-items:center;">
           <button type="button" onclick="toggleNoAplica(${sIndex}, ${iIndex})">
@@ -563,6 +566,11 @@ function scrollASeccion(index) {
   if (el) {
     el.scrollIntoView({ behavior: "smooth", block: "start" })
   }
+}
+
+function seccionPermiteSacabocado(seccion) {
+  const nombre = (seccion?.nombre || "").toUpperCase().trim()
+  return nombre === "SECCION N° 1" || nombre === "SECCION N° 6"
 }
 
 function renderPiezas(seccionIndex) {
