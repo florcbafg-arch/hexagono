@@ -363,6 +363,7 @@ if (fichaExistente) {
   tipo_pieza: pieza.tipo_pieza || "estructural",
   orden: pieza.orden || piezaIndex + 1,
   observacion: pieza.observacion || "",
+  sacabocado_id: pieza.sacabocado_id || null,
   empresa_id
 }])
             .select()
