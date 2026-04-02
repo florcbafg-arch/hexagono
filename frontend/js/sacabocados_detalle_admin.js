@@ -53,6 +53,7 @@ function renderDetalleSacabocado(s) {
         <div><strong>Modelo referencia:</strong> ${escapeHtml(s.modelo_referencia || "-")}</div>
         <div><strong>Pieza:</strong> ${escapeHtml(s.pieza || "-")}</div>
         <div><strong>Subpieza:</strong> ${escapeHtml(s.subpieza || "-")}</div>
+        <div><strong>Material base:</strong> ${escapeHtml(s.material_base || "-")}</div>
         <div><strong>Ancho:</strong> ${formatearNumero(s.ancho)}</div>
         <div><strong>Alto:</strong> ${formatearNumero(s.alto)}</div>
         <div><strong>Área base:</strong> ${formatearNumero(s.area_base)}</div>

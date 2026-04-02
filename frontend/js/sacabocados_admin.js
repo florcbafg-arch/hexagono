@@ -46,7 +46,7 @@ function renderSacabocados() {
   if (filtrados.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center;">No hay sacabocados cargados</td>
+        <td colspan="8" style="text-align:center;">No hay sacabocados cargados</td>
       </tr>
     `
     return
@@ -60,6 +60,7 @@ function renderSacabocados() {
         <td>${escapeHtml(s.modelo_referencia || "-")}</td>
         <td>${escapeHtml(s.pieza || "-")}</td>
         <td>${escapeHtml(s.subpieza || "-")}</td>
+        <td>${escapeHtml(s.material_base || "-")}</td>
         <td>${s.activo ? "Sí" : "No"}</td>
         <td style="display:flex; gap:6px; flex-wrap:wrap;">
           <button type="button" onclick="verSacabocado(${s.id})">👁 Ver</button>

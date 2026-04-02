@@ -61,6 +61,7 @@ async function cargarSacabocadoSiEdita() {
     document.getElementById("modelo_referencia").value = s.modelo_referencia || ""
     document.getElementById("pieza").value = s.pieza || ""
     document.getElementById("subpieza").value = s.subpieza || ""
+    document.getElementById("material_base").value = sacabocado.material_base || ""
     document.getElementById("descripcion").value = s.descripcion || ""
     document.getElementById("unidad_medida").value = s.unidad_medida || ""
     document.getElementById("ancho").value = s.ancho ?? ""
@@ -89,6 +90,7 @@ async function guardarSacabocado() {
   const modelo_referencia = document.getElementById("modelo_referencia").value.trim()
   const pieza = document.getElementById("pieza").value.trim()
   const subpieza = document.getElementById("subpieza").value.trim()
+  const material_base = document.getElementById("material_base").value.trim()
   const descripcion = document.getElementById("descripcion").value.trim()
   const unidad_medida = document.getElementById("unidad_medida").value.trim()
   const anchoRaw = document.getElementById("ancho").value
@@ -121,6 +123,7 @@ try {
     modelo_referencia,
     pieza,
     subpieza,
+    material_base,
     imagen_url,
     descripcion,
     unidad_medida,
