@@ -14,6 +14,7 @@ const fichasRoutes = require("../backend/routes/fichas");
 const programacionRoutes = require("../backend/routes/programacion");
 const authRoutes = require("../backend/routes/auth");
 const sacabocadosRoutes = require("../backend/routes/sacabocados");
+console.log("✅ sacabocadosRoutes importado en server.js")
 const app = express();
 
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -42,7 +43,8 @@ app.use("/api/modelos", authMiddleware);
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 
 app.use("/api", authMiddleware, fichasRoutes);
-
+console.log("✅ montando rutas sacabocados en /api")
+app.use("/api", authMiddleware, sacabocadosRoutes);
 app.get("/api/produccion/resumen", async (req, res) => {
 
 const { data, error } = await supabase.rpc("produccion_resumen")
