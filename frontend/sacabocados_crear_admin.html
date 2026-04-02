@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Sacabocado</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="js/authGuard.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+
+  <script>
+    checkAuth("admin")
+  </script>
+</head>
+
+<body>
+<div class="container">
+  <div class="main">
+    <div class="header">Panel Administrador</div>
+
+    <div id="contenido">
+      <h1 id="tituloPantalla">Nuevo Sacabocado</h1>
+
+      <div class="form-row">
+        <label>Marca</label>
+        <input id="marca" placeholder="Marca">
+
+        <label>Modelo referencia</label>
+        <input id="modelo_referencia" placeholder="Modelo de referencia">
+
+        <label>Pieza</label>
+        <input id="pieza" placeholder="Ej: Puntera">
+      </div>
+
+      <div class="form-row">
+        <label>Subpieza</label>
+        <input id="subpieza" placeholder="Ej: Delantera">
+
+        <label>Descripción</label>
+        <input id="descripcion" placeholder="Descripción breve">
+
+        <label>Unidad medida</label>
+        <input id="unidad_medida" placeholder="Ej: cm2">
+      </div>
+
+      <div class="form-row">
+        <label>Ancho</label>
+        <input id="ancho" type="number" step="0.0001" placeholder="0.0000">
+
+        <label>Alto</label>
+        <input id="alto" type="number" step="0.0001" placeholder="0.0000">
+
+        <label>Área base</label>
+        <input id="area_base" type="number" step="0.0001" placeholder="0.0000">
+      </div>
+
+      <div class="form-row">
+        <label>Consumo referencia</label>
+        <input id="consumo_referencia" type="number" step="0.0001" placeholder="0.0000">
+
+        <label>Activo</label>
+        <select id="activo">
+          <option value="true">Sí</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Observaciones</label>
+        <textarea id="observaciones" rows="4" placeholder="Observaciones del sacabocado"></textarea>
+      </div>
+
+      <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" id="btnGuardarSacabocado" onclick="guardarSacabocado()">💾 Guardar</button>
+        <button type="button" onclick="volver()">⬅ Volver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/sacabocados_crear_admin.js?v=1"></script>
+<script>
+  function logout() {
+    localStorage.removeItem("token")
+    localStorage.removeItem("usuario")
+    window.location.href = "login.html"
+  }
+</script>
+</body>
+</html>
