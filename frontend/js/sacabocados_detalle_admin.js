@@ -101,7 +101,11 @@ function renderDetalleSacabocado(s) {
           justify-content:center;
           color:#666;
         ">
-          Próximamente imagen del sacabocado
+         ${
+  s.imagen_url
+    ? `<img src="${s.imagen_url}" style="max-width:100%; max-height:180px; object-fit:contain;">`
+    : "Sin imagen"
+}
         </div>
       </div>
     </div>

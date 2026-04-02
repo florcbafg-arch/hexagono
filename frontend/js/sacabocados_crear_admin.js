@@ -3,6 +3,46 @@ const id = params.get("id")
 
 let guardandoSacabocado = false
 
+async function subirImagenSacabocado() {
+  const input = document.getElementById("imagen_file")
+
+  if (!input.files || input.files.length === 0) {
+    return ""
+  }
+
+  const file = input.files[0]
+
+  const base64 = await convertirABase64(file)
+
+  const res = await apiFetch("/api/sacabocados/upload-imagen", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      fileBase64: base64.split(",")[1],
+      fileName: file.name
+    })
+  })
+
+  const data = await res.json()
+
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || "Error subiendo imagen")
+  }
+
+  return data.url
+}
+
+function convertirABase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+  })
+}
+
 async function cargarSacabocadoSiEdita() {
   if (!id) return
 
@@ -68,11 +108,20 @@ async function guardarSacabocado() {
     return alert("Ingresar pieza")
   }
 
+  let imagen_url = ""
+
+try {
+  imagen_url = await subirImagenSacabocado()
+} catch (err) {
+  console.warn("No se subió imagen:", err.message)
+}
+
   const payload = {
     marca,
     modelo_referencia,
     pieza,
     subpieza,
+    imagen_url,
     descripcion,
     unidad_medida,
     ancho: anchoRaw === "" ? null : Number(anchoRaw),
