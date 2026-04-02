@@ -237,4 +237,107 @@ router.get("/sacabocados/:id", async (req, res) => {
   }
 })
 
+// ACTUALIZAR SACABOCADO
+router.put("/sacabocados/:id", async (req, res) => {
+  const empresaId = req.user?.empresa_id
+  const { id } = req.params
+
+  if (!empresaId) {
+    return res.status(401).json({
+      ok: false,
+      error: "Empresa no identificada"
+    })
+  }
+
+  try {
+    const {
+      marca,
+      modelo_referencia,
+      pieza,
+      subpieza,
+      descripcion,
+      ancho,
+      alto,
+      area_base,
+      consumo_referencia,
+      unidad_medida,
+      imagen_url,
+      observaciones,
+      activo
+    } = req.body
+
+    const { data, error } = await supabase
+      .from("sacabocados")
+      .update({
+        marca,
+        modelo_referencia,
+        pieza,
+        subpieza,
+        descripcion,
+        ancho,
+        alto,
+        area_base,
+        consumo_referencia,
+        unidad_medida,
+        imagen_url,
+        observaciones,
+        activo
+      })
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return res.json({
+      ok: true,
+      message: "Sacabocado actualizado",
+      sacabocado: data
+    })
+
+  } catch (error) {
+    console.error("Error actualizando sacabocado:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
+// ELIMINAR SACABOCADO
+router.delete("/sacabocados/:id", async (req, res) => {
+  const empresaId = req.user?.empresa_id
+  const { id } = req.params
+
+  if (!empresaId) {
+    return res.status(401).json({
+      ok: false,
+      error: "Empresa no identificada"
+    })
+  }
+
+  try {
+    const { error } = await supabase
+      .from("sacabocados")
+      .delete()
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+
+    if (error) throw error
+
+    return res.json({
+      ok: true,
+      message: "Sacabocado eliminado correctamente"
+    })
+
+  } catch (error) {
+    console.error("Error eliminando sacabocado:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
 module.exports = router
