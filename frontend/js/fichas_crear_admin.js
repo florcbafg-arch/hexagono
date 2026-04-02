@@ -213,6 +213,98 @@ function renderOpcionesSacabocadosSeleccionado(sacabocadoIdActual = "") {
   return opcionesBase.join("")
 }
 
+async function cargarFichaExistente() {
+  if (!modoEdicion || !modeloIdEditar) return
+
+  try {
+    const res = await apiFetch(`/api/fichas/${modeloIdEditar}`)
+    const data = await res.json()
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "No se pudo cargar la ficha para editar")
+    }
+
+    const ficha = data.ficha
+
+    cargarCabeceraFicha(ficha)
+    cargarSeccionesFicha(ficha)
+
+  } catch (error) {
+    console.error("Error cargando ficha para edición:", error)
+    alert(error.message || "Error cargando ficha para edición")
+  }
+}
+
+function cargarCabeceraFicha(ficha) {
+  const setValue = (id, valor) => {
+    const el = document.getElementById(id)
+    if (el) el.value = valor || ""
+  }
+
+  setValue("modelo", ficha.nombre || "")
+  setValue("codigo", ficha.codigo || "")
+  setValue("nombre", ficha.nombre || "")
+  setValue("marca", ficha.marca || "")
+  setValue("horma", ficha.horma || "")
+  setValue("temporada", ficha.temporada || "")
+  setValue("detalle_general", ficha.detalle_general || "")
+
+  const tipoCalzado = document.getElementById("tipo_calzado")
+  if (tipoCalzado) {
+    tipoCalzado.value = ficha.tipo_calzado || "vulcanizada"
+  }
+
+  if (previewModelo && ficha.imagen_modelo_url) {
+    previewModelo.src = ficha.imagen_modelo_url
+    previewModelo.style.display = "block"
+  }
+
+  if (previewSecundaria && ficha.imagen_secundaria_url) {
+    previewSecundaria.src = ficha.imagen_secundaria_url
+    previewSecundaria.style.display = "block"
+  }
+
+  if (previewLogo && ficha.logo_marca_url) {
+    previewLogo.src = ficha.logo_marca_url
+    previewLogo.style.display = "block"
+  }
+}
+
+function cargarSeccionesFicha(ficha) {
+  const seccionesBackend = Array.isArray(ficha.secciones) ? ficha.secciones : []
+
+  secciones = seccionesBackend.map((seccion, sIndex) => ({
+    nombre: seccion.nombre || `SECCION N° ${sIndex + 1}`,
+    sector: seccion.sector || "",
+    tipo_seccion: seccion.tipo_seccion || "proceso",
+    titulo_impresion: seccion.titulo_impresion || "",
+    observaciones: seccion.observaciones || "",
+    fija: true,
+    items: (seccion.piezas || []).map((pieza, pIndex) => ({
+      label: pieza.nombre || `ITEM ${pIndex + 1}`,
+      valor: pieza.materiales?.[0]?.material || "",
+      no_aplica: (pieza.materiales?.[0]?.material || "").trim().toUpperCase() === "NO APLICA",
+      orden: pieza.orden || pIndex + 1,
+      es_extra: false,
+      sacabocado_id: pieza.sacabocado_id || "",
+      sacabocado_codigo: obtenerCodigoSacabocadoPorId(pieza.sacabocado_id)
+    }))
+  }))
+
+  renderSecciones()
+  renderPreviewFicha()
+}
+
+function obtenerCodigoSacabocadoPorId(sacabocadoId) {
+  if (!sacabocadoId) return ""
+
+  const encontrado = sacabocadosDisponibles.find(
+    s => String(s.id) === String(sacabocadoId)
+  )
+
+  return encontrado?.codigo || ""
+}
+
 function activarPreview(input, preview) {
   if (!input || !preview) return
 
@@ -913,14 +1005,18 @@ function renderPreviewFicha() {
 async function init() {
   await cargarSacabocadosDisponibles()
   construirSeccionesFijas()
-  renderSecciones()
 
-    if (modoEdicion) {
+  if (modoEdicion) {
     const titulo = document.querySelector("h1")
     if (titulo) titulo.textContent = "Editar Ficha Técnica"
 
     const btnGuardar = document.getElementById("btnGuardarFicha")
     if (btnGuardar) btnGuardar.textContent = "💾 Actualizar Ficha"
+
+    await cargarFichaExistente()
+  } else {
+    renderSecciones()
+    renderPreviewFicha()
   }
 
   const tipoCalzado = document.getElementById("tipo_calzado")
