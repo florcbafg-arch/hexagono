@@ -2,6 +2,8 @@ const express = require("express")
 const router = express.Router()
 const { supabase } = require("../../config/supabase")
 
+console.log("✅ sacabocados.js cargado")
+
 function abreviarMarca(marca = "") {
   const limpia = String(marca)
     .trim()
@@ -85,8 +87,11 @@ async function generarCodigoSacabocado({ empresaId, marca, pieza }) {
 
 // CREAR SACABOCADO
 router.post("/sacabocados", async (req, res) => {
-  const empresaId = req.user?.empresa_id
+  console.log("🔥 HIT POST /api/sacabocados")
+  console.log("📦 BODY POST /api/sacabocados:", req.body)
+  console.log("👤 req.user en POST:", req.user)
 
+  const empresaId = req.user?.empresa_id
   if (!empresaId) {
     return res.status(401).json({
       ok: false,
@@ -171,6 +176,9 @@ router.post("/sacabocados", async (req, res) => {
 
 // LISTAR SACABOCADOS
 router.get("/sacabocados", async (req, res) => {
+  console.log("🔥 HIT GET /api/sacabocados")
+  console.log("👤 req.user en GET:", req.user)
+
   const empresaId = req.user?.empresa_id
 
   if (!empresaId) {
@@ -180,6 +188,7 @@ router.get("/sacabocados", async (req, res) => {
     })
   }
 
+  
   try {
     const { data, error } = await supabase
       .from("sacabocados")
@@ -342,6 +351,10 @@ router.delete("/sacabocados/:id", async (req, res) => {
 
 // SUBIR IMAGEN SACABOCADO
 router.post("/sacabocados/upload-imagen", async (req, res) => {
+  console.log("🔥 HIT POST /api/sacabocados/upload-imagen")
+  console.log("📦 BODY UPLOAD:", req.body)
+  console.log("👤 req.user en UPLOAD:", req.user)
+
   const empresaId = req.user?.empresa_id
 
   if (!empresaId) {
@@ -384,13 +397,13 @@ router.post("/sacabocados/upload-imagen", async (req, res) => {
       url: data.publicUrl
     })
 
-  } catch (error) {
-    console.error("Error subiendo imagen sacabocado:", error)
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
+ } catch (error) {
+  console.error("❌ ERROR POST /api/sacabocados/upload-imagen:", error)
+  return res.status(500).json({
+    ok: false,
+    error: error.message
+  })
+}
 })
 
 module.exports = router
