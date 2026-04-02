@@ -1,6 +1,7 @@
 let pdfUrl = ""
 let secciones = []
 let guardandoFicha = false
+let sacabocadosDisponibles = []
 
 const inputImagenModelo = document.getElementById("imagen_modelo")
 const inputImagenSecundaria = document.getElementById("imagen_secundaria")
@@ -178,6 +179,36 @@ async function subirImagen(file, tipo) {
   return data.url
 }
 
+async function cargarSacabocadosDisponibles() {
+  try {
+    const res = await apiFetch("/api/sacabocados")
+    const data = await res.json()
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Error cargando sacabocados")
+    }
+
+    sacabocadosDisponibles = Array.isArray(data.sacabocados) ? data.sacabocados : []
+  } catch (error) {
+    console.error("Error cargando sacabocados para ficha:", error)
+    sacabocadosDisponibles = []
+  }
+}
+
+function renderOpcionesSacabocadosSeleccionado(sacabocadoIdActual = "") {
+  const opcionesBase = [`<option value="">-- Sin sacabocado --</option>`]
+
+  sacabocadosDisponibles.forEach((s) => {
+    opcionesBase.push(`
+      <option value="${s.id}" ${String(s.id) === String(sacabocadoIdActual) ? "selected" : ""}>
+        ${escapeHtml(s.codigo || "-")} - ${escapeHtml(s.material_base || "-")}
+      </option>
+    `)
+  })
+
+  return opcionesBase.join("")
+}
+
 function activarPreview(input, preview) {
   if (!input || !preview) return
 
@@ -194,14 +225,15 @@ function activarPreview(input, preview) {
     preview.style.display = "block"
   })
 }
-
 function crearItemFijo(label, orden) {
   return {
     label,
     valor: "",
     no_aplica: false,
     orden,
-    es_extra: false
+    es_extra: false,
+    sacabocado_id: "",
+    sacabocado_codigo: ""
   }
 }
 
@@ -211,7 +243,9 @@ function crearItemExtra(orden) {
     valor: "",
     no_aplica: false,
     orden,
-    es_extra: true
+    es_extra: true,
+    sacabocado_id: "",
+    sacabocado_codigo: ""
   }
 }
 
@@ -368,6 +402,16 @@ function actualizarItem(seccionIndex, itemIndex, campo, valor) {
   renderPreviewFicha()
 }
 
+function actualizarSacabocadoItem(seccionIndex, itemIndex, sacabocadoId) {
+  const item = secciones[seccionIndex]?.items?.[itemIndex]
+  if (!item) return
+
+  item.sacabocado_id = sacabocadoId || ""
+
+  const encontrado = sacabocadosDisponibles.find(s => String(s.id) === String(sacabocadoId))
+  item.sacabocado_codigo = encontrado?.codigo || ""
+}
+
 function toggleNoAplica(seccionIndex, itemIndex) {
   const item = secciones[seccionIndex].items[itemIndex]
   item.no_aplica = !item.no_aplica
@@ -429,6 +473,24 @@ function renderSecciones() {
           oninput="actualizarItem(${sIndex}, ${iIndex}, 'valor', this.value)"
           style="width:100%; margin-bottom:8px;"
         >${escapeHtml(item.valor)}</textarea>
+
+        <div style="margin-bottom:8px;">
+  <label style="display:block; font-weight:bold; margin-bottom:6px;">
+    Sacabocado
+  </label>
+  <select
+    onchange="actualizarSacabocadoItem(${sIndex}, ${iIndex}, this.value)"
+    style="width:100%;"
+  >
+    ${renderOpcionesSacabocadosSeleccionado(item.sacabocado_id)}
+  </select>
+
+  ${item.sacabocado_codigo ? `
+    <div style="margin-top:6px; font-size:12px; color:#aaa;">
+      Código seleccionado: ${escapeHtml(item.sacabocado_codigo)}
+    </div>
+  ` : ""}
+</div>
 
         <div style="display:flex; gap:8px; align-items:center;">
           <button type="button" onclick="toggleNoAplica(${sIndex}, ${iIndex})">
@@ -658,12 +720,13 @@ function normalizarSeccionesParaGuardar() {
       orden: sIndex + 1,
 
       piezas: (seccion.items || []).map((item, iIndex) => ({
-        nombre: item.label || "ITEM",
-        tipo_pieza: item.es_extra ? "visual" : "estructural",
-        observacion: "",
-        orden: iIndex + 1,
+  nombre: item.label || "ITEM",
+  tipo_pieza: item.es_extra ? "visual" : "estructural",
+  observacion: "",
+  orden: iIndex + 1,
+  sacabocado_id: item.sacabocado_id || null,
 
-        materiales: [
+  materiales: [
           {
             material: item.no_aplica ? "NO APLICA" : (item.valor || ""),
             especificacion: "",
@@ -836,6 +899,7 @@ function renderPreviewFicha() {
 }
 
 async function init() {
+  await cargarSacabocadosDisponibles()
   construirSeccionesFijas()
   renderSecciones()
 
@@ -854,4 +918,5 @@ activarPreview(inputImagenModelo, previewModelo)
 activarPreview(inputImagenSecundaria, previewSecundaria)
 activarPreview(inputLogoMarca, previewLogo)
 
+window.actualizarSacabocadoItem = actualizarSacabocadoItem
 window.addEventListener("DOMContentLoaded", init)
