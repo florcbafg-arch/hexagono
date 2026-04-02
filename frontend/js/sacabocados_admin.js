@@ -1,4 +1,4 @@
-let sacabocados = []
+var sacabocados = []
 
 async function cargarSacabocados() {
   try {
@@ -122,4 +122,3 @@ function escapeHtml(valor) {
     .replace(/'/g, "&#039;")
 }
 
-window.addEventListener("DOMContentLoaded", cargarSacabocados)
