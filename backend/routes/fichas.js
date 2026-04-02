@@ -355,17 +355,20 @@ if (fichaExistente) {
         const piezas = Array.isArray(seccion.piezas) ? seccion.piezas : [];
 
         for (const [piezaIndex, pieza] of piezas.entries()) {
+
+          console.log("PIEZA A GUARDAR:", pieza)
+
           const { data: piezaData, error: piezaError } = await supabase
             .from("fichas_piezas")
-.insert([{
-  seccion_id,
-  nombre: pieza.nombre?.trim() || `Pieza ${piezaIndex + 1}`,
-  tipo_pieza: pieza.tipo_pieza || "estructural",
-  orden: pieza.orden || piezaIndex + 1,
-  observacion: pieza.observacion || "",
-  sacabocado_id: pieza.sacabocado_id || null,
-  empresa_id
-}])
+            .insert([{
+            seccion_id,
+            nombre: pieza.nombre?.trim() || `Pieza ${piezaIndex + 1}`,
+            tipo_pieza: pieza.tipo_pieza || "estructural",
+            orden: pieza.orden || piezaIndex + 1,
+            observacion: pieza.observacion || "",
+            sacabocado_id: pieza.sacabocado_id || null,
+            empresa_id
+          }])
             .select()
             .single();
 
@@ -558,6 +561,125 @@ if (!empresaId) {
   } catch (error) {
     console.error("Error obteniendo ficha:", error);
     res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+// ELIMINAR FICHA POR MODELO
+router.delete("/fichas/:modelo_id", async (req, res) => {
+  const empresaId = req.user?.empresa_id;
+  const { modelo_id } = req.params;
+
+  if (!empresaId) {
+    return res.status(401).json({
+      ok: false,
+      error: "Empresa no identificada"
+    });
+  }
+
+  try {
+    const { data: ficha, error: fichaError } = await supabase
+      .from("fichas_tecnicas")
+      .select("id")
+      .eq("modelo_id", modelo_id)
+      .eq("empresa_id", empresaId)
+      .maybeSingle();
+
+    if (fichaError) throw fichaError;
+
+    if (!ficha) {
+      return res.status(404).json({
+        ok: false,
+        error: "Ficha no encontrada"
+      });
+    }
+
+    const fichaId = ficha.id;
+
+    const { data: secciones, error: secError } = await supabase
+      .from("fichas_secciones")
+      .select("id")
+      .eq("ficha_id", fichaId)
+      .eq("empresa_id", empresaId);
+
+    if (secError) throw secError;
+
+    const seccionIds = (secciones || []).map(s => s.id);
+
+    let piezaIds = [];
+    if (seccionIds.length > 0) {
+      const { data: piezas, error: piezasError } = await supabase
+        .from("fichas_piezas")
+        .select("id")
+        .in("seccion_id", seccionIds)
+        .eq("empresa_id", empresaId);
+
+      if (piezasError) throw piezasError;
+      piezaIds = (piezas || []).map(p => p.id);
+    }
+
+    if (piezaIds.length > 0) {
+      const { error: matError } = await supabase
+        .from("fichas_materiales")
+        .delete()
+        .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId);
+
+      if (matError) throw matError;
+
+      const { error: opError } = await supabase
+        .from("fichas_operaciones")
+        .delete()
+        .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId);
+
+      if (opError) throw opError;
+    }
+
+    if (seccionIds.length > 0) {
+      const { error: piezasDeleteError } = await supabase
+        .from("fichas_piezas")
+        .delete()
+        .in("seccion_id", seccionIds)
+        .eq("empresa_id", empresaId);
+
+      if (piezasDeleteError) throw piezasDeleteError;
+    }
+
+    const { error: imgError } = await supabase
+      .from("fichas_imagenes")
+      .delete()
+      .eq("ficha_id", fichaId)
+      .eq("empresa_id", empresaId);
+
+    if (imgError) throw imgError;
+
+    const { error: secDeleteError } = await supabase
+      .from("fichas_secciones")
+      .delete()
+      .eq("ficha_id", fichaId)
+      .eq("empresa_id", empresaId);
+
+    if (secDeleteError) throw secDeleteError;
+
+    const { error: fichaDeleteError } = await supabase
+      .from("fichas_tecnicas")
+      .delete()
+      .eq("id", fichaId)
+      .eq("empresa_id", empresaId);
+
+    if (fichaDeleteError) throw fichaDeleteError;
+
+    return res.json({
+      ok: true,
+      message: "Ficha eliminada correctamente"
+    });
+
+  } catch (error) {
+    console.error("Error eliminando ficha:", error);
+    return res.status(500).json({
       ok: false,
       error: error.message
     });

@@ -897,6 +897,18 @@ if (inputLogoMarca?.files?.[0]) {
   logoMarcaUrl = await subirImagen(inputLogoMarca.files[0], "logo")
 }
 
+    if (modoEdicion && modeloIdEditar) {
+      const resDelete = await apiFetch(`/api/fichas/${modeloIdEditar}`, {
+        method: "DELETE"
+      })
+
+      const dataDelete = await resDelete.json()
+
+      if (!resDelete.ok || !dataDelete.ok) {
+        throw new Error(dataDelete.error || "Error eliminando ficha anterior")
+      }
+    }
+
     const res = await apiFetch("/api/fichas", {
       method: "POST",
       headers: {
@@ -922,9 +934,9 @@ logo_marca_url: logoMarcaUrl,
 
     const data = await res.json()
 
-    if (data.ok) {
-  alert("Ficha técnica guardada correctamente")
-  window.location.href = "fichas_admin.html"
+if (data.ok) {
+  alert(modoEdicion ? "Ficha técnica actualizada correctamente" : "Ficha técnica guardada correctamente")
+  window.location.href = "admin.html?modulo=fichas"
 } else {
   guardandoFicha = false
   alert(data.error || "Error guardando ficha")
