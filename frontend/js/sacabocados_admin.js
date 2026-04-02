@@ -1,3 +1,4 @@
+console.log("✅ sacabocados_admin.js cargó")
 var sacabocados = []
 
 async function cargarSacabocados() {
@@ -121,4 +122,17 @@ function escapeHtml(valor) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;")
 }
+function initSacabocados() {
+  console.log("✅ initSacabocados ejecutándose")
 
+  const buscador = document.getElementById("buscadorSacabocados")
+
+  if (buscador && !buscador.dataset.listenerSacabocados) {
+    buscador.addEventListener("input", filtrarSacabocados)
+    buscador.dataset.listenerSacabocados = "1"
+  }
+
+  cargarSacabocados()
+}
+
+window.initSacabocados = initSacabocados

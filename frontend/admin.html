@@ -198,6 +198,8 @@ if (window[nombreInit]) {
 
           script.onload = () => {
 
+            console.log("🧪 window.initSacabocados =", window.initSacabocados)
+
             if (typeof window[nombreInit] === "function") {
               window[nombreInit]()
             } else {
