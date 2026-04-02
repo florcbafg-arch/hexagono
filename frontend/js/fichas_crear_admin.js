@@ -3,6 +3,10 @@ let secciones = []
 let guardandoFicha = false
 let sacabocadosDisponibles = []
 
+const params = new URLSearchParams(window.location.search)
+const modeloIdEditar = params.get("modelo_id")
+let modoEdicion = !!modeloIdEditar
+
 const inputImagenModelo = document.getElementById("imagen_modelo")
 const inputImagenSecundaria = document.getElementById("imagen_secundaria")
 const inputLogoMarca = document.getElementById("logo_marca")
@@ -910,6 +914,14 @@ async function init() {
   await cargarSacabocadosDisponibles()
   construirSeccionesFijas()
   renderSecciones()
+
+    if (modoEdicion) {
+    const titulo = document.querySelector("h1")
+    if (titulo) titulo.textContent = "Editar Ficha Técnica"
+
+    const btnGuardar = document.getElementById("btnGuardarFicha")
+    if (btnGuardar) btnGuardar.textContent = "💾 Actualizar Ficha"
+  }
 
   const tipoCalzado = document.getElementById("tipo_calzado")
   if (tipoCalzado) {

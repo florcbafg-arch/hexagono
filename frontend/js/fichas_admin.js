@@ -51,9 +51,10 @@ function renderFichas() {
         <td>${fuente}</td>
         <td>${tienePDF ? "Sí" : "No"}</td>
         <td>
-          <button onclick="verFicha(${f.modelo_id})">👁 Ver</button>
-          ${pdfBoton}
-        </td>
+  <button onclick="verFicha(${f.modelo_id})">👁 Ver</button>
+  <button onclick="editarFicha(${f.modelo_id})">✏ Editar</button>
+  ${pdfBoton}
+</td>
       </tr>
     `
   })
@@ -65,6 +66,10 @@ function crearFicha() {
 
 function verFicha(modelo_id) {
   window.location.href = `fichas_detalle_admin.html?modelo_id=${modelo_id}`
+}
+
+function editarFicha(modelo_id) {
+  window.location.href = `fichas_crear_admin.html?modelo_id=${modelo_id}`
 }
 
 function verPDF(pdf_url) {
@@ -94,6 +99,7 @@ function initFichas() {
 window.initFichas = initFichas
 window.crearFicha = crearFicha
 window.verFicha = verFicha
+window.editarFicha = editarFicha
 window.verPDF = verPDF
 window.filtrarFichas = filtrarFichas
 })()
