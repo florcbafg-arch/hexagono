@@ -138,7 +138,7 @@ function escapeHtml(valor) {
 }
 
 function volver() {
-  window.location.href = "sacabocados_admin.html"
+  window.location.href = "admin.html?modulo=sacabocados"
 }
 
 window.addEventListener("DOMContentLoaded", cargarDetalleSacabocado)

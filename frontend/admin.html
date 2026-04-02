@@ -151,7 +151,8 @@
         usuarioNombre.innerText = user.nombre || user.email || "Admin"
       }
 
-      cargarModulo("dashboard")
+      const modulo = params.get("modulo") || "dashboard"
+cargarModulo(modulo)
     })
 
     function cerrarSesion() {
