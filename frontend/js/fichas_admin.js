@@ -50,9 +50,10 @@ function renderFichas() {
         <td>${f.nombre || "-"}</td>
         <td>${fuente}</td>
         <td>${tienePDF ? "Sí" : "No"}</td>
-        <td>
+    <td>
   <button onclick="verFicha(${f.modelo_id})">👁 Ver</button>
   <button onclick="editarFicha(${f.modelo_id})">✏ Editar</button>
+  <button onclick="eliminarFicha(${f.modelo_id})">🗑 Eliminar</button>
   ${pdfBoton}
 </td>
       </tr>
@@ -70,6 +71,31 @@ function verFicha(modelo_id) {
 
 function editarFicha(modelo_id) {
   window.location.href = `fichas_crear_admin.html?modelo_id=${modelo_id}`
+}
+
+async function eliminarFicha(modelo_id) {
+  const ok = confirm("¿Eliminar esta ficha técnica?")
+  if (!ok) return
+
+  try {
+    const res = await apiFetch(`/api/fichas/${modelo_id}`, {
+      method: "DELETE"
+    })
+
+    const data = await res.json()
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Error eliminando ficha")
+    }
+
+    alert("Ficha eliminada correctamente")
+
+    await cargarFichas()
+
+  } catch (error) {
+    console.error("Error eliminando ficha:", error)
+    alert(error.message || "Error eliminando ficha")
+  }
 }
 
 function verPDF(pdf_url) {
@@ -102,4 +128,5 @@ window.verFicha = verFicha
 window.editarFicha = editarFicha
 window.verPDF = verPDF
 window.filtrarFichas = filtrarFichas
+window.eliminarFicha = eliminarFicha
 })()
