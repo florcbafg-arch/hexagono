@@ -325,7 +325,7 @@ function escapeHtml(valor) {
 }
 
 function volver() {
-  window.location.href = "fichas_admin.html"
+  window.location.href = "admin.html?modulo=fichas"
 }
 
 cargarDetalleFicha()

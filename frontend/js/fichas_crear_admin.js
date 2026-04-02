@@ -851,7 +851,7 @@ if (btnGuardar) {
 }
 
 function volver() {
-  window.location.href = "fichas_admin.html"
+  window.location.href = "admin.html?modulo=fichas"
 }
 
 function escapeHtml(valor) {
