@@ -13,7 +13,7 @@ const { authMiddleware } = require("../backend/middlewares/authMiddleware") // â
 const fichasRoutes = require("../backend/routes/fichas");
 const programacionRoutes = require("../backend/routes/programacion");
 const authRoutes = require("../backend/routes/auth");
-
+const sacabocadosRoutes = require("../backend/routes/sacabocados");
 const app = express();
 
 app.use(express.static(path.join(__dirname, "../frontend")));
