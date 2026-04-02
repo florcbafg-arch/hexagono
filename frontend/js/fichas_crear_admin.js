@@ -2,6 +2,7 @@ let pdfUrl = ""
 let secciones = []
 let guardandoFicha = false
 let sacabocadosDisponibles = []
+let seccionActivaIndex = 0
 
 const params = new URLSearchParams(window.location.search)
 const modeloIdEditar = params.get("modelo_id")
@@ -531,6 +532,10 @@ function eliminarItemExtra(seccionIndex, itemIndex) {
 function renderSecciones() {
   const contenedor = document.getElementById("secciones")
   contenedor.innerHTML = ""
+  contenedor.style.height = "78vh"
+  contenedor.style.overflowY = "auto"
+  contenedor.style.paddingRight = "8px"
+
 
   if (secciones.length === 0) {
     contenedor.innerHTML = `<p>No hay secciones cargadas todavía.</p>`
@@ -539,18 +544,20 @@ function renderSecciones() {
     return
   }
 
-  secciones.forEach((seccion, sIndex) => {
+   secciones.forEach((seccion, sIndex) => {
+  if (sIndex !== seccionActivaIndex) return
     const divSeccion = document.createElement("div")
     divSeccion.id = "seccion_" + sIndex
-    divSeccion.style.border = "1px solid #999"
-    divSeccion.style.padding = "12px"
-    divSeccion.style.marginBottom = "16px"
+    divSeccion.style.border = "1px solid #666"
+    divSeccion.style.padding = "10px"
+    divSeccion.style.marginBottom = "10px"
     divSeccion.style.background = "#111"
     divSeccion.style.borderRadius = "8px"
-
+    divSeccion.style.minHeight = "100%"
+    divSeccion.style.boxSizing = "border-box"
     const itemsHtml = (seccion.items || []).map((item, iIndex) => `
-      <div style="margin-bottom:12px; padding:10px; background:#1c1c1c; border-radius:6px;">
-        <label style="display:block; font-weight:bold; margin-bottom:6px;">
+      <div style="margin-bottom:8px; padding:8px; background:#1c1c1c; border-radius:6px;">
+        <label style="display:block; font-weight:bold; margin-bottom:4px; font-size:13px;">
           ${escapeHtml(item.label || "Nuevo ítem")}
         </label>
 
@@ -564,10 +571,10 @@ function renderSecciones() {
         ` : ""}
 
         <textarea
-          rows="2"
+        rows="2"
           ${item.no_aplica ? "disabled" : ""}
           oninput="actualizarItem(${sIndex}, ${iIndex}, 'valor', this.value)"
-          style="width:100%; margin-bottom:8px;"
+          style="width:100%; margin-bottom:6px; font-size:13px; padding:6px;"
         >${escapeHtml(item.valor)}</textarea>
 
     ${seccionPermiteSacabocado(seccion) ? `
@@ -620,6 +627,19 @@ function renderSecciones() {
       <div style="margin-top:12px;">
         <button type="button" onclick="agregarItemExtra(${sIndex})">➕ Agregar ítem extra</button>
       </div>
+            <div style="margin-top:16px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <button type="button" onclick="seccionAnterior()" ${sIndex === 0 ? "disabled" : ""}>
+          ⬅ Sección anterior
+        </button>
+
+        <div style="font-size:13px; color:#aaa; display:flex; align-items:center;">
+          Sección ${sIndex + 1} de ${secciones.length}
+        </div>
+
+        <button type="button" onclick="seccionSiguiente()" ${sIndex === secciones.length - 1 ? "disabled" : ""}>
+          Sección siguiente ➡
+        </button>
+      </div>
     `
 
     contenedor.appendChild(divSeccion)
@@ -642,25 +662,44 @@ function renderListaSecciones() {
 
   secciones.forEach((s, i) => {
     cont.innerHTML += `
-      <div
-        onclick="scrollASeccion(${i})"
-        style="
-          padding:8px;
-          margin-bottom:6px;
-          background:#222;
-          border-radius:6px;
-          cursor:pointer;
-        ">
-        ${i + 1}. ${escapeHtml(s.nombre || "Sin nombre")}
-      </div>
-    `
+  <div
+    onclick="scrollASeccion(${i})"
+    style="
+      padding:8px;
+      margin-bottom:6px;
+      background:${i === seccionActivaIndex ? "#444" : "#222"};
+      border:${i === seccionActivaIndex ? "1px solid #fff" : "1px solid transparent"};
+      border-radius:6px;
+      cursor:pointer;
+      font-size:13px;
+    ">
+    ${i + 1}. ${escapeHtml(s.nombre || "Sin nombre")}
+  </div>
+`
   })
 }
 
 function scrollASeccion(index) {
-  const el = document.getElementById("seccion_" + index)
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" })
+  irASeccion(index)
+}
+
+function irASeccion(index) {
+  if (index < 0 || index >= secciones.length) return
+  seccionActivaIndex = index
+  renderSecciones()
+}
+
+function seccionAnterior() {
+  if (seccionActivaIndex > 0) {
+    seccionActivaIndex--
+    renderSecciones()
+  }
+}
+
+function seccionSiguiente() {
+  if (seccionActivaIndex < secciones.length - 1) {
+    seccionActivaIndex++
+    renderSecciones()
   }
 }
 
@@ -1046,5 +1085,9 @@ activarPreview(inputImagenModelo, previewModelo)
 activarPreview(inputImagenSecundaria, previewSecundaria)
 activarPreview(inputLogoMarca, previewLogo)
 
+
+window.seccionAnterior = seccionAnterior
+window.seccionSiguiente = seccionSiguiente
+window.irASeccion = irASeccion
 window.actualizarSacabocadoItem = actualizarSacabocadoItem
 window.addEventListener("DOMContentLoaded", init)
