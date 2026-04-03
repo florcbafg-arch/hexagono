@@ -3,9 +3,23 @@ async function validarSesionReal() {
   try {
     const userStorage = JSON.parse(localStorage.getItem("hexagono_user") || "null")
 
-    if (userStorage?.tipo_login === "operario") {
-      return userStorage
-    }
+   if (userStorage?.tipo_login === "operario") {
+
+  // ⏳ expiración simple (8 horas)
+  const ahora = Date.now()
+  const creado = userStorage?.login_time || 0
+
+  const EXPIRACION = 1000 * 60 * 60 * 8 // 8 horas
+
+  if (ahora - creado > EXPIRACION) {
+    console.warn("⏳ Sesión operario expirada")
+    localStorage.clear()
+    window.location.href = "login.html"
+    return null
+  }
+
+  return userStorage
+}
 
     const res = await apiFetch("/api/auth/me")
 
