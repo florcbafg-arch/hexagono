@@ -1194,7 +1194,7 @@ body.admin-page #contenido {
 
 .usuarios-wrapper {
   display: grid;
-  grid-template-columns: 460px 1fr;
+  grid-template-columns: 430px 1fr;
   gap: 28px;
   align-items: start;
   margin-top: 24px;
@@ -1305,4 +1305,33 @@ body.admin-page #contenido {
   .usuarios-form-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.usuarios-tabla-wrap th,
+.usuarios-tabla-wrap td {
+  padding: 8px 6px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.usuarios-col-der {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.usuarios-lista-card {
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.usuarios-tabla-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.usuarios-tabla-wrap table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: auto;
 }
