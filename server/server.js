@@ -7,7 +7,7 @@ const cors = require("cors");
 const path = require("path");
 const { supabase } = require("../config/supabase")
 const multer = require("multer")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs")
 const { authMiddleware } = require("../backend/middlewares/authMiddleware") // ✅ SOLO UNA VEZ
 
 const fichasRoutes = require("../backend/routes/fichas");
