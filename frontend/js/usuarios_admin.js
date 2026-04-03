@@ -27,14 +27,9 @@ usuarios.forEach(u => {
 tabla.innerHTML += `
 
 <tr>
-
 <td>${u.nombre}</td>
-
 <td>${u.email || "-"}</td>
-
-
 <td>${u.puesto || "-"}</td>
-
 <td>
 
 <button class="action-btn" onclick="editarUsuario(${u.id})">
@@ -46,9 +41,7 @@ Eliminar
 </button>
 
 </td>
-
 </tr>
-
 `
 
 })
@@ -234,6 +227,7 @@ alert("Edición de usuario próximamente")
 }
 
 window.crearUsuario = crearAdmin
+window.initUsuarios = iniciarUsuarios
 window.eliminarUsuario = eliminarUsuario
 window.editarUsuario = editarUsuario
 

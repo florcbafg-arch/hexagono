@@ -7,7 +7,7 @@ const cors = require("cors");
 const path = require("path");
 const { supabase } = require("../config/supabase")
 const multer = require("multer")
-
+const bcrypt = require("bcrypt")
 const { authMiddleware } = require("../backend/middlewares/authMiddleware") // ✅ SOLO UNA VEZ
 
 const fichasRoutes = require("../backend/routes/fichas");
@@ -478,64 +478,83 @@ app.post("/api/usuarios/admin", async (req,res)=>{
 })
 
 // ============================
-// CREAR USUARIO (ADMIN)
+// CREAR OPERARIO
 // ============================
+app.post("/api/usuarios/operario", async (req,res)=>{
+  try{
 
-app.post("/api/usuarios", async (req,res)=>{
+    const { nombre, codigo_acceso, pin, puesto_id } = req.body
 
-try{
+    const empresaId = req.user?.empresa_id
 
-const {nombre,username,password,puesto_id} = req.body
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
 
-const empresaId = req.user?.empresa_id
+    if (!nombre || !codigo_acceso || !pin || !puesto_id) {
+      return res.status(400).json({
+        error: "Faltan datos obligatorios"
+      })
+    }
 
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
+    const codigoLimpio = codigo_acceso.trim().toUpperCase()
+    const nombreLimpio = nombre.trim()
 
-// 🔒 VALIDAR DATOS
-if(!nombre || !username || !password || !puesto_id){
+    const { data: existe, error: errorExiste } = await supabase
+      .from("usuarios")
+      .select("id")
+      .eq("empresa_id", empresaId)
+      .eq("codigo_acceso", codigoLimpio)
+      .maybeSingle()
 
- return res.status(400).json({
-  error:"Datos incompletos"
- })
+    if (errorExiste) {
+      return res.status(500).json({ error: errorExiste.message })
+    }
 
-}
+    if (existe) {
+      return res.status(400).json({
+        error: "Ya existe un operario con ese código"
+      })
+    }
 
+    const pin_hash = await bcrypt.hash(pin, 10)
 
-const {data,error} = await supabase
-.from("usuarios")
-.insert([
-{
-nombre,
-username,
-password,
-puesto_id,
-activo:true,
-empresa_id: empresaId
-}
-])
+    const { data, error } = await supabase
+      .from("usuarios")
+      .insert([{
+        nombre: nombreLimpio,
+        codigo_acceso: codigoLimpio,
+        pin_hash,
+        puesto_id,
+        rol: "operario",
+        activo: true,
+        empresa_id: empresaId,
+        tipo_login: "operario"
+      }])
+      .select()
+      .single()
 
-if(error){
- console.log(error)
- return res.status(500).json(error)
-}
+    if (error) {
+      console.error("❌ Error guardando operario:", error)
+      return res.status(500).json({
+        error: error.message
+      })
+    }
 
-res.json({
- mensaje:"Usuario creado correctamente",
- data
-})
+    res.json({
+      mensaje: "Operario creado correctamente",
+      usuario: data
+    })
 
-}catch(err){
+  }catch(err){
 
-console.error(err)
+    console.error("❌ Error creando operario:", err)
 
-res.status(500).json({
- error:"Error creando usuario"
-})
+    res.status(500).json({
+      error: "Error creando operario"
+    })
 
-}
-
+  }
 })
 
 // ===============
@@ -1228,85 +1247,58 @@ res.status(500).json({error:"error puestos"})
 // ==========================
 // LISTAR USUARIOS
 // ==========================
-
 app.get("/api/usuarios", async (req,res)=>{
 
-try{
+  try{
 
-  const empresaId = req.user?.empresa_id
+    const empresaId = req.user?.empresa_id
 
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
 
-const { data, error } = await supabase
-.from("usuarios")
-.select(`
-id,
-nombre,
-email,
-rol,
-tipo_login,
-puesto_id,
-puestos(nombre)
-`)
-.eq("empresa_id", empresaId)
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select(`
+        id,
+        nombre,
+        email,
+        rol,
+        tipo_login,
+        codigo_acceso,
+        puesto_id,
+        puestos(nombre)
+      `)
+      .eq("empresa_id", empresaId)
+      .order("id", { ascending: false })
 
-if(error) throw error
+    if(error) throw error
 
-const usuarios = data.map(u => ({
-  id: u.id,
-  nombre: u.nombre,
-  email: u.email,
-  rol: u.rol,
-  tipo_login: u.tipo_login,
-  puesto: u.puestos?.nombre || "-"
-}))
+    const usuarios = data.map(u => ({
+      id: u.id,
+      nombre: u.nombre,
+      tipo_login: u.tipo_login || "-",
+      rol: u.rol || "-",
+      acceso: u.tipo_login === "operario"
+        ? (u.codigo_acceso || "-")
+        : (u.email || "-"),
+      puesto: u.puestos?.nombre || "-"
+    }))
 
-res.json(usuarios)
+    res.json(usuarios)
 
-}catch(err){
+  }catch(err){
 
-console.error("Error obteniendo usuarios:",err)
+    console.error("Error obteniendo usuarios:",err)
 
-res.status(500).json({
-error:"error usuarios"
-})
+    res.status(500).json({
+      error:"error usuarios"
+    })
 
-}
-
-})
-
-// ============================
-// OBTENER OBJETIVOS
-// ============================
-app.get("/api/objetivos", async (req,res)=>{
-
-try{
-
-  const empresaId = req.user?.empresa_id
-
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
-
-const {data,error} = await supabase
-.from("sectores")
-.select("nombre,objetivo_diario")
-.eq("empresa_id", empresaId)
-
-if(error) throw error
-
-res.json(data)
-
-}catch(err){
-
-console.error(err)
-res.status(500).json({error:"error objetivos"})
-
-}
+  }
 
 })
+
 
 // ==========================
 //  DASHBOARD PRODUCCION

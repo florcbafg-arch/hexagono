@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <title>Usuarios - HEXAFLOW</title>
+  <link rel="stylesheet" href="styles.css">
 
-<meta charset="UTF-8">
-<title>Usuarios - HEXAFLOW</title>
-<link rel="stylesheet" href="styles.css">
-
-<!-- 🔐 AUTH -->
   <script src="js/authGuard.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/usuarios_admin.js"></script>
 
   <script>
     checkAuth("admin")
@@ -18,99 +17,127 @@
 
 <body class="pagina-usuarios">
 
-<h1>Administración de Usuarios</h1>
+  <h1>Administración de Usuarios</h1>
 
-<div class="container">
+  <div class="container">
+    <div class="usuarios-layout">
 
+      <!-- ========================= -->
+      <!-- CREAR ADMINISTRADOR -->
+      <!-- ========================= -->
+      <div class="usuarios-crear">
+        <h2>Crear Administrador</h2>
 
+        <div id="mensajeAdmin" style="
+          margin-bottom:10px;
+          font-size:14px;
+          font-weight:bold;
+        "></div>
 
-<div class="usuarios-layout">
+        <div class="usuarios-form-grid">
 
+          <div class="usuarios-group">
+            <label>Nombre</label>
+            <input type="text" id="adminNombre">
+          </div>
 
-<div class="usuarios-crear">
+          <div class="usuarios-group">
+            <label>Email</label>
+            <input type="email" id="adminEmail">
+          </div>
 
-<h2>Crear Usuario</h2>
+          <div class="usuarios-group">
+            <label>Contraseña</label>
+            <input type="password" id="adminPassword">
+          </div>
 
-<div id="mensajeUsuario" style="
-margin-bottom:10px;
-font-size:14px;
-font-weight:bold;
-"></div>
+          <div class="usuarios-group">
+            <label>Rol</label>
+            <select id="adminRol">
+              <option value="admin">Admin</option>
+            </select>
+          </div>
 
-<div class="usuarios-form-grid">
+        </div>
 
+        <button class="usuarios-btn" onclick="crearAdmin()">
+          Crear Administrador
+        </button>
+      </div>
 
-<div class="usuarios-group">
-<label>Nombre</label>
-<input type="text" id="nombre">
-</div>
+      <div class="section-divider"></div>
 
+      <!-- ========================= -->
+      <!-- CREAR OPERARIO -->
+      <!-- ========================= -->
+      <div class="usuarios-crear">
+        <h2>Crear Operario</h2>
 
-<div class="usuarios-group">
-<label>Usuario</label>
-<input type="text" id="username">
-</div>
+        <div id="mensajeOperario" style="
+          margin-bottom:10px;
+          font-size:14px;
+          font-weight:bold;
+        "></div>
 
-<div class="usuarios-group">
-<label>Contraseña</label>
-<input type="password" id="password">
-</div>
+        <div class="usuarios-form-grid">
 
-<div class="usuarios-group">
-<label>Puesto</label>
+          <div class="usuarios-group">
+            <label>Nombre</label>
+            <input type="text" id="operarioNombre">
+          </div>
 
-<select id="puesto">
-<option value="">Seleccionar puesto</option>
-</select>
+          <div class="usuarios-group">
+            <label>Código de acceso</label>
+            <input type="text" id="operarioCodigo">
+          </div>
 
-</div>
+          <div class="usuarios-group">
+            <label>PIN</label>
+            <input type="password" id="operarioPin">
+          </div>
 
-</div>
+          <div class="usuarios-group">
+            <label>Puesto</label>
+            <select id="operarioPuesto">
+              <option value="">Seleccionar puesto</option>
+            </select>
+          </div>
 
-<button class="usuarios-btn" onclick="crearUsuario()">
-Crear Usuario
-</button>
+        </div>
 
-</div>
+        <button class="usuarios-btn" onclick="crearOperario()">
+          Crear Operario
+        </button>
+      </div>
 
-<div class="section-divider"></div>
+      <div class="section-divider"></div>
 
-<div class="usuarios-lista">
+      <!-- ========================= -->
+      <!-- LISTA DE USUARIOS -->
+      <!-- ========================= -->
+      <div class="usuarios-lista">
+        <h2 style="margin-top:40px;">
+          Lista de Usuarios (<span id="totalUsuarios">0</span>)
+        </h2>
 
-<h2 style="margin-top:40px;">
-Lista de Usuarios (<span id="totalUsuarios">0</span>)
-</h2>
+        <table class="tabla-produccion">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Rol</th>
+              <th>Acceso</th>
+              <th>Puesto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
 
+          <tbody id="tablaUsuarios"></tbody>
+        </table>
+      </div>
 
-<table class="tabla-produccion">
-
-
-
-<thead>
-
-<tr>
-<th>Nombre</th>
-<th>Usuario</th>
-<th>Puesto</th>
-<th>Acciones</th>
-</tr>
-
-</thead>
-
-
-<tbody id="tablaUsuarios">
-</tbody>
-
-
-</table>
-
-</div>
-
-   </div>
-</div>
-<script>
-  
-</script>
+    </div>
+  </div>
 
 </body>
 </html>
