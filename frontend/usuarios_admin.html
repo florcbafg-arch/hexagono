@@ -19,14 +19,15 @@
 
   <h1>Administración de Usuarios</h1>
 
-  <div class="container">
-    <div class="usuarios-wrapper">
+ <div class="container">
+  <div class="usuarios-panel">
 
       <!-- COLUMNA IZQUIERDA -->
       <div class="usuarios-col-izq">
 
         <!-- CREAR ADMINISTRADOR -->
-        <div class="usuarios-card">
+       <div class="usuarios-panel-left">
+      <div class="usuarios-box">
           <h2>Crear Administrador</h2>
 
           <div id="mensajeAdmin" style="
@@ -65,7 +66,8 @@
         </div>
 
         <!-- CREAR OPERARIO -->
-        <div class="usuarios-card">
+        
+      <div class="usuarios-box">
           <h2>Crear Operario</h2>
 
           <div id="mensajeOperario" style="
@@ -106,9 +108,9 @@
       </div>
 
       <!-- COLUMNA DERECHA -->
-      <div class="usuarios-col-der">
-        <div class="usuarios-card usuarios-lista-card">
-          
+      <div class="usuarios-panel-right">
+      <div class="usuarios-box usuarios-box-tabla">
+
          <h2 style="margin-bottom: 18px;">
            Lista de Usuarios (<span id="totalUsuarios">0</span>)
          </h2>
