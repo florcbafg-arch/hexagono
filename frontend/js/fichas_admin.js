@@ -330,11 +330,8 @@ const visibles = filtradas.slice(0, 10)
   }
 
   visibles.forEach(f => {
-    const tienePDF = !!f.pdf_url
     const fuente = f.fuente || "-"
-    const pdfBoton = tienePDF
-      ? `<button onclick="verPDF('${f.pdf_url}')">📄 PDF</button>`
-      : `<span style="color:#888;">Sin PDF</span>`
+    
 
     tbody.innerHTML += `
       <tr>
@@ -342,12 +339,10 @@ const visibles = filtradas.slice(0, 10)
         <td>${f.codigo || "-"}</td>
         <td>${f.nombre || "-"}</td>
         <td>${fuente}</td>
-        <td>${tienePDF ? "Sí" : "No"}</td>
     <td>
   <button onclick="verFicha(${f.modelo_id})">👁 Ver</button>
   <button onclick="editarFicha(${f.modelo_id})">✏ Editar</button>
   <button onclick="eliminarFicha(${f.modelo_id})">🗑 Eliminar</button>
-  ${pdfBoton}
 </td>
       </tr>
     `
