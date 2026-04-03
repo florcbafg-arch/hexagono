@@ -348,14 +348,8 @@ const visibles = filtradas.slice(0, 10)
     `
   })
 
-  const infoResultados = document.getElementById("infoResultadosFichas")
-
 if (infoResultados) {
-  if (filtradas.length > 10) {
-    infoResultados.textContent = `Mostrando 10 de ${filtradas.length} fichas. Usá el buscador para encontrar un modelo específico.`
-  } else {
-    infoResultados.textContent = `Mostrando ${filtradas.length} ficha(s).`
-  }
+  infoResultados.textContent = ""
 }
 
 }
