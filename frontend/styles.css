@@ -1189,13 +1189,13 @@ body.admin-page #contenido {
 }
 
 .pagina-usuarios .container {
-  max-width: 1400px;
+  max-width: 1450px;
 }
 
 .usuarios-wrapper {
   display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 24px;
+  grid-template-columns: 460px 1fr;
+  gap: 28px;
   align-items: start;
   margin-top: 24px;
 }
@@ -1211,22 +1211,23 @@ body.admin-page #contenido {
 }
 
 .usuarios-card {
-  background: #f7f7f7;
+  background: #f4f4f4;
   border: 1px solid #cfcfcf;
-  border-radius: 10px;
-  padding: 18px;
+  border-radius: 12px;
+  padding: 22px;
   box-sizing: border-box;
 }
 
 .usuarios-card h2 {
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  font-size: 22px;
 }
 
 .usuarios-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px;
 }
 
 .usuarios-group {
@@ -1236,18 +1237,29 @@ body.admin-page #contenido {
 
 .usuarios-group label {
   font-size: 14px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 
 .usuarios-group input,
 .usuarios-group select {
-  height: 36px;
-  padding: 6px 8px;
+  height: 40px;
+  padding: 8px 10px;
   box-sizing: border-box;
+  border: 1px solid #bdbdbd;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.usuarios-group input:focus,
+.usuarios-group select:focus {
+  outline: none;
+  border-color: #888;
 }
 
 .usuarios-btn {
-  margin-top: 16px;
+  margin-top: 18px;
+  min-width: 160px;
 }
 
 .usuarios-lista-card {
@@ -1260,9 +1272,32 @@ body.admin-page #contenido {
 
 .usuarios-tabla-wrap table {
   width: 100%;
+  border-collapse: collapse;
 }
 
-@media (max-width: 1100px) {
+.usuarios-tabla-wrap th,
+.usuarios-tabla-wrap td {
+  padding: 10px 8px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.usuarios-tabla-wrap thead th {
+  background: #e7e7e7;
+  font-weight: 700;
+}
+
+.usuarios-tabla-wrap tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.usuarios-tabla-wrap .action-btn,
+.usuarios-tabla-wrap .delete-btn {
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 1150px) {
   .usuarios-wrapper {
     grid-template-columns: 1fr;
   }
