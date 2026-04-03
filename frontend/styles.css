@@ -1188,150 +1188,139 @@ body.admin-page #contenido {
   border-radius: 8px;
 }
 
+/* =========================
+   MODULO USUARIOS - LIMPIO
+========================= */
+
+.pagina-usuarios {
+  margin: 0;
+  padding: 0;
+}
+
 .pagina-usuarios .container {
-  max-width: 1450px;
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  box-sizing: border-box;
 }
 
-.usuarios-wrapper {
+.pagina-usuarios .usuarios-wrapper {
   display: grid;
-  grid-template-columns: 430px 1fr;
-  gap: 28px;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
-  margin-top: 24px;
 }
 
-.usuarios-col-izq {
+.pagina-usuarios .usuarios-col-izq {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-}
-
-.usuarios-col-der {
+  gap: 20px;
   min-width: 0;
 }
 
-.usuarios-card {
+.pagina-usuarios .usuarios-col-der {
+  min-width: 0;
+}
+
+.pagina-usuarios .usuarios-card {
   background: #f4f4f4;
   border: 1px solid #cfcfcf;
   border-radius: 12px;
-  padding: 22px;
+  padding: 18px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-.usuarios-card h2 {
-  margin-top: 0;
-  margin-bottom: 18px;
-  font-size: 22px;
+.pagina-usuarios .usuarios-card h2 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  line-height: 1.2;
 }
 
-.usuarios-form-grid {
+.pagina-usuarios .usuarios-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px 14px;
 }
 
-.usuarios-group {
+.pagina-usuarios .usuarios-group {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.usuarios-group label {
-  font-size: 14px;
-  margin-bottom: 6px;
+.pagina-usuarios .usuarios-group label {
+  margin-bottom: 4px;
+  font-size: 13px;
   font-weight: 600;
 }
 
-.usuarios-group input,
-.usuarios-group select {
-  height: 40px;
+.pagina-usuarios .usuarios-group input,
+.pagina-usuarios .usuarios-group select {
+  width: 100%;
+  height: 38px;
   padding: 8px 10px;
-  box-sizing: border-box;
   border: 1px solid #bdbdbd;
   border-radius: 8px;
   background: #fff;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
-.usuarios-group input:focus,
-.usuarios-group select:focus {
-  outline: none;
-  border-color: #888;
+.pagina-usuarios .usuarios-btn {
+  margin-top: 16px;
+  min-width: 150px;
+  height: 38px;
 }
 
-.usuarios-btn {
-  margin-top: 18px;
-  min-width: 160px;
+.pagina-usuarios .usuarios-lista-card {
+  overflow: hidden;
 }
 
-.usuarios-lista-card {
-  min-height: 100%;
-}
-
-.usuarios-tabla-wrap {
+.pagina-usuarios .usuarios-tabla-wrap {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
 }
 
-.usuarios-tabla-wrap table {
+.pagina-usuarios .usuarios-tabla-wrap table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
+  background: #fff;
 }
 
-.usuarios-tabla-wrap th,
-.usuarios-tabla-wrap td {
-  padding: 10px 8px;
-  vertical-align: middle;
+.pagina-usuarios .usuarios-tabla-wrap th,
+.pagina-usuarios .usuarios-tabla-wrap td {
+  padding: 8px 8px;
   text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
-.usuarios-tabla-wrap thead th {
+.pagina-usuarios .usuarios-tabla-wrap thead th {
   background: #e7e7e7;
   font-weight: 700;
 }
 
-.usuarios-tabla-wrap tbody tr:nth-child(even) {
+.pagina-usuarios .usuarios-tabla-wrap tbody tr:nth-child(even) {
   background: #fafafa;
 }
 
-.usuarios-tabla-wrap .action-btn,
-.usuarios-tabla-wrap .delete-btn {
-  margin-right: 6px;
+.pagina-usuarios .usuarios-tabla-wrap .action-btn,
+.pagina-usuarios .usuarios-tabla-wrap .delete-btn {
+  margin-right: 4px;
   margin-bottom: 4px;
 }
 
-@media (max-width: 1150px) {
-  .usuarios-wrapper {
+@media (max-width: 1100px) {
+  .pagina-usuarios .usuarios-wrapper {
     grid-template-columns: 1fr;
   }
 
-  .usuarios-form-grid {
+  .pagina-usuarios .usuarios-form-grid {
     grid-template-columns: 1fr;
   }
-}
-
-.usuarios-tabla-wrap th,
-.usuarios-tabla-wrap td {
-  padding: 8px 6px;
-  vertical-align: middle;
-  text-align: left;
-}
-
-.usuarios-col-der {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.usuarios-lista-card {
-  min-height: 100%;
-  overflow: hidden;
-}
-
-.usuarios-tabla-wrap {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.usuarios-tabla-wrap table {
-  width: 100%;
-  max-width: 100%;
-  table-layout: auto;
 }
