@@ -348,10 +348,6 @@ const visibles = filtradas.slice(0, 10)
     `
   })
 
-if (infoResultados) {
-  infoResultados.textContent = ""
-}
-
 }
 
 function crearFicha() {
