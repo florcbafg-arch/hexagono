@@ -9,6 +9,19 @@ function apiFetch(url, options = {}) {
       Authorization: `Bearer ${token}`
     }
   })
-}
+  .then(res => {
+    if (res.status === 401) {
+      console.warn("🔒 Sesión expirada o token inválido")
 
-window.apiFetch = apiFetch
+      localStorage.clear()
+
+      alert("Sesión expirada. Volvé a iniciar sesión.")
+
+      window.location.href = "/login.html"
+
+      return Promise.reject("Unauthorized")
+    }
+
+    return res
+  })
+}

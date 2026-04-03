@@ -245,4 +245,51 @@ const { data: empresaNueva, error: errorEmpresa } = await supabase
     }
   })
 })
+
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null
+
+    if (!token) {
+      return res.status(401).json({ error: "Sin token" })
+    }
+
+    const { data, error } = await supabase.auth.getUser(token)
+
+    if (error || !data?.user) {
+      return res.status(401).json({ error: "Token inválido" })
+    }
+
+    const authUser = data.user
+
+    const { data: usuario, error: userError } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("auth_id", authUser.id)
+      .single()
+
+    if (userError || !usuario) {
+      return res.status(401).json({ error: "Usuario no sincronizado" })
+    }
+
+    return res.json({
+      id: usuario.id,
+      auth_id: usuario.auth_id,
+      email: usuario.email,
+      nombre: usuario.nombre,
+      rol: usuario.rol,
+      puesto_id: usuario.puesto_id,
+      empresa_id: usuario.empresa_id,
+      tipo_login: usuario.tipo_login,
+      activo: usuario.activo
+    })
+  } catch (err) {
+    console.error("Error en /api/auth/me:", err)
+    return res.status(500).json({ error: "Error interno del servidor" })
+  }
+})
+
 module.exports = router;
