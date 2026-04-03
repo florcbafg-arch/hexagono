@@ -131,6 +131,8 @@ function construirSeccionesImportacion() {
 }
 
 function aplicarDetalleImportado(secciones, filasDetalle) {
+  let coincidencias = 0
+
   filasDetalle.forEach((fila) => {
     const seccionNombre = normalizarTextoImport(fila.seccion)
     const itemNombre = normalizarTextoImport(fila.item)
@@ -150,15 +152,28 @@ function aplicarDetalleImportado(secciones, filasDetalle) {
 
     if (pieza.materiales?.[0]) {
       pieza.materiales[0].material = valor
+      coincidencias++
     }
   })
 
-  return secciones
+  return {
+    secciones,
+    coincidencias
+  }
 }
 
 async function importarExcelFicha(event) {
   const file = event.target.files?.[0]
   if (!file) return
+
+  const nombreArchivo = (file.name || "").toLowerCase()
+  const esExcel = nombreArchivo.endsWith(".xlsx") || nombreArchivo.endsWith(".xls")
+
+  if (!esExcel) {
+    alert("Error al importar: solo se permiten archivos Excel (.xlsx o .xls)")
+    event.target.value = ""
+    return
+  }
 
   try {
     const data = await file.arrayBuffer()
@@ -176,33 +191,50 @@ async function importarExcelFicha(event) {
     }
 
     const filasFicha = XLSX.utils.sheet_to_json(hojaFicha, { defval: "" })
-    const filasDetalle = XLSX.utils.sheet_to_json(hojaDetalle, { defval: "" })
+const filasDetalle = XLSX.utils.sheet_to_json(hojaDetalle, { defval: "" })
 
-    if (!Array.isArray(filasFicha) || filasFicha.length === 0) {
-      throw new Error("La hoja 'ficha' está vacía")
-    }
+if (!Array.isArray(filasFicha) || filasFicha.length === 0) {
+  throw new Error("La hoja 'ficha' está vacía o incompleta")
+}
+
+if (!Array.isArray(filasDetalle) || filasDetalle.length === 0) {
+  throw new Error("La hoja 'detalle' está vacía o incompleta")
+}
 
     const cabecera = filasFicha[0]
 
-    const payload = {
-      modelo: String(cabecera.modelo || "").trim(),
-      codigo: String(cabecera.codigo || "").trim(),
-      nombre: String(cabecera.nombre || "").trim(),
-      marca: String(cabecera.marca || "").trim(),
-      horma: String(cabecera.horma || "").trim(),
-      temporada: String(cabecera.temporada || "").trim(),
-      detalle_general: "",
-      tipo_calzado: String(cabecera.tipo_calzado || "vulcanizada").trim().toLowerCase(),
-      imagen_modelo_url: "",
-      imagen_secundaria_url: "",
-      logo_marca_url: "",
-      pdf_url: "",
-      fuente: "EXCEL",
-      secciones: aplicarDetalleImportado(
-        construirSeccionesImportacion(),
-        filasDetalle
-      )
-    }
+    const primeraFilaDetalle = filasDetalle[0] || {}
+
+if (!("seccion" in primeraFilaDetalle) || !("item" in primeraFilaDetalle) || !("valor" in primeraFilaDetalle)) {
+  throw new Error("La hoja 'detalle' debe incluir las columnas: seccion, item, valor")
+}
+
+    const resultadoImportacion = aplicarDetalleImportado(
+  construirSeccionesImportacion(),
+  filasDetalle
+)
+
+if (!resultadoImportacion.coincidencias) {
+  throw new Error("El Excel no coincide con la estructura esperada. Revisá sección, item y valor.")
+}
+
+const payload = {
+  modelo: String(cabecera.modelo || "").trim(),
+  codigo: String(cabecera.codigo || "").trim(),
+  nombre: String(cabecera.nombre || "").trim(),
+  marca: String(cabecera.marca || "").trim(),
+  horma: String(cabecera.horma || "").trim(),
+  temporada: String(cabecera.temporada || "").trim(),
+  detalle_general: "",
+  tipo_calzado: String(cabecera.tipo_calzado || "vulcanizada").trim().toLowerCase(),
+  imagen_modelo_url: "",
+  imagen_secundaria_url: "",
+  logo_marca_url: "",
+  pdf_url: "",
+  fuente: "EXCEL",
+  secciones: resultadoImportacion.secciones
+}
+  
 
     if (!payload.modelo) {
       throw new Error("La hoja 'ficha' debe incluir 'modelo'")
@@ -230,12 +262,12 @@ async function importarExcelFicha(event) {
       throw new Error(resultado.error || "Error importando ficha desde Excel")
     }
 
-    alert("Ficha importada correctamente desde Excel")
+    alert(`Ficha importada correctamente desde Excel. Se cargaron ${resultadoImportacion.coincidencias} ítems.`)
     await cargarFichas()
 
   } catch (error) {
     console.error("Error importando Excel de ficha:", error)
-    alert(error.message || "Error importando Excel")
+    alert(error.message || "Error al importar Excel. Revisá el formato del archivo.")
   } finally {
     event.target.value = ""
   }
@@ -247,7 +279,25 @@ async function cargarFichas() {
     const data = await res.json()
 
     fichas = Array.isArray(data) ? data : []
-    renderFichas()
+
+fichas.sort((a, b) => {
+  const modeloA = (a.modelo_nombre || "").toLowerCase()
+  const modeloB = (b.modelo_nombre || "").toLowerCase()
+
+  if (modeloA < modeloB) return -1
+  if (modeloA > modeloB) return 1
+
+  const marcaA = (a.marca || "").toLowerCase()
+  const marcaB = (b.marca || "").toLowerCase()
+
+  if (marcaA < marcaB) return -1
+  if (marcaA > marcaB) return 1
+
+  return 0
+})
+
+renderFichas()
+    
   } catch (error) {
     console.error("Error cargando fichas:", error)
     alert("Error cargando fichas")
@@ -261,11 +311,14 @@ function renderFichas() {
 
   tbody.innerHTML = ""
 
-  const filtradas = fichas.filter(f =>
-    (f.nombre || "").toLowerCase().includes(filtro) ||
-    (f.codigo || "").toLowerCase().includes(filtro) ||
-    (f.modelo_nombre || "").toLowerCase().includes(filtro)
-  )
+const filtradas = fichas.filter(f =>
+  (f.nombre || "").toLowerCase().includes(filtro) ||
+  (f.codigo || "").toLowerCase().includes(filtro) ||
+  (f.modelo_nombre || "").toLowerCase().includes(filtro) ||
+  (f.marca || "").toLowerCase().includes(filtro)
+)
+
+const visibles = filtradas.slice(0, 10)
 
   if (filtradas.length === 0) {
     tbody.innerHTML = `
@@ -276,7 +329,7 @@ function renderFichas() {
     return
   }
 
-  filtradas.forEach(f => {
+  visibles.forEach(f => {
     const tienePDF = !!f.pdf_url
     const fuente = f.fuente || "-"
     const pdfBoton = tienePDF
@@ -299,6 +352,17 @@ function renderFichas() {
       </tr>
     `
   })
+
+  const infoResultados = document.getElementById("infoResultadosFichas")
+
+if (infoResultados) {
+  if (filtradas.length > 10) {
+    infoResultados.textContent = `Mostrando 10 de ${filtradas.length} fichas. Usá el buscador para encontrar un modelo específico.`
+  } else {
+    infoResultados.textContent = `Mostrando ${filtradas.length} ficha(s).`
+  }
+}
+
 }
 
 function crearFicha() {
