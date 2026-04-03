@@ -1,6 +1,12 @@
 // 🔥 VALIDAR SESIÓN REAL CONTRA BACKEND
 async function validarSesionReal() {
   try {
+    const userStorage = JSON.parse(localStorage.getItem("hexagono_user") || "null")
+
+    if (userStorage?.tipo_login === "operario") {
+      return userStorage
+    }
+
     const res = await apiFetch("/api/auth/me")
 
     if (!res.ok) {
@@ -8,21 +14,13 @@ async function validarSesionReal() {
     }
 
     const user = await res.json()
-
-    // 🔁 sincronizamos localStorage con backend
     localStorage.setItem("hexagono_user", JSON.stringify(user))
-
     return user
 
   } catch (error) {
     console.warn("Error validando sesión:", error)
-
-    // 🧹 limpiamos sesión corrupta o vencida
     localStorage.clear()
-
-    // 🔁 redirigimos al login
     window.location.href = "login.html"
-
     return null
   }
 }

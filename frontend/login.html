@@ -51,39 +51,46 @@
 
         try {
 
-          const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              email: usuario,
-              password
-            })
-          })
+          const esEmail = usuario.includes("@")
+
+const endpoint = esEmail
+  ? "/api/auth/login"
+  : "/api/auth/login-operario"
+
+const body = esEmail
+  ? { email: usuario, password }
+  : { codigo_acceso: usuario, pin: password }
+
+const res = await fetch(endpoint, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(body)
+})
+          
 
           const data = await res.json()
 
           console.log("RESPUESTA:", data)
 
-          if (data.ok && data.usuario) {
+         if (data.ok && data.usuario) {
 
-            localStorage.setItem("token", data.token)
-            
-            localStorage.setItem("hexagono_user", JSON.stringify(data.usuario))
-            localStorage.setItem("usuario", data.usuario.nombre)
-            localStorage.setItem("puesto_id", data.usuario.puesto_id)
-            localStorage.setItem("rol", data.usuario.rol)
+  localStorage.setItem("token", data.token)
+  localStorage.setItem("hexagono_user", JSON.stringify(data.usuario))
+  localStorage.setItem("usuario", data.usuario.nombre)
+  localStorage.setItem("puesto_id", data.usuario.puesto_id || "")
+  localStorage.setItem("rol", data.usuario.rol || "")
 
-            if (data.usuario.rol === "admin") {
-              window.location.href = "admin.html"
-            } else {
-              window.location.href = "operario.html"
-            }
+  if (data.usuario.rol === "admin") {
+    window.location.href = "admin.html"
+  } else {
+    window.location.href = "operario.html"
+  }
 
-          } else {
-            alert("Usuario o contraseña incorrectos")
-          }
+} else {
+  alert(data.error || "Usuario o contraseña incorrectos")
+}
 
         } catch (error) {
           console.error("ERROR LOGIN:", error)

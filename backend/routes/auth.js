@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { supabase } = require("../../config/supabase");
 const crypto = require("crypto")
+const bcrypt = require("bcryptjs")
 
 // 🔐 REGISTRO
 router.post("/registro", async (req, res) => {
@@ -289,6 +290,69 @@ router.get("/me", async (req, res) => {
   } catch (err) {
     console.error("Error en /api/auth/me:", err)
     return res.status(500).json({ error: "Error interno del servidor" })
+  }
+})
+
+// 🔐 LOGIN OPERARIO
+router.post("/login-operario", async (req, res) => {
+  try {
+    const { codigo_acceso, pin } = req.body
+
+    if (!codigo_acceso || !pin) {
+      return res.status(400).json({
+        ok: false,
+        error: "Código y PIN requeridos"
+      })
+    }
+
+    const codigoLimpio = codigo_acceso.trim().toUpperCase()
+
+    const { data: operario, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("codigo_acceso", codigoLimpio)
+      .eq("tipo_login", "operario")
+      .eq("activo", true)
+      .maybeSingle()
+
+    if (error || !operario) {
+      return res.json({
+        ok: false,
+        error: "Operario no encontrado"
+      })
+    }
+
+    const pinOk = await bcrypt.compare(pin, operario.pin_hash || "")
+
+    if (!pinOk) {
+      return res.json({
+        ok: false,
+        error: "Código o PIN incorrectos"
+      })
+    }
+
+    const tokenOperario = `operario-${operario.id}-${Date.now()}`
+
+    return res.json({
+      ok: true,
+      token: tokenOperario,
+      usuario: {
+        id: operario.id,
+        nombre: operario.nombre,
+        rol: operario.rol,
+        puesto_id: operario.puesto_id,
+        empresa_id: operario.empresa_id,
+        tipo_login: operario.tipo_login,
+        codigo_acceso: operario.codigo_acceso
+      }
+    })
+
+  } catch (err) {
+    console.error("Error login operario:", err)
+    return res.status(500).json({
+      ok: false,
+      error: "Error en login operario"
+    })
   }
 })
 
