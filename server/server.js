@@ -390,6 +390,92 @@ app.post("/api/produccion", async (req, res) => {
 
 })
 
+// ============================
+// CREAR ADMIN (NUEVO SISTEMA)
+// ============================
+app.post("/api/usuarios/admin", async (req,res)=>{
+  try{
+
+    const { nombre, email, password, rol } = req.body
+
+    const empresaId = req.user?.empresa_id
+
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
+
+    if (!nombre || !email || !password || !rol) {
+      return res.status(400).json({
+        error: "Faltan datos obligatorios"
+      })
+    }
+
+    const emailLimpio = email.trim().toLowerCase()
+    const nombreLimpio = nombre.trim()
+
+    // 1. crear usuario en Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: emailLimpio,
+      password,
+      email_confirm: true
+    })
+
+    if (authError) {
+      console.error("❌ Error creando usuario en Auth:", authError)
+      return res.status(400).json({
+        error: authError.message
+      })
+    }
+
+    const authUser = authData?.user
+
+    if (!authUser?.id) {
+      return res.status(500).json({
+        error: "No se pudo obtener auth_id del usuario creado"
+      })
+    }
+
+    // 2. guardar perfil en tabla usuarios
+    const { data, error } = await supabase
+      .from("usuarios")
+      .insert([{
+        nombre: nombreLimpio,
+        email: emailLimpio,
+        auth_id: authUser.id,
+        rol,
+        activo: true,
+        empresa_id: empresaId,
+        tipo_login: "admin"
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error("❌ Error guardando usuario en tabla usuarios:", error)
+
+      // rollback básico: borrar usuario auth si falló tabla usuarios
+      await supabase.auth.admin.deleteUser(authUser.id)
+
+      return res.status(500).json({
+        error: error.message
+      })
+    }
+
+    res.json({
+      mensaje: "Admin creado correctamente",
+      usuario: data
+    })
+
+  }catch(err){
+
+    console.error("❌ Error creando admin:", err)
+
+    res.status(500).json({
+      error: "Error creando admin"
+    })
+
+  }
+})
 
 // ============================
 // CREAR USUARIO (ADMIN)
@@ -1158,7 +1244,9 @@ const { data, error } = await supabase
 .select(`
 id,
 nombre,
-username,
+email,
+rol,
+tipo_login,
 puesto_id,
 puestos(nombre)
 `)
@@ -1167,10 +1255,12 @@ puestos(nombre)
 if(error) throw error
 
 const usuarios = data.map(u => ({
-id: u.id,
-nombre: u.nombre,
-username: u.username,
-puesto: u.puestos?.nombre || "-"
+  id: u.id,
+  nombre: u.nombre,
+  email: u.email,
+  rol: u.rol,
+  tipo_login: u.tipo_login,
+  puesto: u.puestos?.nombre || "-"
 }))
 
 res.json(usuarios)

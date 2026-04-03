@@ -30,7 +30,7 @@ tabla.innerHTML += `
 
 <td>${u.nombre}</td>
 
-<td>${u.username}</td>
+<td>${u.email || "-"}</td>
 
 
 <td>${u.puesto || "-"}</td>
@@ -53,6 +53,62 @@ Eliminar
 
 })
 
+}
+
+async function crearAdmin(){
+
+  const nombre = document.getElementById("nombre").value
+  const email = document.getElementById("username").value
+  const password = document.getElementById("password").value
+  const mensaje = document.getElementById("mensajeUsuario")
+
+  // por ahora rol fijo admin, después lo hacemos selector
+  const rol = "admin"
+
+  if(!nombre || !email || !password){
+    mensaje.style.color = "red"
+    mensaje.textContent = "⚠ Complete nombre, email y contraseña"
+    return
+  }
+
+  try{
+
+    const res = await apiFetch("/api/usuarios/admin", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        nombre,
+        email,
+        password,
+        rol
+      })
+    })
+
+    const data = await res.json()
+
+    if(!res.ok){
+      throw new Error(data?.error || "Error creando admin")
+    }
+
+    mensaje.style.color = "green"
+    mensaje.textContent = "✅ Admin creado correctamente"
+
+    limpiarFormulario()
+    cargarUsuarios()
+
+  }catch(err){
+
+    console.error(err)
+    mensaje.style.color = "red"
+    mensaje.textContent = "❌ " + (err.message || "Error al crear admin")
+
+  }
+
+  setTimeout(()=>{
+    mensaje.textContent=""
+  },3000)
 }
 
 async function crearUsuario(){
@@ -177,7 +233,7 @@ alert("Edición de usuario próximamente")
 
 }
 
-window.crearUsuario = crearUsuario
+window.crearUsuario = crearAdmin
 window.eliminarUsuario = eliminarUsuario
 window.editarUsuario = editarUsuario
 
