@@ -10,7 +10,7 @@ async function obtenerOCrearModelo({ empresaId, nombreModelo, marca = null, codi
       .replace(/\s+/g, " ")
 
   const nombreLimpio = normalizarTexto(nombreModelo)
-  const marcaLimpia = normalizarTexto(marca) || null
+  const marcaLimpia = normalizarTexto(marca).toUpperCase() || null
   const codigoLimpio = normalizarTexto(codigo) || null
 
   if (!empresaId) {
@@ -256,6 +256,20 @@ const modelo = await obtenerOCrearModelo({
   marca: p.marca || null,
   codigo: p.codigo || null
 })
+// 🔥 SI EL MODELO NO TIENE TIPO_CURVA, LO HEREDA DE PROGRAMACION
+if (!modelo.tipo_curva && p.tipo_curva) {
+  const tipoCurvaNormalizada = String(p.tipo_curva).trim().toLowerCase()
+
+  const { error: errorUpdateTipoCurva } = await supabase
+    .from("modelos")
+    .update({ tipo_curva: tipoCurvaNormalizada })
+    .eq("id", modelo.id)
+    .eq("empresa_id", empresaId)
+
+  if (!errorUpdateTipoCurva) {
+    modelo.tipo_curva = tipoCurvaNormalizada
+  }
+}
 
         console.log("✅ Modelo resuelto:", {
           programacion_id: p.id,
@@ -264,10 +278,9 @@ const modelo = await obtenerOCrearModelo({
           modelo_nombre: modelo.nombre
         })
 
-        // 5. BUSCAR CURVA DEL MODELO
       // 5. BUSCAR CURVA POR MARCA + TIPO_CURVA
-const marcaModelo = modelo.marca || p.marca || null
-const tipoCurvaModelo = modelo.tipo_curva || null
+const marcaModelo = String(modelo.marca || p.marca || "").trim().toUpperCase() || null
+const tipoCurvaModelo = String(modelo.tipo_curva || p.tipo_curva || "").trim().toLowerCase() || null
 
 if (!marcaModelo || !tipoCurvaModelo) {
   errores.push({
@@ -504,11 +517,13 @@ router.post("/curvas", async (req, res) => {
 
     const { marca, tipo_curva, talles } = req.body
 
-    if (!marca || !tipo_curva || !Array.isArray(talles) || talles.length === 0) {
+    const tipoCurvaLimpia = String(tipo_curva || "").trim().toLowerCase()
+
+    if (!marca || !tipoCurvaLimpia || !Array.isArray(talles) || talles.length === 0) {
       return res.status(400).json({ error: "Datos incompletos para guardar curva" })
     }
 
-    const marcaLimpia = String(marca).trim()
+    const marcaLimpia = String(marca).trim().toUpperCase()
 
     const tallesValidos = talles
       .map(t => ({
@@ -533,7 +548,7 @@ router.post("/curvas", async (req, res) => {
       .delete()
       .eq("empresa_id", empresaId)
       .eq("marca", marcaLimpia)
-      .eq("tipo_curva", tipo_curva)
+      .eq("tipo_curva", tipoCurvaLimpia)
 
     if (errorDelete) throw errorDelete
 
@@ -541,7 +556,7 @@ router.post("/curvas", async (req, res) => {
     const filasInsert = tallesValidos.map(t => ({
       empresa_id: empresaId,
       marca: marcaLimpia,
-      tipo_curva,
+      tipo_curva: tipoCurvaLimpia,
       talle: t.talle,
       pares: t.pares,
       porcentaje: t.pares / totalPares
