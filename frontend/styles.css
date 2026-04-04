@@ -2604,3 +2604,25 @@ body.admin-page .sidebar {
   width: 235px;
   min-width: 235px;
 }
+body.admin-page .sidebar {
+  width: 250px !important;
+  min-width: 250px !important;
+}
+
+.sidebar-brand-horizontal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px 0 18px !important;
+  margin-bottom: 20px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  overflow: visible !important;
+}
+
+.brand-logo-horizontal {
+  width: 210px !important;
+  max-width: none !important;
+  height: auto !important;
+  display: block !important;
+  object-fit: contain !important;
+}
