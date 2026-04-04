@@ -120,3 +120,210 @@
         display: none;
       }
     }
+    @media print {
+  .no-print {
+    display: none !important;
+  }
+    .sector-titulo {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .cabecera {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .bloque {
+    min-height: 110px;
+    padding: 8px;
+  }
+
+  .campo {
+    font-size: 10px;
+  }
+
+  #detalleTecnico {
+    font-size: 10px !important;
+  }
+
+  .barcode-box {
+    min-height: 40px;
+    font-size: 9px;
+  }
+
+  .subtitulo {
+    font-size: 12px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+  }
+}
+@media print {
+  body {
+    margin: 0;
+    padding: 10mm;
+  }
+}
+.bloque-talles {
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+.tabla-talles {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.tabla-talles th,
+.tabla-talles td {
+  border: 1px solid #222;
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tabla-talles thead th {
+  background: #e9e9e9;
+  font-weight: bold;
+}
+
+.tabla-talles .col-total,
+.tabla-talles .fila-total td:first-child {
+  font-weight: bold;
+}
+
+.tabla-talles .fila-total td {
+  font-weight: bold;
+  background: #f5f5f5;
+}
+.encabezado-orden {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.encabezado-col {
+  flex: 1;
+}
+
+.encabezado-box {
+  border: 1px solid #222;
+  padding: 8px 10px;
+  min-height: 92px;
+  box-sizing: border-box;
+}
+
+.encabezado-box p {
+  margin: 2px 0;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.encabezado-box strong {
+  font-weight: 700;
+}
+
+.titulo-sector,
+.titulo-orden {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 12px 0 14px;
+  letter-spacing: 0.5px;
+}
+
+.codigo-barras-box {
+  border: 1px solid #222;
+  padding: 8px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.codigo-barras-box .titulo-codigo {
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.codigo-barras-box .codigo-placeholder {
+  flex: 1;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  text-align: center;
+}
+.sector-titulo {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bloque {
+  flex: 1;
+  border: 1px solid #222;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  min-height: 120px;
+  background: #fff;
+}
+
+.campo {
+  margin: 2px 0;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.campo strong {
+  font-weight: 700;
+}
+
+#detalleTecnico {
+  font-size: 11px !important;
+  line-height: 1.25;
+  min-height: 42px !important;
+  margin-top: 4px;
+}
+
+.barcode-box {
+  margin-top: 8px;
+  border: 1px solid #333;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.subtitulo {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.firma {
+  display: none;
+}
