@@ -275,4 +275,103 @@ function agregarFilaCurva() {
   body.appendChild(tr)
 }
 
+function autogenerarCurva() {
+  const tipo = document.getElementById("curvaTipo").value
+  const body = document.getElementById("tablaCurvaBody")
+
+  if (!body) return
+
+  body.innerHTML = ""
+
+  let rangos = []
+
+  if (tipo === "dama") {
+    rangos = [35, 36, 37, 38, 39, 40]
+  } else if (tipo === "hombre") {
+    rangos = [39, 40, 41, 42, 43, 44]
+  } else if (tipo === "kids") {
+    rangos = [27, 28, 29, 30, 31, 32, 33, 34]
+  }
+
+  rangos.forEach(talle => {
+    const tr = document.createElement("tr")
+
+    tr.innerHTML = `
+      <td><input type="number" value="${talle}" readonly></td>
+      <td><input type="number" placeholder="0"></td>
+    `
+
+    body.appendChild(tr)
+  })
+}
+
+async function guardarCurva() {
+  const marcaInput = document.getElementById("curvaMarca")
+  const tipoInput = document.getElementById("curvaTipo")
+  const body = document.getElementById("tablaCurvaBody")
+
+  if (!marcaInput || !tipoInput || !body) return
+
+  const marca = marcaInput.value.trim()
+  const tipo_curva = tipoInput.value
+
+  if (!marca) {
+    alert("Ingresá una marca")
+    return
+  }
+
+  if (!tipo_curva) {
+    alert("Seleccioná un tipo de curva")
+    return
+  }
+
+  const filas = [...body.querySelectorAll("tr")]
+
+  const talles = filas.map(tr => {
+    const inputs = tr.querySelectorAll("input")
+    return {
+      talle: Number(inputs[0]?.value || 0),
+      pares: Number(inputs[1]?.value || 0)
+    }
+  }).filter(t => t.talle > 0 && t.pares > 0)
+
+  if (talles.length === 0) {
+    alert("Cargá al menos un talle con pares")
+    return
+  }
+
+  try {
+    const res = await apiFetch("/api/programacion/curvas", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        marca,
+        tipo_curva,
+        talles
+      })
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      alert(data.error || "Error guardando curva")
+      return
+    }
+
+    alert(data.mensaje || "Curva guardada correctamente")
+
+    cerrarModalCurva()
+
+    marcaInput.value = ""
+    tipoInput.value = ""
+    body.innerHTML = ""
+
+  } catch (error) {
+    console.error("❌ Error guardando curva:", error)
+    alert("Error inesperado guardando curva")
+  }
+}
+
 cargarProgramacion()

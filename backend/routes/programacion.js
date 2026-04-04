@@ -493,5 +493,80 @@ if (errorCurva) throw errorCurva
   }
 })
 
+// 💾 GUARDAR CURVA
+router.post("/curvas", async (req, res) => {
+  try {
+    const empresaId = req.user?.empresa_id
+
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
+
+    const { marca, tipo_curva, talles } = req.body
+
+    if (!marca || !tipo_curva || !Array.isArray(talles) || talles.length === 0) {
+      return res.status(400).json({ error: "Datos incompletos para guardar curva" })
+    }
+
+    const marcaLimpia = String(marca).trim()
+
+    const tallesValidos = talles
+      .map(t => ({
+        talle: Number(t.talle),
+        pares: Number(t.pares)
+      }))
+      .filter(t => t.talle > 0 && t.pares > 0)
+
+    if (tallesValidos.length === 0) {
+      return res.status(400).json({ error: "No hay talles válidos para guardar" })
+    }
+
+    const totalPares = tallesValidos.reduce((acc, t) => acc + t.pares, 0)
+
+    if (totalPares <= 0) {
+      return res.status(400).json({ error: "La suma de pares debe ser mayor a 0" })
+    }
+
+    // 1. borrar curva previa de esa marca + tipo
+    const { error: errorDelete } = await supabase
+      .from("curvas_talles")
+      .delete()
+      .eq("empresa_id", empresaId)
+      .eq("marca", marcaLimpia)
+      .eq("tipo_curva", tipo_curva)
+
+    if (errorDelete) throw errorDelete
+
+    // 2. insertar nueva curva
+    const filasInsert = tallesValidos.map(t => ({
+      empresa_id: empresaId,
+      marca: marcaLimpia,
+      tipo_curva,
+      talle: t.talle,
+      pares: t.pares,
+      porcentaje: t.pares / totalPares
+    }))
+
+    const { error: errorInsert } = await supabase
+      .from("curvas_talles")
+      .insert(filasInsert)
+
+    if (errorInsert) throw errorInsert
+
+    res.json({
+      ok: true,
+      mensaje: "Curva guardada correctamente",
+      total_talles: filasInsert.length
+    })
+
+  } catch (error) {
+    console.error("❌ Error guardando curva:", error)
+    res.status(500).json({
+      ok: false,
+      error: error.message || "Error guardando curva"
+    })
+  }
+})
+
 module.exports = router
 
