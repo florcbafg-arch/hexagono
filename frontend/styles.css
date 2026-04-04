@@ -1562,13 +1562,28 @@ body.dark-mode {
 }
 
 /* Sidebar */
-body.dark-mode .sidebar {
-  background: #12131a;
-  border-right: 1px solid #2a2f3a;
+.sidebar {
+  background: linear-gradient(
+    180deg,
+    #0f1117 0%,
+    #12131a 100%
+  );
+
+  border-right: 1px solid rgba(255,255,255,0.05);
 }
 
-body.dark-mode .sidebar li {
-  color: #cbd5f5;
+.sidebar li {
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.sidebar li:hover {
+  background: rgba(168, 85, 247, 0.12);
+  color: #e2e8f0;
 }
 
 body.dark-mode .sidebar li:hover {
@@ -1612,8 +1627,52 @@ body.dark-mode .tabla-produccion td {
   background: #12131a;
 }
 .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
 
-  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.4));
+  filter: 
+    drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))
+    drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));
+
+  transition: 0.3s;
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+body.dark-mode {
+  background: radial-gradient(
+    circle at 20% 20%,
+    rgba(168, 85, 247, 0.08),
+    transparent 40%
+  ),
+  radial-gradient(
+    circle at 80% 30%,
+    rgba(56, 189, 248, 0.08),
+    transparent 40%
+  ),
+  #0a0a0f;
+}
+.sidebar li.activo {
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+  color: white;
+}
+
+.brand-text {
+  font-size: 18px;
+  font-weight: 700;
+
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  background-clip: text; /* 👈 ESTE FALTABA */
+
+  letter-spacing: 1px;
 }
