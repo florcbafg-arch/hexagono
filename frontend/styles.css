@@ -126,41 +126,36 @@ outline:none;
 /* BOTONES */
 /* ========================= */
 
-button{
-background:#444;
-color:white;
-border:none;
-padding:10px 18px;
-border-radius:6px;
-cursor:pointer;
-font-family:'Orbitron',sans-serif;
-white-space:nowrap;
+button {
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+  color: white;
+
+  border: none;
+  border-radius: 6px;
+
+  padding: 10px 16px;
+  cursor: pointer;
+
+  transition: 0.2s;
 }
-button:hover{
-background:#333;
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
 }
 
 /* ========================= */
 /* TABLAS */
 /* ========================= */
-
-.tabla-produccion{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-font-size:14px;
+.tabla-produccion th {
+  background: #161922;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8;
 }
 
-.tabla-produccion th{
-background:#cfcfcf;
-border:1px solid #8f8f8f;
-padding:10px;
-}
-
-.tabla-produccion td{
-border:1px solid #999;
-padding:10px;
-background:white;
+.tabla-produccion td {
+  background: #0f1117;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 /* ========================= */
@@ -226,15 +221,21 @@ align-items:stretch;
 }
 /* PANEL */
 
-.panel{
-background:#e9e9e9;
-border:1px solid #888;
-padding:15px;
-border-radius:6px;
-height:100%;
-display:flex;
-flex-direction:column;
-justify-content:flex-start;
+.panel {
+  background: linear-gradient(
+    180deg,
+    #12131a,
+    #0f1117
+  );
+
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+
+  padding: 15px;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.5);
 }
 
 .panel h3{
@@ -1149,8 +1150,10 @@ body.admin-page .main {
   height: 100vh;
 }
 
-body.admin-page .header {
-  margin: 0;
+.header {
+  background: #0f1117;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: #e2e8f0;
 }
 
 body.admin-page #contenido {
@@ -1675,4 +1678,10 @@ body.dark-mode {
   background-clip: text; /* 👈 ESTE FALTABA */
 
   letter-spacing: 1px;
+}
+body.dark-mode {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(168,85,247,0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(56,189,248,0.08), transparent 40%),
+    #0a0a0f;
 }
