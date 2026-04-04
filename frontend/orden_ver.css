@@ -15,16 +15,19 @@
     }
 
     .sector-titulo {
-      background: #111;
-      color: #fff;
-      font-weight: bold;
-      font-size: 24px;
-      padding: 8px 12px;
-      display: inline-block;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-    }
-
+  font-size: 20px;
+  font-weight: bold;
+  background: #000 !important;
+  color: #fff !important;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-block;
+  min-width: 260px;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
     .cabecera {
       display: grid;
       grid-template-columns: 1.2fr 1fr 1fr;
@@ -124,6 +127,12 @@
   .no-print {
     display: none !important;
   }
+  @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
     .sector-titulo {
     font-size: 22px;
     margin-bottom: 12px;
@@ -336,4 +345,11 @@
 .tabla-materiales th {
   background: #f2f2f2;
   font-weight: bold;
+}
+#detalleTecnico {
+  font-size: 11px !important;
+  line-height: 1.3;
+  min-height: 56px !important;
+  margin-top: 4px;
+  white-space: pre-line;
 }
