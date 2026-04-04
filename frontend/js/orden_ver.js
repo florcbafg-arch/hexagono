@@ -60,19 +60,19 @@ function renderMaterialesFicha(ficha, sectorFiltro = null) {
     const secciones = grupos[sector] || []
     if (!secciones.length) return
 
-    const nombresSector = {
-  corte: "CORTE CAPELLADA",
-  aparado: "APARADO",
-  armado: "ARMADO",
-  terminacion: "TERMINACIÓN",
-  general: "GENERAL"
-}
+       const nombresSector = {
+      corte: "CORTE CAPELLADA",
+      aparado: "APARADO",
+      armado: "ARMADO",
+      terminacion: "TERMINACIÓN",
+      general: "GENERAL"
+    }
 
-body.innerHTML += `
-  <tr class="seccion-row">
-    <td colspan="4"><strong>${titulo} · Sección ${numero}</strong></td>
-  </tr>
-`
+    body.innerHTML += `
+      <tr class="sector-row">
+        <td colspan="4"><strong>${nombresSector[sector] || sector.toUpperCase()}</strong></td>
+      </tr>
+    `
 
     secciones.forEach(seccion => {
       const numero = seccion.numero_seccion_resuelto || "-"
