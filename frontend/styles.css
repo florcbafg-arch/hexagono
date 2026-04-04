@@ -2580,11 +2580,10 @@ body.pagina-usuarios .usuarios-tabla-wrap table {
 
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-
 .brand-logo-horizontal {
-  width: 180px; /* 👈 un poco más grande */
-  max-width: 100%;
-  height: auto;
+  width: 190px !important;
+  max-width: none !important;
+  height: auto !important;
   display: block;
   object-fit: contain;
 
@@ -2600,4 +2599,8 @@ body.pagina-usuarios .usuarios-tabla-wrap table {
   filter:
     drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))
     drop-shadow(0 0 18px rgba(56, 189, 248, 0.3));
+}
+body.admin-page .sidebar {
+  width: 235px;
+  min-width: 235px;
 }
