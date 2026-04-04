@@ -302,35 +302,46 @@ const { data: curva, error: errorCurva } = await supabase
 
 if (errorCurva) throw errorCurva
 
-        // 6. VALIDAR SUMA DE CURVA (acepta 1 o 100)
-        const sumaPorcentajes = curvaFinal.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
+let curvaFinal = curva
 
-        const sumaValida =
-          Math.abs(sumaPorcentajes - 1) <= 0.001 ||
-          Math.abs(sumaPorcentajes - 100) <= 0.001
-
-        if (!sumaValida) {
-  console.warn("⚠️ Curva inválida, usando fallback automático")
-
-  curvaFinal = [
-    { talle: 39, porcentaje: 0.15 },
-    { talle: 40, porcentaje: 0.20 },
-    { talle: 41, porcentaje: 0.25 },
-    { talle: 42, porcentaje: 0.20 },
-    { talle: 43, porcentaje: 0.10 },
-    { talle: 44, porcentaje: 0.10 }
-  ]
+if (!curvaFinal || curvaFinal.length === 0) {
+  errores.push({
+    fila: p.id,
+    numero_tarea: numeroTarea,
+    modelo: p.modelo,
+    error: `No se encontró curva para marca ${marcaModelo} y tipo ${tipoCurvaModelo}`
+  })
+  continue
 }
 
-        const usaPorcentajeEntero = Math.abs(sumaPorcentajes - 100) <= 0.001
+// 6. VALIDAR SUMA DE CURVA
+const sumaPorcentajes = curvaFinal.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
 
-        console.log("📏 Curva encontrada:", {
-          programacion_id: p.id,
-          modelo_id: modelo.id,
-          suma_porcentajes: sumaPorcentajes,
-          usa_porcentaje_entero: usaPorcentajeEntero,
-          talles: curva
-        })
+const sumaValida =
+  Math.abs(sumaPorcentajes - 1) <= 0.001 ||
+  Math.abs(sumaPorcentajes - 100) <= 0.001
+
+if (!sumaValida) {
+  errores.push({
+    fila: p.id,
+    numero_tarea: numeroTarea,
+    modelo: p.modelo,
+    error: `La curva para marca ${marcaModelo} y tipo ${tipoCurvaModelo} tiene porcentajes inválidos`
+  })
+  continue
+}
+
+const usaPorcentajeEntero = Math.abs(sumaPorcentajes - 100) <= 0.001
+
+console.log("📏 Curva encontrada:", {
+  programacion_id: p.id,
+  modelo_id: modelo.id,
+  marca: marcaModelo,
+  tipo_curva: tipoCurvaModelo,
+  suma_porcentajes: sumaPorcentajes,
+  usa_porcentaje_entero: usaPorcentajeEntero,
+  talles: curvaFinal
+})
 
         // 7. CREAR ORDEN
         const { data: orden, error: errorOrden } = await supabase
