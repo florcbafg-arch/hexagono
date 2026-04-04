@@ -2241,3 +2241,110 @@ body.dark-mode .auth-card input:focus {
   border-color: #7c3aed;
   box-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
 }
+/* =========================
+   LOGIN BRAND FULL LOGO
+========================= */
+
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.login-logo-full {
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 10px;
+  filter:
+    drop-shadow(0 0 10px rgba(124, 58, 237, 0.18))
+    drop-shadow(0 0 18px rgba(37, 99, 235, 0.12));
+}
+
+.subtitulo {
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: #94a3b8;
+  text-align: center;
+  letter-spacing: 0.8px;
+}
+/* =========================
+   LOGIN CARD PREMIUM
+========================= */
+
+.auth-card {
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  padding: 34px 28px;
+  border-radius: 14px;
+}
+
+body.dark-mode .auth-card {
+  background: linear-gradient(180deg, #10131c, #0b0f17);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 16px 40px rgba(0,0,0,0.45);
+}
+/* =========================
+   ADMIN LIGHT FINAL FIX
+========================= */
+
+body.admin-page:not(.dark-mode) {
+  background: #eef2f7 !important;
+}
+
+body.admin-page:not(.dark-mode) .container {
+  background: #eef2f7 !important;
+}
+
+body.admin-page:not(.dark-mode) .header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #dbe3ee !important;
+  color: #111827 !important;
+}
+
+body.admin-page:not(.dark-mode) #contenido {
+  background: linear-gradient(180deg, #f8fafc, #eef2f7) !important;
+  color: #111827 !important;
+}
+
+body.admin-page:not(.dark-mode) .panel,
+body.admin-page:not(.dark-mode) .panel-produccion {
+  background: #ffffff !important;
+  border: 1px solid #dbe3ee !important;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06) !important;
+}
+
+body.admin-page:not(.dark-mode) .tabla-produccion th {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #dbe3ee !important;
+}
+
+body.admin-page:not(.dark-mode) .tabla-produccion td {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+body.admin-page:not(.dark-mode) input,
+body.admin-page:not(.dark-mode) select,
+body.admin-page:not(.dark-mode) textarea {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+body.admin-page:not(.dark-mode) h1,
+body.admin-page:not(.dark-mode) h2,
+body.admin-page:not(.dark-mode) h3,
+body.admin-page:not(.dark-mode) p,
+body.admin-page:not(.dark-mode) span,
+body.admin-page:not(.dark-mode) label,
+body.admin-page:not(.dark-mode) td,
+body.admin-page:not(.dark-mode) th {
+  color: #111827 !important;
+}
