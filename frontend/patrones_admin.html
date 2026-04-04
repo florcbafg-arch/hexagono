@@ -18,30 +18,27 @@
     }
   </script>
 </head>
-<body>
+<body onload="initPatrones()">
   <div id="contenido">
     <h2>Patrones</h2>
 
     <div style="margin-bottom: 20px;">
-      <label>Modelo:</label>
+      <label for="modeloSelect">Modelo:</label>
       <select id="modeloSelect">
         <option value="">Seleccionar modelo</option>
       </select>
 
-      <button onclick="agregarFila()">+ Agregar fila</button>
       <button onclick="guardarPatron()">💾 Guardar</button>
     </div>
 
     <table border="1" width="100%" id="tablaPatrones">
       <thead>
         <tr>
-          <th>Bloque</th>
           <th>Pieza</th>
           <th>Material</th>
           <th>Color</th>
-          <th>Unidad</th>
-          <th>Consumo</th>
-          <th></th>
+          <th>U.M</th>
+          <th>T. Tarea</th>
         </tr>
       </thead>
       <tbody></tbody>

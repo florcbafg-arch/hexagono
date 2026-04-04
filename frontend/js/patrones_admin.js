@@ -1,25 +1,18 @@
 (() => {
-  const PIEZAS = [
-    "Capellada",
-    "Caña",
-    "Lengua",
-    "Cordonería",
-    "Talón",
-    "Forro",
-    "Plantilla",
-    "Suela"
-  ]
 
   async function initPatrones() {
-    const select = document.getElementById("modeloSelect")
-    const tbody = document.querySelector("#tablaPatrones tbody")
-
-    if (!select || !tbody) return
-
-    tbody.innerHTML = ""
-
     await cargarModelos()
-    agregarFila()
+
+    const select = document.getElementById("modeloSelect")
+
+    if (select) {
+      select.addEventListener("change", async () => {
+        const modelo_id = select.value
+        if (modelo_id) {
+          await cargarDesdeFicha(modelo_id)
+        }
+      })
+    }
   }
 
   async function cargarModelos() {
@@ -43,54 +36,68 @@
     }
   }
 
-  function agregarFila() {
+  async function cargarDesdeFicha(modelo_id) {
     const tbody = document.querySelector("#tablaPatrones tbody")
     if (!tbody) return
 
-    const opciones = PIEZAS.map(p => `<option value="${p}">${p}</option>`).join("")
-    const tr = document.createElement("tr")
+    tbody.innerHTML = ""
 
-    tr.innerHTML = `
-      <td>
-        <select>
-          <option value="CORTE REFUERZO">CORTE REFUERZO</option>
-          <option value="CORTE FORRO">CORTE FORRO</option>
-          <option value="CORTE CAPELLADA">CORTE CAPELLADA</option>
-        </select>
-      </td>
+    try {
+      const res = await apiFetch(`/api/patrones/generar-desde-ficha/${modelo_id}`)
+      const data = await res.json()
 
-      <td>
-        <select>
-          <option value="">Seleccionar</option>
-          ${opciones}
-        </select>
-      </td>
+      data.bloques.forEach(bloque => {
 
-      <td><input placeholder="Material"></td>
-      <td><input placeholder="Color"></td>
+        // titulo bloque
+        const trTitulo = document.createElement("tr")
+        trTitulo.innerHTML = `
+          <td colspan="6" style="background:#eee;font-weight:bold;">
+            ${bloque.bloque}
+          </td>
+        `
+        tbody.appendChild(trTitulo)
 
-      <td>
-        <select>
-          <option value="m">m</option>
-          <option value="m2">m2</option>
-          <option value="unidad">unidad</option>
-          <option value="plancha">plancha</option>
-        </select>
-      </td>
+        // items
+        bloque.items.forEach(item => {
+          const tr = document.createElement("tr")
 
-      <td><input type="number" step="0.01"></td>
+          tr.innerHTML = `
+            <td>${item.pieza}</td>
+            <td>${item.material}</td>
+            <td>${item.color || ""}</td>
 
-      <td>
-        <button type="button" class="btn-eliminar-fila">❌</button>
-      </td>
-    `
+            <td>
+              <select class="um">
+                <option value="">-</option>
+                <option value="m">m</option>
+                <option value="m2">m2</option>
+                <option value="unidad">unidad</option>
+                <option value="plancha">plancha</option>
+              </select>
+            </td>
 
-    const btnEliminar = tr.querySelector(".btn-eliminar-fila")
-    if (btnEliminar) {
-      btnEliminar.addEventListener("click", () => tr.remove())
+            <td>
+              <input type="number" class="t_tarea" step="0.01" value="${item.t_tarea || ""}">
+            </td>
+          `
+
+          tr.dataset.ficha_material_id = item.ficha_material_id
+
+          // setear UM si ya existe
+          if (item.um) {
+            setTimeout(() => {
+              tr.querySelector(".um").value = item.um
+            }, 0)
+          }
+
+          tbody.appendChild(tr)
+        })
+      })
+
+    } catch (err) {
+      console.error("Error cargando patrón:", err)
+      alert("Error cargando patrón")
     }
-
-    tbody.appendChild(tr)
   }
 
   async function guardarPatron() {
@@ -98,26 +105,25 @@
     if (!modeloSelect) return
 
     const modelo_id = modeloSelect.value
-
     if (!modelo_id) {
-      alert("Seleccioná un modelo")
+      alert("Seleccioná modelo")
       return
     }
 
     const filas = document.querySelectorAll("#tablaPatrones tbody tr")
-    const patrones = []
+    const items = []
 
     filas.forEach(f => {
-      const inputs = f.querySelectorAll("input, select")
-      if (!inputs.length || !inputs[0].value) return
+      const id = f.dataset.ficha_material_id
+      if (!id) return
 
-      patrones.push({
-        bloque: inputs[0].value,
-        pieza: inputs[1].value,
-        material: inputs[2].value,
-        color: inputs[3].value,
-        unidad: inputs[4].value,
-        consumo: parseFloat(inputs[5].value || 0)
+      const um = f.querySelector(".um")?.value || ""
+      const t_tarea = f.querySelector(".t_tarea")?.value || ""
+
+      items.push({
+        ficha_material_id: Number(id),
+        um,
+        t_tarea
       })
     })
 
@@ -125,66 +131,17 @@
       await apiFetch("/api/patrones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelo_id, patrones })
+        body: JSON.stringify({ modelo_id, items })
       })
 
       alert("Patrón guardado")
     } catch (error) {
       console.error("Error guardando patrón:", error)
-      alert("Error al guardar patrón")
-    }
-  }
-
-  async function calcular() {
-    const modeloSelect = document.getElementById("modeloSelect")
-    const cantidadInput = document.getElementById("cantidad")
-    const resultado = document.getElementById("resultado")
-
-    if (!modeloSelect || !cantidadInput || !resultado) return
-
-    const modelo_id = modeloSelect.value
-    const cantidad = Number(cantidadInput.value)
-
-    if (!modelo_id) {
-      alert("Seleccioná un modelo")
-      return
-    }
-
-    if (!cantidad || cantidad <= 0) {
-      alert("Ingresá cantidad válida")
-      return
-    }
-
-    try {
-      const res = await apiFetch("/api/patrones/calcular", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelo_id, cantidad })
-      })
-
-      const data = await res.json()
-
-      resultado.innerHTML = ""
-
-      data.forEach(b => {
-        const titulo = document.createElement("h4")
-        titulo.textContent = b.bloque
-        resultado.appendChild(titulo)
-
-        b.items.forEach(m => {
-          const p = document.createElement("p")
-          p.textContent = `${m.material} (${m.color}) → ${m.total} ${m.unidad}`
-          resultado.appendChild(p)
-        })
-      })
-    } catch (error) {
-      console.error("Error calculando consumo:", error)
-      alert("Error al calcular consumo")
+      alert("Error al guardar")
     }
   }
 
   window.initPatrones = initPatrones
-  window.agregarFila = agregarFila
   window.guardarPatron = guardarPatron
-  window.calcular = calcular
+
 })()
