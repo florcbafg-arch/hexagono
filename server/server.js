@@ -694,18 +694,39 @@ app.get("/api/modelos/:id/curva", async (req, res) => {
 
     const empresaId = req.user?.empresa_id
 
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
+
+    const { data: modelo, error: errorModelo } = await supabase
+      .from("modelos")
+      .select("id, nombre, marca, tipo_curva")
+      .eq("id", modeloId)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+
+    if (errorModelo) throw errorModelo
+
+    if (!modelo) {
+      return res.status(404).json({ error: "Modelo no encontrado" })
+    }
+
+    if (!modelo.marca || !modelo.tipo_curva) {
+      return res.json([])
+    }
 
     const { data, error } = await supabase
       .from("curvas_talles")
-      .select("talle, porcentaje")
-      .eq("modelo_id", modeloId)
+      .select("talle, porcentaje, pares")
+      .eq("marca", modelo.marca)
+      .eq("tipo_curva", modelo.tipo_curva)
       .eq("empresa_id", empresaId)
       .order("talle", { ascending: true })
 
     if (error) throw error
+
+    console.log("MODELO CURVA:", modelo)
+    console.log("CURVA RECIBIDA:", data)
 
     res.json(data)
 
