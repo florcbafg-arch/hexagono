@@ -19,29 +19,26 @@
 </head>
 
 <body>
+  <div class="auth-container">
+    <div class="auth-card">
 
-<body>
+      <div class="logo">HEXAFLOW</div>
+      <div class="subtitulo">Panel Operario</div>
 
-<div class="auth-container">
-<div class="auth-card">
+      <button class="boton-principal" onclick="irProduccion()">
+        Registrar Producción
+      </button>
 
-<div class="logo">HEXAFLOW</div>
-<div class="subtitulo">Panel Operario</div>
+      <button class="boton-secundario" onclick="irFichas()">
+        Ver Ficha Técnica
+      </button>
 
-<button class="boton-principal" onclick="irProduccion()">
-Registrar Producción
-</button>
+      <button class="boton-salir" onclick="logout()">
+        Salir
+      </button>
 
-<button class="boton-secundario" onclick="irFichas()">
-Ver Ficha Técnica
-</button>
-
-<button class="boton-salir" onclick="logout()">
-Salir
-</button>
-
-</div>
-</div>
+    </div>
+  </div>
 
 <script>
 
@@ -57,11 +54,13 @@ window.location.href = "fichas_operario.html"
 
 }
 
-function logout(){
-
-localStorage.removeItem("hexagono_user")
-window.location.href = "login.html"
-
+function logout() {
+  localStorage.removeItem("hexagono_user")
+  localStorage.removeItem("token")
+  localStorage.removeItem("usuario")
+  localStorage.removeItem("puesto_id")
+  localStorage.removeItem("rol")
+  window.location.href = "login.html"
 }
 
 </script>

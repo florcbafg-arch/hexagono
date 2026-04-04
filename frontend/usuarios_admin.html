@@ -22,120 +22,103 @@
  <div class="container">
   <div class="usuarios-panel">
 
-      <!-- COLUMNA IZQUIERDA -->
-      <div class="usuarios-col-izq">
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="usuarios-panel-left">
 
-        <!-- CREAR ADMINISTRADOR -->
-       <div class="usuarios-panel-left">
       <div class="usuarios-box">
-          <h2>Crear Administrador</h2>
+        <h2>Crear Administrador</h2>
 
-          <div id="mensajeAdmin" style="
-            margin-bottom:10px;
-            font-size:14px;
-            font-weight:bold;
-          "></div>
+        <div id="mensajeAdmin" style="margin-bottom:10px; font-size:14px; font-weight:bold;"></div>
 
-          <div class="usuarios-form-grid">
-            <div class="usuarios-group">
-              <label>Nombre</label>
-              <input type="text" id="adminNombre">
-            </div>
-
-            <div class="usuarios-group">
-              <label>Email</label>
-              <input type="email" id="adminEmail">
-            </div>
-
-            <div class="usuarios-group">
-              <label>Contraseña</label>
-              <input type="password" id="adminPassword">
-            </div>
-
-            <div class="usuarios-group">
-              <label>Rol</label>
-              <select id="adminRol">
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+        <div class="usuarios-form-grid">
+          <div class="usuarios-group">
+            <label>Nombre</label>
+            <input type="text" id="adminNombre">
           </div>
 
-          <button class="usuarios-btn" onclick="crearAdmin()">
-            Crear Administrador
-          </button>
-        </div>
-
-        <!-- CREAR OPERARIO -->
-        
-      <div class="usuarios-box">
-          <h2>Crear Operario</h2>
-
-          <div id="mensajeOperario" style="
-            margin-bottom:10px;
-            font-size:14px;
-            font-weight:bold;
-          "></div>
-
-          <div class="usuarios-form-grid">
-            <div class="usuarios-group">
-              <label>Nombre</label>
-              <input type="text" id="operarioNombre">
-            </div>
-
-            <div class="usuarios-group">
-              <label>Código de acceso</label>
-              <input type="text" id="operarioCodigo">
-            </div>
-
-            <div class="usuarios-group">
-              <label>PIN</label>
-              <input type="password" id="operarioPin">
-            </div>
-
-            <div class="usuarios-group">
-              <label>Puesto</label>
-              <select id="operarioPuesto">
-                <option value="">Seleccionar puesto</option>
-              </select>
-            </div>
+          <div class="usuarios-group">
+            <label>Email</label>
+            <input type="email" id="adminEmail">
           </div>
 
-          <button class="usuarios-btn" onclick="crearOperario()">
-            Crear Operario
-          </button>
+          <div class="usuarios-group">
+            <label>Contraseña</label>
+            <input type="password" id="adminPassword">
+          </div>
+
+          <div class="usuarios-group">
+            <label>Rol</label>
+            <select id="adminRol">
+              <option value="admin">Admin</option>
+            </select>
+          </div>
         </div>
 
+        <button class="usuarios-btn" onclick="crearAdmin()">
+          Crear Administrador
+        </button>
       </div>
 
-      <!-- COLUMNA DERECHA -->
-      <div class="usuarios-panel-right">
-      <div class="usuarios-box usuarios-box-tabla">
+      <div class="usuarios-box">
+        <h2>Crear Operario</h2>
 
-         <h2 style="margin-bottom: 18px;">
-           Lista de Usuarios (<span id="totalUsuarios">0</span>)
-         </h2>
+        <div id="mensajeOperario" style="margin-bottom:10px; font-size:14px; font-weight:bold;"></div>
 
-          <div class="usuarios-tabla-wrap">
-            <table class="tabla-produccion">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Tipo</th>
-                  <th>Rol</th>
-                  <th>Acceso</th>
-                  <th>Puesto</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
+        <div class="usuarios-form-grid">
+          <div class="usuarios-group">
+            <label>Nombre</label>
+            <input type="text" id="operarioNombre">
+          </div>
 
-              <tbody id="tablaUsuarios"></tbody>
-            </table>
+          <div class="usuarios-group">
+            <label>Código de acceso</label>
+            <input type="text" id="operarioCodigo">
+          </div>
+
+          <div class="usuarios-group">
+            <label>PIN</label>
+            <input type="password" id="operarioPin">
+          </div>
+
+          <div class="usuarios-group">
+            <label>Puesto</label>
+            <select id="operarioPuesto">
+              <option value="">Seleccionar puesto</option>
+            </select>
           </div>
         </div>
+
+        <button class="usuarios-btn" onclick="crearOperario()">
+          Crear Operario
+        </button>
       </div>
 
     </div>
-  </div>
 
-</body>
-</html>
+    <!-- COLUMNA DERECHA -->
+    <div class="usuarios-panel-right">
+      <div class="usuarios-box usuarios-box-tabla">
+        <h2 style="margin-bottom: 18px;">
+          Lista de Usuarios (<span id="totalUsuarios">0</span>)
+        </h2>
+
+        <div class="usuarios-tabla-wrap">
+          <table class="tabla-produccion">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Rol</th>
+                <th>Acceso</th>
+                <th>Puesto</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaUsuarios"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

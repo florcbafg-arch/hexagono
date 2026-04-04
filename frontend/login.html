@@ -87,13 +87,18 @@ const res = await fetch(endpoint, {
 
          if (data.ok && data.usuario) {
 
-  localStorage.setItem("token", data.token)
-  localStorage.setItem("hexagono_user", JSON.stringify(data.usuario))
-  localStorage.setItem("usuario", data.usuario.nombre)
-  localStorage.setItem("puesto_id", data.usuario.puesto_id || "")
-  localStorage.setItem("rol", data.usuario.rol || "")
+  const usuarioFinal = {
+    ...data.usuario,
+    login_time: Date.now()
+  }
 
-  if (data.usuario.rol === "admin") {
+  localStorage.setItem("token", data.token)
+  localStorage.setItem("hexagono_user", JSON.stringify(usuarioFinal))
+  localStorage.setItem("usuario", usuarioFinal.nombre)
+  localStorage.setItem("puesto_id", usuarioFinal.puesto_id || "")
+  localStorage.setItem("rol", usuarioFinal.rol || "")
+
+  if (usuarioFinal.rol === "admin") {
     window.location.href = "admin.html"
   } else {
     window.location.href = "operario.html"
