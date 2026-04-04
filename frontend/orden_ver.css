@@ -263,11 +263,14 @@
   text-align: center;
 }
 .sector-titulo {
-  text-align: center;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: bold;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .cabecera {
@@ -317,13 +320,20 @@
 }
 
 .subtitulo {
-  margin-top: 12px;
-  margin-bottom: 6px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: bold;
+  background: #eaeaea;
+  padding: 6px;
+  margin-top: 12px;
+  border-left: 4px solid #000;
   text-transform: uppercase;
 }
 
 .firma {
   display: none;
+}
+.tabla-talles th,
+.tabla-materiales th {
+  background: #f2f2f2;
+  font-weight: bold;
 }
