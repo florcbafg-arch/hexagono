@@ -1649,14 +1649,24 @@ body.dark-mode .tabla-produccion td {
   background: #12131a;
 }
 .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  object-fit: contain;
+  display: block;
 
-  filter: 
-    drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))
-    drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));
+  filter:
+    drop-shadow(0 0 6px rgba(168, 85, 247, 0.55))
+    drop-shadow(0 0 10px rgba(56, 189, 248, 0.35));
 
-  transition: 0.3s;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+.sidebar-brand:hover .brand-logo {
+  transform: scale(1.06);
+  filter:
+    drop-shadow(0 0 10px rgba(168, 85, 247, 0.7))
+    drop-shadow(0 0 16px rgba(56, 189, 248, 0.45));
 }
 .sidebar-brand {
   display: flex;
@@ -2249,20 +2259,23 @@ body.dark-mode .auth-card input:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 }
 
 .login-logo-full {
-  width: 80px; /* antes era más chico */
-  height: auto;
+  width: 180px !important;
+  max-width: 100%;
+  height: auto !important;
   display: block;
-  margin-bottom: 12px;
+  margin: 0 auto 14px auto;
+  object-fit: contain;
 
   filter:
-    drop-shadow(0 0 8px rgba(168, 85, 247, 0.4))
-    drop-shadow(0 0 14px rgba(56, 189, 248, 0.3));
+    drop-shadow(0 0 10px rgba(168, 85, 247, 0.45))
+    drop-shadow(0 0 18px rgba(56, 189, 248, 0.35));
 
-  transition: 0.3s;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  animation: glowPulse 3s infinite ease-in-out;
 }
 
 .subtitulo {
@@ -2277,9 +2290,9 @@ body.dark-mode .auth-card input:focus {
 ========================= */
 
 .auth-card {
-  width: 380px;
+  width: 400px;
   max-width: calc(100vw - 40px);
-  padding: 34px 28px;
+  padding: 38px 30px;
   border-radius: 14px;
 }
 
@@ -2365,17 +2378,9 @@ body.admin-page:not(.dark-mode) th {
 .login-logo-full {
   animation: glowPulse 3s infinite ease-in-out;
 }
-.logo-login {
-  width: 120px !important;
-  height: auto;
-
-  filter: 
-    drop-shadow(0 0 10px rgba(168, 85, 247, 0.6))
-    drop-shadow(0 0 20px rgba(56, 189, 248, 0.4));
-
-  transition: 0.3s;
-}
-
-.logo-login:hover {
+.login-logo-full:hover {
   transform: scale(1.05);
+  filter:
+    drop-shadow(0 0 14px rgba(168, 85, 247, 0.65))
+    drop-shadow(0 0 22px rgba(56, 189, 248, 0.5));
 }
