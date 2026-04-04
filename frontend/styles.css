@@ -1649,11 +1649,12 @@ body.dark-mode .tabla-produccion td {
   background: #12131a;
 }
 .brand-logo {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   object-fit: contain;
+  aspect-ratio: 1 / 1;
   display: block;
 
   filter:
@@ -2259,15 +2260,15 @@ body.dark-mode .auth-card input:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 22px;
+  margin-bottom: 26px;
 }
 
 .login-logo-full {
-  width: 180px !important;
+  width: 240px !important;
   max-width: 100%;
   height: auto !important;
   display: block;
-  margin: 0 auto 14px auto;
+  margin: 0 auto 16px auto;
   object-fit: contain;
 
   filter:
@@ -2280,7 +2281,7 @@ body.dark-mode .auth-card input:focus {
 
 .subtitulo {
   font-size: 13px;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   color: #94a3b8;
   text-align: center;
   letter-spacing: 0.8px;
@@ -2308,29 +2309,29 @@ body.dark-mode .auth-card {
 ========================= */
 
 body.admin-page:not(.dark-mode) {
-  background: #eef2f7 !important;
+  background: #dde3ea !important;
 }
 
 body.admin-page:not(.dark-mode) .container {
-  background: #eef2f7 !important;
+  background: #dde3ea !important;
 }
 
 body.admin-page:not(.dark-mode) .header {
-  background: #ffffff !important;
-  border-bottom: 1px solid #dbe3ee !important;
-  color: #111827 !important;
+  background: #e9eef5 !important;
+  border-bottom: 1px solid #cfd8e3 !important;
+  color: #0f172a !important;
 }
 
 body.admin-page:not(.dark-mode) #contenido {
-  background: linear-gradient(180deg, #f8fafc, #eef2f7) !important;
-  color: #111827 !important;
+  background: linear-gradient(180deg, #e7ecf3, #dce3eb) !important;
+  color: #0f172a !important;
 }
 
 body.admin-page:not(.dark-mode) .panel,
 body.admin-page:not(.dark-mode) .panel-produccion {
-  background: #ffffff !important;
-  border: 1px solid #dbe3ee !important;
-  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06) !important;
+  background: #f4f7fb !important;
+  border: 1px solid #cfd8e3 !important;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.05) !important;
 }
 
 body.admin-page:not(.dark-mode) .tabla-produccion th {
@@ -2355,13 +2356,17 @@ body.admin-page:not(.dark-mode) textarea {
 
 body.admin-page:not(.dark-mode) h1,
 body.admin-page:not(.dark-mode) h2,
-body.admin-page:not(.dark-mode) h3,
+body.admin-page:not(.dark-mode) h3 {
+  color: #0f172a !important;
+}
+
+body.admin-page:not(.dark-mode) .header-left,
 body.admin-page:not(.dark-mode) p,
 body.admin-page:not(.dark-mode) span,
 body.admin-page:not(.dark-mode) label,
 body.admin-page:not(.dark-mode) td,
 body.admin-page:not(.dark-mode) th {
-  color: #111827 !important;
+  color: #1e293b !important;
 }
 @keyframes glowPulse {
   0% {
