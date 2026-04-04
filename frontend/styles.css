@@ -1552,3 +1552,68 @@ body.pagina-usuarios .usuarios-tabla-wrap thead th {
     grid-template-columns: 1fr;
   }
 }
+/* ========================= */
+/* DARK MODE HEXAFLOW */
+/* ========================= */
+
+body.dark-mode {
+  background: #0a0a0f;
+  color: #f1f5f9;
+}
+
+/* Sidebar */
+body.dark-mode .sidebar {
+  background: #12131a;
+  border-right: 1px solid #2a2f3a;
+}
+
+body.dark-mode .sidebar li {
+  color: #cbd5f5;
+}
+
+body.dark-mode .sidebar li:hover {
+  background: #1f2230;
+}
+
+/* Header */
+body.dark-mode .header {
+  background: #12131a;
+  border-bottom: 1px solid #2a2f3a;
+  color: #f1f5f9;
+}
+
+/* Contenido */
+body.dark-mode #contenido {
+  background: #0f1117;
+  border: 1px solid #2a2f3a;
+}
+
+/* Paneles */
+body.dark-mode .panel,
+body.dark-mode .panel-produccion,
+body.dark-mode .auth-card {
+  background: #161922;
+  border: 1px solid #2a2f3a;
+}
+
+/* Inputs */
+body.dark-mode input {
+  background: #1a1c24;
+  border: 1px solid #2a2f3a;
+  color: #f1f5f9;
+}
+
+/* Tablas */
+body.dark-mode .tabla-produccion th {
+  background: #1a1c24;
+}
+
+body.dark-mode .tabla-produccion td {
+  background: #12131a;
+}
+.brand-logo {
+  width: 36px;
+  height: 36px;
+
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.4));
+}
