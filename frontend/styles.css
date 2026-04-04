@@ -1685,3 +1685,282 @@ body.dark-mode {
     radial-gradient(circle at 80% 30%, rgba(56,189,248,0.08), transparent 40%),
     #0a0a0f;
 }
+
+/* ========================= */
+/* HEADER PRO */
+/* ========================= */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.btn-tema {
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-tema:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35);
+}
+
+/* =========================
+   CIRUGIA FINAL ADMIN + DARK MODE
+========================= */
+
+body.admin-page {
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+  background: #0a0a0f;
+}
+
+body.admin-page .container {
+  display: flex;
+  min-height: 100vh;
+  height: 100vh;
+  background: transparent !important;
+}
+
+body.admin-page .sidebar {
+  width: 220px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #0f1117 0%, #12131a 100%);
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+body.admin-page .sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+body.admin-page .sidebar li {
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  margin-bottom: 4px;
+}
+
+body.admin-page .sidebar li:hover {
+  background: rgba(168, 85, 247, 0.12);
+  color: #e2e8f0;
+}
+
+body.admin-page .sidebar li.activo {
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+  color: white;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  filter:
+    drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))
+    drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));
+}
+
+.brand-text {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sidebar-logout {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #cbd5e1;
+  font-family: 'Orbitron', sans-serif;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.sidebar-logout:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+body.admin-page .main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+body.admin-page .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: #0f1117;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: #e2e8f0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.btn-tema {
+  background: linear-gradient(90deg, #a855f7, #38bdf8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-tema:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35);
+}
+
+body.admin-page #contenido {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  border: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(168,85,247,0.06), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(56,189,248,0.06), transparent 40%),
+    #0a0a0f;
+  color: #f1f5f9;
+}
+
+body.admin-page .panel,
+body.admin-page .panel-produccion,
+body.admin-page .auth-card {
+  background: linear-gradient(180deg, #12131a, #0f1117);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.5);
+}
+
+body.admin-page input,
+body.admin-page select,
+body.admin-page textarea {
+  background: #1a1c24;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f1f5f9;
+}
+
+body.admin-page input:focus,
+body.admin-page select:focus,
+body.admin-page textarea:focus {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.35);
+}
+
+body.admin-page .tabla-produccion th {
+  background: #161922;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8;
+}
+
+body.admin-page .tabla-produccion td {
+  background: #0f1117;
+  border: 1px solid rgba(255,255,255,0.05);
+  color: #f8fafc;
+}
+
+/* auth sincronizado con el tema */
+body.dark-mode .auth-container {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(168,85,247,0.06), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(56,189,248,0.06), transparent 40%),
+    #0a0a0f;
+}
+
+body.dark-mode .auth-card {
+  background: linear-gradient(180deg, #12131a, #0f1117);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #f1f5f9;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .subtitulo,
+body.dark-mode .link {
+  color: #94a3b8;
+}
+
+body.dark-mode .auth-card input {
+  background: #1a1c24;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f1f5f9;
+}
+
+body.dark-mode .auth-card input:focus {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.35);
+}

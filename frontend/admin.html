@@ -122,15 +122,23 @@
   <li onclick="cargarModulo('ventas')">💰 Ventas</li>
   <li onclick="cargarModulo('costos')">🧾 Costos</li>
   <li onclick="cargarModulo('reportes')">📈 Reportes</li>
-<li onclick="toggleDarkMode()">🌙 Modo oscuro</li>
+
         <li onclick="cerrarSesion()">🚪 Cerrar sesión</li>
       </ul>
     </div>
 
     <div class="main">
       <div class="header">
-        Panel Administrador | 👤 <span id="usuarioNombre"></span>
-      </div>
+  <div class="header-left">
+    Panel Administrador | 👤 <span id="usuarioNombre"></span>
+  </div>
+
+  <div class="header-right">
+    <button class="btn-tema" onclick="toggleDarkMode()" id="btnTema">
+      🌙 Modo oscuro
+    </button>
+  </div>
+</div>
 
       <div id="contenido">
         <h1>Bienvenido al Panel</h1>
@@ -227,18 +235,46 @@ if (window[nombreInit]) {
         })
     }
 
-    function toggleDarkMode() {
+  function actualizarTextoTema() {
+  const btn = document.getElementById("btnTema")
+  if (!btn) return
+
+  const oscuro = document.body.classList.contains("dark-mode")
+  btn.innerText = oscuro ? "☀️ Modo claro" : "🌙 Modo oscuro"
+}
+
+function toggleDarkMode() {
   document.body.classList.toggle("dark-mode")
 
   const activo = document.body.classList.contains("dark-mode")
   localStorage.setItem("hexaflow_theme", activo ? "dark" : "light")
+
+  actualizarTextoTema()
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search)
+
+  if (params.get("tv") === "1") {
+    document.body.classList.add("tv-mode")
+  }
+
   const tema = localStorage.getItem("hexaflow_theme")
   if (tema === "dark") {
     document.body.classList.add("dark-mode")
   }
+
+  actualizarTextoTema()
+
+  const user = JSON.parse(localStorage.getItem("hexagono_user"))
+  const usuarioNombre = document.getElementById("usuarioNombre")
+
+  if (user && usuarioNombre) {
+    usuarioNombre.innerText = user.nombre || user.email || "Admin"
+  }
+
+  const modulo = params.get("modulo") || "dashboard"
+  cargarModulo(modulo)
 })
 
   </script>
