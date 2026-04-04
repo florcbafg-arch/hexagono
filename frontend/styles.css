@@ -2092,3 +2092,152 @@ body.admin-page #contenido {
     radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.04), transparent 30%),
     #05070d !important;
 }
+/* =========================
+   LIGHT MODE REAL ADMIN
+========================= */
+
+body.admin-page {
+  background: #f4f4f4;
+}
+
+body.admin-page .container {
+  background: #f4f4f4;
+}
+
+body.admin-page .header {
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+  color: #111827;
+}
+
+body.admin-page #contenido {
+  background: #f4f4f4;
+  color: #111827;
+}
+
+body.admin-page .panel,
+body.admin-page .panel-produccion {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+}
+
+body.admin-page .tabla-produccion th {
+  background: #eef2f7;
+  color: #334155;
+  border: 1px solid #dbe3ee;
+}
+
+body.admin-page .tabla-produccion td {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
+body.admin-page input,
+body.admin-page select,
+body.admin-page textarea {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #cbd5e1;
+}
+
+body.admin-page .sidebar {
+  background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+}
+
+body.admin-page .sidebar li {
+  color: #cbd5e1;
+}
+
+body.admin-page .sidebar li:hover {
+  color: white;
+}
+/* =========================
+   DARK MODE REAL ADMIN
+========================= */
+
+body.admin-page.dark-mode {
+  background: #0a0a0f;
+}
+
+body.admin-page.dark-mode .header {
+  background: #0f1117;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: #e2e8f0;
+}
+
+body.admin-page.dark-mode #contenido {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(124, 58, 237, 0.08), transparent 30%),
+    radial-gradient(circle at 78% 20%, rgba(37, 99, 235, 0.08), transparent 28%),
+    radial-gradient(circle at 50% 80%, rgba(56, 189, 248, 0.04), transparent 30%),
+    #05070d !important;
+  color: #f1f5f9;
+}
+
+body.admin-page.dark-mode .panel,
+body.admin-page.dark-mode .panel-produccion {
+  background: linear-gradient(180deg, #12131a, #0f1117);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.5);
+}
+
+body.admin-page.dark-mode .tabla-produccion th {
+  background: #161922;
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+body.admin-page.dark-mode .tabla-produccion td {
+  background: #0f1117;
+  color: #f8fafc;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+body.admin-page.dark-mode input,
+body.admin-page.dark-mode select,
+body.admin-page.dark-mode textarea {
+  background: #1a1c24;
+  color: #f1f5f9;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+/* =========================
+   LOGIN / REGISTRO DARK MODE
+========================= */
+
+body.dark-mode.auth-page,
+body.dark-mode .auth-container {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.08), transparent 35%),
+    radial-gradient(circle at 80% 25%, rgba(37, 99, 235, 0.08), transparent 35%),
+    #05070d !important;
+}
+
+body.dark-mode .auth-card {
+  background: linear-gradient(180deg, #12131a, #0f1117);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #f1f5f9;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.45);
+}
+
+body.dark-mode .subtitulo,
+body.dark-mode .link {
+  color: #94a3b8;
+}
+
+body.dark-mode .auth-card input {
+  background: #1a1c24;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f1f5f9;
+}
+
+body.dark-mode .auth-card input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
+}

@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="auth-page">
 
   <div class="auth-container">
     <div class="auth-card">
@@ -36,6 +36,15 @@
 
   <!-- ✅ SCRIPT ABAJO -->
   <script>
+
+window.addEventListener("DOMContentLoaded", () => {
+  const tema = localStorage.getItem("hexaflow_theme")
+
+  if (tema === "dark") {
+    document.body.classList.add("dark-mode")
+  }
+})
+
     document
       .getElementById("loginForm")
       .addEventListener("submit", async (e) => {

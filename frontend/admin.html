@@ -148,23 +148,33 @@
   </div>
 
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(window.location.search)
+   window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search)
 
-      if (params.get("tv") === "1") {
-        document.body.classList.add("tv-mode")
-      }
+  if (params.get("tv") === "1") {
+    document.body.classList.add("tv-mode")
+  }
 
-      const user = JSON.parse(localStorage.getItem("hexagono_user"))
-      const usuarioNombre = document.getElementById("usuarioNombre")
+  const tema = localStorage.getItem("hexaflow_theme")
 
-      if (user && usuarioNombre) {
-        usuarioNombre.innerText = user.nombre || user.email || "Admin"
-      }
+  if (tema === "dark") {
+    document.body.classList.add("dark-mode")
+  } else {
+    document.body.classList.remove("dark-mode")
+  }
 
-      const modulo = params.get("modulo") || "dashboard"
-cargarModulo(modulo)
-    })
+  actualizarTextoTema()
+
+  const user = JSON.parse(localStorage.getItem("hexagono_user"))
+  const usuarioNombre = document.getElementById("usuarioNombre")
+
+  if (user && usuarioNombre) {
+    usuarioNombre.innerText = user.nombre || user.email || "Admin"
+  }
+
+  const modulo = params.get("modulo") || "dashboard"
+  cargarModulo(modulo)
+})
 
     function cerrarSesion() {
       localStorage.removeItem("hexagono_user")
@@ -235,7 +245,7 @@ if (window[nombreInit]) {
         })
     }
 
-  function actualizarTextoTema() {
+ function actualizarTextoTema() {
   const btn = document.getElementById("btnTema")
   if (!btn) return
 
@@ -244,39 +254,14 @@ if (window[nombreInit]) {
 }
 
 function toggleDarkMode() {
-  document.body.classList.toggle("dark-mode")
+  const body = document.body
+  body.classList.toggle("dark-mode")
 
-  const activo = document.body.classList.contains("dark-mode")
+  const activo = body.classList.contains("dark-mode")
   localStorage.setItem("hexaflow_theme", activo ? "dark" : "light")
 
   actualizarTextoTema()
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search)
-
-  if (params.get("tv") === "1") {
-    document.body.classList.add("tv-mode")
-  }
-
-  const tema = localStorage.getItem("hexaflow_theme")
-  if (tema === "dark") {
-    document.body.classList.add("dark-mode")
-  }
-
-  actualizarTextoTema()
-
-  const user = JSON.parse(localStorage.getItem("hexagono_user"))
-  const usuarioNombre = document.getElementById("usuarioNombre")
-
-  if (user && usuarioNombre) {
-    usuarioNombre.innerText = user.nombre || user.email || "Admin"
-  }
-
-  const modulo = params.get("modulo") || "dashboard"
-  cargarModulo(modulo)
-})
-
   </script>
 
 </body>
