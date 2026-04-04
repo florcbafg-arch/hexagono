@@ -2645,3 +2645,74 @@ body.admin-page .sidebar-menu {
   flex-shrink: 0 !important;
   margin-top: 10px !important;
 }
+
+/* =========================
+   USUARIOS MODULO DENTRO DE ADMIN
+========================= */
+
+.modulo-usuarios {
+  width: 100%;
+}
+
+.modulo-usuarios .usuarios-panel {
+  display: grid !important;
+  grid-template-columns: 380px minmax(0, 1fr) !important;
+  gap: 28px !important;
+  align-items: start !important;
+  width: 100% !important;
+}
+
+.modulo-usuarios .usuarios-panel-left {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  min-width: 0 !important;
+}
+
+.modulo-usuarios .usuarios-panel-right {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.modulo-usuarios .usuarios-box {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.modulo-usuarios .usuarios-form-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px 14px !important;
+}
+
+.modulo-usuarios .usuarios-group {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+
+.modulo-usuarios .usuarios-group input,
+.modulo-usuarios .usuarios-group select {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.modulo-usuarios .usuarios-tabla-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.modulo-usuarios .usuarios-tabla-wrap table {
+  width: 100% !important;
+  min-width: 700px !important;
+}
+
+@media (max-width: 1100px) {
+  .modulo-usuarios .usuarios-panel {
+    grid-template-columns: 1fr !important;
+  }
+
+  .modulo-usuarios .usuarios-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
