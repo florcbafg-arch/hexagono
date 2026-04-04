@@ -2253,14 +2253,16 @@ body.dark-mode .auth-card input:focus {
 }
 
 .login-logo-full {
-  width: 220px;
-  max-width: 100%;
+  width: 80px; /* antes era más chico */
   height: auto;
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+
   filter:
-    drop-shadow(0 0 10px rgba(124, 58, 237, 0.18))
-    drop-shadow(0 0 18px rgba(37, 99, 235, 0.12));
+    drop-shadow(0 0 8px rgba(168, 85, 247, 0.4))
+    drop-shadow(0 0 14px rgba(56, 189, 248, 0.3));
+
+  transition: 0.3s;
 }
 
 .subtitulo {
@@ -2347,4 +2349,19 @@ body.admin-page:not(.dark-mode) label,
 body.admin-page:not(.dark-mode) td,
 body.admin-page:not(.dark-mode) th {
   color: #111827 !important;
+}
+@keyframes glowPulse {
+  0% {
+    filter: drop-shadow(0 0 6px rgba(168,85,247,0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(56,189,248,0.5));
+  }
+  100% {
+    filter: drop-shadow(0 0 6px rgba(168,85,247,0.3));
+  }
+}
+
+.login-logo-full {
+  animation: glowPulse 3s infinite ease-in-out;
 }
