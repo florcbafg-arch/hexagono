@@ -13,6 +13,68 @@
   <script>
     checkAuth("admin")
   </script>
+  <style>
+  .modal-curva {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+  }
+
+  .modal-curva-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+  }
+
+  .modal-curva-contenido {
+    position: relative;
+    z-index: 2;
+    width: 680px;
+    max-width: calc(100% - 32px);
+    margin: 60px auto;
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+
+  .modal-curva-header,
+  .modal-curva-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .modal-curva-header h3 {
+    margin: 0;
+  }
+
+  .modal-curva-body {
+    margin-top: 14px;
+    margin-bottom: 14px;
+  }
+
+  .fila-campos-curva {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .fila-campos-curva label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+
+  .fila-campos-curva input,
+  .fila-campos-curva select,
+  #tablaCurvaBody input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+</style>
 </head>
 
 <body>
@@ -28,6 +90,7 @@
 
 <button onclick="agregarFila()">➕ Agregar fila</button>
 <button onclick="generarOrdenes()">🚀 Generar Órdenes</button>
+<button onclick="abrirModalCurva()">👟 Cargar curva</button>
 
 <table border="1" width="100%" style="margin-top:20px;">
   <thead>
@@ -44,6 +107,62 @@
 </thead>
   <tbody id="tabla"></tbody>
 </table>
+
+<div id="modalCurva" class="modal-curva" style="display:none;">
+  <div class="modal-curva-backdrop" onclick="cerrarModalCurva()"></div>
+
+  <div class="modal-curva-contenido">
+    <div class="modal-curva-header">
+      <h3>👟 Cargar curva</h3>
+      <button type="button" onclick="cerrarModalCurva()">✖</button>
+    </div>
+
+    <div class="modal-curva-body">
+      <div class="fila-campos-curva">
+        <div>
+          <label>Marca</label>
+          <input type="text" id="curvaMarca" placeholder="Ej: AMERIKA SB">
+        </div>
+
+        <div>
+          <label>Tipo curva</label>
+          <select id="curvaTipo">
+            <option value="">Seleccionar</option>
+            <option value="dama">Dama</option>
+            <option value="hombre">Hombre</option>
+            <option value="kids">Kids</option>
+          </select>
+        </div>
+      </div>
+
+      <table border="1" width="100%" style="margin-top:16px;">
+        <thead>
+          <tr>
+            <th>Talle</th>
+            <th>Pares</th>
+          </tr>
+        </thead>
+        <tbody id="tablaCurvaBody">
+          <tr><td><input type="number" placeholder="35"></td><td><input type="number" placeholder="1"></td></tr>
+          <tr><td><input type="number" placeholder="36"></td><td><input type="number" placeholder="2"></td></tr>
+          <tr><td><input type="number" placeholder="37"></td><td><input type="number" placeholder="3"></td></tr>
+          <tr><td><input type="number" placeholder="38"></td><td><input type="number" placeholder="3"></td></tr>
+          <tr><td><input type="number" placeholder="39"></td><td><input type="number" placeholder="2"></td></tr>
+          <tr><td><input type="number" placeholder="40"></td><td><input type="number" placeholder="1"></td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:12px;">
+        <button type="button" onclick="agregarFilaCurva()">➕ Agregar talle</button>
+      </div>
+    </div>
+
+    <div class="modal-curva-footer">
+      <button type="button" onclick="guardarCurva()">💾 Guardar curva</button>
+      <button type="button" onclick="cerrarModalCurva()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="js/programacion_admin.js"></script>
