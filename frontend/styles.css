@@ -2555,3 +2555,14 @@ body.pagina-usuarios .usuarios-tabla-wrap table {
     grid-template-columns: 1fr !important;
   }
 }
+.login-logo-full {
+  width: 140px;
+  margin-bottom: 10px;
+  animation: floatLogo 3s ease-in-out infinite;
+}
+
+@keyframes floatLogo {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
