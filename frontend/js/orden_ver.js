@@ -78,9 +78,9 @@ function renderMaterialesFicha(ficha, sectorFiltro = null) {
       const numero = seccion.numero_seccion_resuelto || "-"
       const titulo = seccion.nombre || seccion.titulo || `Sección ${numero}`
 
-      body.innerHTML += `
+           body.innerHTML += `
         <tr class="seccion-row">
-          <td colspan="4"><strong>Sección ${numero}: ${titulo}</strong></td>
+          <td colspan="4"><strong>${titulo}</strong></td>
         </tr>
       `
 

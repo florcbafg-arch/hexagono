@@ -1,7 +1,17 @@
 function agregarFila() {
   const fila = `
     <tr>
+      <td><input placeholder="Marca"></td>
       <td><input placeholder="Modelo"></td>
+      <td><input placeholder="Curva"></td>
+      <td>
+        <select>
+          <option value="">Seleccionar</option>
+          <option value="dama">Dama</option>
+          <option value="hombre">Hombre</option>
+          <option value="kids">Kids</option>
+        </select>
+      </td>
       <td><input type="number"></td>
       <td><input type="date"></td>
       <td>
@@ -37,14 +47,17 @@ function pintarProgramacion(items) {
   }
 
   tabla.innerHTML = items.map(item => `
-    <tr>
-      <td>${item.modelo || "-"}</td>
-      <td>${item.cantidad || 0}</td>
-      <td>${formatearFecha(item.fecha)}</td>
-      <td>${item.prioridad || "-"}</td>
-      <td>${item.estado || "pendiente"}</td>
-    </tr>
-  `).join("")
+  <tr>
+    <td>${item.marca || "-"}</td>
+    <td>${item.modelo || "-"}</td>
+    <td>${item.curva || "-"}</td>
+    <td>${item.tipo_curva || "-"}</td>
+    <td>${item.cantidad || 0}</td>
+    <td>${formatearFecha(item.fecha)}</td>
+    <td>${item.prioridad || "-"}</td>
+    <td>${item.estado || "pendiente"}</td>
+  </tr>
+`).join("")
 }
 
 async function cargarProgramacion() {
@@ -188,6 +201,7 @@ console.log("TODAS LAS CLAVES DE LA PRIMERA FILA:", Object.keys(json[0] || {}))
 ),
     numero_tarea: row["Nº DE TAREA"] || row["N° DE TAREA"] || row["N DE TAREA"] || row["numero_tarea"] || null,
     curva: row["CURVA"] || row["Curva"] || row["curva"] || null,
+    tipo_curva: row["TIPO CURVA"] || row["Tipo curva"] || row["tipo_curva"] || null,
     modelo: row["MODELO"] || row["Modelo"] || row["modelo"] || null,
     codigo: row["CODIGO"] || row["Codigo"] || row["codigo"] || null,
     v_p: row["V/P"] || row["v_p"] || row["vp"] || null,

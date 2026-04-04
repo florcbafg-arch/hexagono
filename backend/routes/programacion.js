@@ -24,7 +24,7 @@ async function obtenerOCrearModelo({ empresaId, nombreModelo, marca = null, codi
   // 1. Traer modelos de la empresa y comparar en memoria de forma exacta, ignorando mayúsculas
   const { data: modelosEmpresa, error: errorBuscar } = await supabase
     .from("modelos")
-    .select("id, nombre, marca, codigo")
+    .select("id, nombre, marca, codigo, tipo_curva")
     .eq("empresa_id", empresaId)
 
   if (errorBuscar) {
@@ -43,16 +43,16 @@ async function obtenerOCrearModelo({ empresaId, nombreModelo, marca = null, codi
 
   // 2. Crear si no existe
   const { data: modeloNuevo, error: errorCrear } = await supabase
-    .from("modelos")
-    .insert([{
-      empresa_id: empresaId,
-      nombre: nombreLimpio,
-      marca: marcaLimpia,
-      codigo: codigoLimpio,
-      descripcion: "Modelo creado automáticamente desde programación"
-    }])
-    .select("id, nombre, marca, codigo")
-    .single()
+  .from("modelos")
+  .insert([{
+    empresa_id: empresaId,
+    nombre: nombreLimpio,
+    marca: marcaLimpia,
+    codigo: codigoLimpio,
+    descripcion: "Modelo creado automáticamente desde programación"
+  }])
+  .select("id, nombre, marca, codigo, tipo_curva")
+  .single()
 
   if (errorCrear) {
     throw errorCrear
@@ -116,6 +116,7 @@ if (!empresaId) {
   fecha: item["FECHA DE INGRESO"] ?? item.fecha ?? item.Fecha ?? null,
   numero_tarea: item["Nº DE TAREA"] ?? item["N° DE TAREA"] ?? item.numero_tarea ?? null,
   curva: item.CURVA ?? item.curva ?? null,
+  tipo_curva: item["TIPO CURVA"] ?? item.tipo_curva ?? null,
   modelo: item.MODELO ?? item.Modelo ?? item.modelo ?? null,
   codigo: item.CODIGO ?? item.codigo ?? null,
   v_p: item["V/P"] ?? item.v_p ?? null,
@@ -264,28 +265,29 @@ const modelo = await obtenerOCrearModelo({
         })
 
         // 5. BUSCAR CURVA DEL MODELO
-       const { data: curva, error: errorCurva } = await supabase
+      // 5. BUSCAR CURVA POR MARCA + TIPO_CURVA
+const marcaModelo = modelo.marca || p.marca || null
+const tipoCurvaModelo = modelo.tipo_curva || null
+
+if (!marcaModelo || !tipoCurvaModelo) {
+  errores.push({
+    fila: p.id,
+    numero_tarea: numeroTarea,
+    modelo: p.modelo,
+    error: "El modelo no tiene marca o tipo_curva definido"
+  })
+  continue
+}
+
+const { data: curva, error: errorCurva } = await supabase
   .from("curvas_talles")
-  .select("talle, porcentaje")
-  .eq("modelo_id", modelo.id)
+  .select("talle, porcentaje, pares")
+  .eq("marca", marcaModelo)
+  .eq("tipo_curva", tipoCurvaModelo)
   .eq("empresa_id", empresaId)
   .order("talle", { ascending: true })
-        if (errorCurva) throw errorCurva
 
-        let curvaFinal = curva
-
-if (!curva || curva.length === 0) {
-  console.warn("⚠️ Modelo sin curva, usando fallback automático")
-
-  curvaFinal = [
-    { talle: 39, porcentaje: 0.15 },
-    { talle: 40, porcentaje: 0.20 },
-    { talle: 41, porcentaje: 0.25 },
-    { talle: 42, porcentaje: 0.20 },
-    { talle: 43, porcentaje: 0.10 },
-    { talle: 44, porcentaje: 0.10 }
-  ]
-}
+if (errorCurva) throw errorCurva
 
         // 6. VALIDAR SUMA DE CURVA (acepta 1 o 100)
         const sumaPorcentajes = curvaFinal.reduce((acc, c) => acc + Number(c.porcentaje || 0), 0)
@@ -369,7 +371,7 @@ if (!curva || curva.length === 0) {
 
           let cantidadTalle
 
-          if (i === curva.length - 1) {
+          if (i === curvaFinal.length - 1) {
             cantidadTalle = totalPares - acumulado
           } else {
             cantidadTalle = Math.round(totalPares * porcentajeNormalizado)
