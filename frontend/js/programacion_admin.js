@@ -248,4 +248,31 @@ console.log("MAPEADO A PROGRAMACION:", programacion.slice(0, 5))
   reader.readAsArrayBuffer(file)
 }
 
+function abrirModalCurva() {
+  const modal = document.getElementById("modalCurva")
+  if (!modal) return
+
+  modal.style.display = "block"
+}
+
+function cerrarModalCurva() {
+  const modal = document.getElementById("modalCurva")
+  if (!modal) return
+
+  modal.style.display = "none"
+}
+
+function agregarFilaCurva() {
+  const body = document.getElementById("tablaCurvaBody")
+  if (!body) return
+
+  const tr = document.createElement("tr")
+  tr.innerHTML = `
+    <td><input type="number" placeholder="Talle"></td>
+    <td><input type="number" placeholder="Pares"></td>
+  `
+
+  body.appendChild(tr)
+}
+
 cargarProgramacion()
