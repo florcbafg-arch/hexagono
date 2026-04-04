@@ -11,6 +11,8 @@ let tallesCalculados = []
 
 function setMensaje(texto, tipo = "normal") {
   mensaje.textContent = texto
+  mensaje.style.fontWeight = "bold"
+  mensaje.style.padding = "8px 0"
   mensaje.style.color =
     tipo === "error" ? "red" :
     tipo === "ok" ? "green" :
@@ -209,9 +211,9 @@ const res = await apiFetch("/api/ordenes", {
     tallesPreview.innerHTML = ""
     totalSpan.textContent = "0"
 
-    setTimeout(() => {
-      cargarModulo("ordenes")
-    }, 700)
+  setTimeout(() => {
+  cargarModulo("ordenes")
+}, 1500)
 
   } catch (err) {
     console.error("Error creando orden:", err)
