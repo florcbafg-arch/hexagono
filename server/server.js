@@ -1451,50 +1451,238 @@ res.status(500).json({error:"error objetivos"})
 
 })
 
-app.post("/api/patrones", async (req, res) => {
+app.get("/api/patrones/generar-desde-ficha/:modelo_id", async (req, res) => {
+  const { modelo_id } = req.params
+  const empresaId = req.user?.empresa_id
+
+  if (!modelo_id) {
+    return res.status(400).json({ error: "modelo_id requerido" })
+  }
+
+  if (!empresaId) {
+    return res.status(401).json({ error: "Empresa no identificada" })
+  }
+
   try {
+    const { data: ficha, error: fichaError } = await supabase
+      .from("fichas_tecnicas")
+      .select("id, modelo_id, codigo, nombre, marca, horma, temporada, detalle_general")
+      .eq("modelo_id", modelo_id)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
 
-    const { modelo_id, patrones } = req.body
-
-    const empresaId = req.user?.empresa_id
-
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
-
-    if (!modelo_id || !patrones) {
-      return res.status(400).json({ error: "Datos incompletos" })
+    if (fichaError) {
+      console.error("Error buscando ficha técnica:", fichaError)
+      return res.status(500).json({ error: "Error buscando ficha técnica" })
     }
 
-    // borrar anteriores (opcional pero recomendado)
-    await supabase
+    if (!ficha) {
+      return res.status(404).json({ error: "Este modelo no tiene ficha técnica cargada" })
+    }
+
+    const { data: secciones, error: seccionesError } = await supabase
+      .from("fichas_secciones")
+      .select("id, nombre, orden, titulo_impresion, tipo_seccion")
+      .eq("ficha_id", ficha.id)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (seccionesError) {
+      console.error("Error buscando secciones:", seccionesError)
+      return res.status(500).json({ error: "Error buscando secciones de ficha" })
+    }
+
+    const seccionIds = (secciones || []).map(s => s.id)
+
+    if (!seccionIds.length) {
+      return res.json({
+        modelo_id: Number(modelo_id),
+        ficha_id: ficha.id,
+        cabecera: ficha,
+        bloques: []
+      })
+    }
+
+    const { data: piezas, error: piezasError } = await supabase
+      .from("fichas_piezas")
+      .select("id, seccion_id, nombre, orden, tipo_pieza")
+      .in("seccion_id", seccionIds)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (piezasError) {
+      console.error("Error buscando piezas:", piezasError)
+      return res.status(500).json({ error: "Error buscando piezas de ficha" })
+    }
+
+    const piezaIds = (piezas || []).map(p => p.id)
+
+    if (!piezaIds.length) {
+      return res.json({
+        modelo_id: Number(modelo_id),
+        ficha_id: ficha.id,
+        cabecera: ficha,
+        bloques: []
+      })
+    }
+
+    const { data: materiales, error: materialesError } = await supabase
+      .from("fichas_materiales")
+      .select("id, pieza_id, material, especificacion, color, unidad_medida, consumo, orden, categoria")
+      .in("pieza_id", piezaIds)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (materialesError) {
+      console.error("Error buscando materiales:", materialesError)
+      return res.status(500).json({ error: "Error buscando materiales de ficha" })
+    }
+
+    const materialIds = (materiales || []).map(m => m.id)
+
+    let patronesGuardados = []
+    if (materialIds.length) {
+      const { data: patrones, error: patronesError } = await supabase
+        .from("patrones")
+        .select("id, ficha_material_id, um, t_tarea")
+        .eq("modelo_id", modelo_id)
+        .eq("empresa_id", empresaId)
+        .in("ficha_material_id", materialIds)
+
+      if (patronesError) {
+        console.error("Error buscando patrones guardados:", patronesError)
+        return res.status(500).json({ error: "Error buscando patrón guardado" })
+      }
+
+      patronesGuardados = patrones || []
+    }
+
+    const patronesMap = new Map(
+      patronesGuardados.map(p => [p.ficha_material_id, p])
+    )
+
+    const materialesPorPieza = new Map()
+
+    for (const material of materiales || []) {
+      if (!materialesPorPieza.has(material.pieza_id)) {
+        materialesPorPieza.set(material.pieza_id, [])
+      }
+      materialesPorPieza.get(material.pieza_id).push(material)
+    }
+
+    const bloques = (secciones || []).map(seccion => {
+      const piezasDeSeccion = (piezas || []).filter(p => p.seccion_id === seccion.id)
+
+      const items = []
+
+      for (const pieza of piezasDeSeccion) {
+        const mats = materialesPorPieza.get(pieza.id) || []
+
+        for (const mat of mats) {
+          const patronGuardado = patronesMap.get(mat.id)
+
+          items.push({
+            ficha_material_id: mat.id,
+            pieza: pieza.nombre || "",
+            material: mat.material || "",
+            especificacion: mat.especificacion || "",
+            color: mat.color || "",
+            um: patronGuardado?.um || "",
+            t_tarea: patronGuardado?.t_tarea ?? null,
+            orden_pieza: pieza.orden ?? 0,
+            orden_material: mat.orden ?? 0
+          })
+        }
+      }
+
+      return {
+        seccion_id: seccion.id,
+        bloque: seccion.titulo_impresion || seccion.nombre || "SIN BLOQUE",
+        tipo_seccion: seccion.tipo_seccion || "",
+        orden: seccion.orden ?? 0,
+        items
+      }
+    }).filter(b => b.items.length > 0)
+
+    return res.json({
+      modelo_id: Number(modelo_id),
+      ficha_id: ficha.id,
+      cabecera: {
+        codigo: ficha.codigo || "",
+        nombre: ficha.nombre || "",
+        marca: ficha.marca || "",
+        horma: ficha.horma || "",
+        temporada: ficha.temporada || "",
+        detalle_general: ficha.detalle_general || ""
+      },
+      bloques
+    })
+  } catch (error) {
+    console.error("Error general generando patrón desde ficha:", error)
+    return res.status(500).json({ error: "Error interno del servidor" })
+  }
+})
+
+app.post("/api/patrones", async (req, res) => {
+  const empresaId = req.user?.empresa_id
+  const { modelo_id, items } = req.body
+
+  if (!empresaId) {
+    return res.status(401).json({ error: "Empresa no identificada" })
+  }
+
+  if (!modelo_id) {
+    return res.status(400).json({ error: "modelo_id requerido" })
+  }
+
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ error: "items debe ser un array" })
+  }
+
+  try {
+    const rows = items
+      .filter(item => item?.ficha_material_id)
+      .map(item => ({
+        modelo_id: Number(modelo_id),
+        ficha_material_id: Number(item.ficha_material_id),
+        um: item.um?.trim() || null,
+        t_tarea:
+          item.t_tarea !== "" &&
+          item.t_tarea !== null &&
+          item.t_tarea !== undefined
+            ? Number(item.t_tarea)
+            : null,
+        empresa_id: empresaId
+      }))
+
+    const { error: deleteError } = await supabase
       .from("patrones")
       .delete()
       .eq("modelo_id", modelo_id)
       .eq("empresa_id", empresaId)
 
-    const dataInsert = patrones.map(p => ({
-      empresa_id: empresaId,
-      modelo_id,
-      bloque: p.bloque || null,
-      pieza: p.pieza,
-      material: p.material,
-      color: p.color || null,
-      unidad: p.unidad,
-      consumo_por_par: p.consumo
-    }))
+    if (deleteError) {
+      console.error("Error borrando patrón anterior:", deleteError)
+      return res.status(500).json({ error: "Error limpiando patrón anterior" })
+    }
 
-    const { error } = await supabase
+    if (!rows.length) {
+      return res.json({ ok: true, message: "Patrón vacío guardado" })
+    }
+
+    const { error: insertError } = await supabase
       .from("patrones")
-      .insert(dataInsert)
+      .insert(rows)
 
-    if (error) throw error
+    if (insertError) {
+      console.error("Error guardando patrón:", insertError)
+      return res.status(500).json({ error: "Error guardando patrón" })
+    }
 
-    res.json({ ok: true })
-
-  } catch (err) {
-    console.log(err)
-    res.status(500).json({ error: "Error guardando patrones" })
+    return res.json({ ok: true, message: "Patrón guardado correctamente" })
+  } catch (error) {
+    console.error("Error general guardando patrón:", error)
+    return res.status(500).json({ error: "Error interno del servidor" })
   }
 })
 
