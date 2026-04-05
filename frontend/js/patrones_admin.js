@@ -1,4 +1,5 @@
 (() => {
+let patronActual = null
 
   async function initPatrones() {
     await cargarModelos()
@@ -45,6 +46,8 @@
     try {
       const res = await apiFetch(`/api/patrones/generar-desde-ficha/${modelo_id}`)
       const data = await res.json()
+
+         patronActual = data
 
       data.bloques.forEach(bloque => {
 
@@ -94,10 +97,109 @@
         })
       })
 
+            renderPatronEnModal(data)
+
     } catch (err) {
       console.error("Error cargando patrón:", err)
       alert("Error cargando patrón")
     }
+  }
+
+    function cerrarModalPatron() {
+    const modal = document.getElementById("modalPatron")
+    if (modal) {
+      modal.classList.add("oculto")
+    }
+  }
+
+  function renderPatronEnModal(data) {
+    const body = document.getElementById("modalPatronBody")
+    if (!body) return
+
+    if (!data || !Array.isArray(data.bloques) || !data.bloques.length) {
+      body.innerHTML = `<div class="patron-vacio">No hay patrón disponible para este modelo.</div>`
+      return
+    }
+
+    const cabecera = data.cabecera || {}
+
+    let html = `
+      <div class="patron-cabecera">
+        <div class="patron-cabecera-grid">
+          <div class="patron-campo"><strong>Código:</strong> ${cabecera.codigo || "-"}</div>
+          <div class="patron-campo"><strong>Artículo:</strong> ${cabecera.nombre || "-"}</div>
+          <div class="patron-campo"><strong>Marca:</strong> ${cabecera.marca || "-"}</div>
+          <div class="patron-campo"><strong>Horma:</strong> ${cabecera.horma || "-"}</div>
+          <div class="patron-campo"><strong>Temporada:</strong> ${cabecera.temporada || "-"}</div>
+        </div>
+
+        <div class="patron-detalle-general">
+          <strong>Detalle técnico:</strong>
+          <div>${cabecera.detalle_general || "Sin detalle técnico"}</div>
+        </div>
+      </div>
+    `
+
+    data.bloques.forEach(bloque => {
+      let filas = ""
+
+      ;(bloque.items || []).forEach(item => {
+        filas += `
+          <tr>
+            <td>${item.pieza || "-"}</td>
+            <td>${item.material || "-"}</td>
+            <td>${item.color || "-"}</td>
+            <td>${item.um || "-"}</td>
+            <td>${item.t_tarea ?? "-"}</td>
+          </tr>
+        `
+      })
+
+      if (!filas) {
+        filas = `
+          <tr>
+            <td colspan="5">Sin datos en este bloque</td>
+          </tr>
+        `
+      }
+
+      html += `
+        <div class="patron-seccion">
+          <h4>${bloque.bloque || "BLOQUE"}</h4>
+          <table class="patron-tabla">
+            <thead>
+              <tr>
+                <th>Pieza</th>
+                <th>Material</th>
+                <th>Color</th>
+                <th>U.M</th>
+                <th>T. Tarea</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filas}
+            </tbody>
+          </table>
+        </div>
+      `
+    })
+
+    body.innerHTML = html
+  }
+
+  function abrirModalPatron() {
+    const modal = document.getElementById("modalPatron")
+    const modeloSelect = document.getElementById("modeloSelect")
+
+    if (!modal) return
+
+    if (!modeloSelect?.value) {
+      alert("Seleccioná un modelo")
+      return
+    }
+
+    renderPatronEnModal(patronActual)
+    modal.classList.remove("oculto")
   }
 
   async function guardarPatron() {
@@ -236,4 +338,6 @@
 window.initPatrones = initPatrones
 window.guardarPatron = guardarPatron
 window.calcular = calcular
+window.abrirModalPatron = abrirModalPatron
+window.cerrarModalPatron = cerrarModalPatron
 })()
