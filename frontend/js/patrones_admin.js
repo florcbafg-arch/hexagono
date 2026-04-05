@@ -1,5 +1,6 @@
 (() => {
-let patronActual = null
+  let patronActual = null
+  let modeloActualId = null
 
   async function initPatrones() {
     await cargarModelos()
@@ -38,6 +39,10 @@ let patronActual = null
   }
 
   async function cargarDesdeFicha(modelo_id) {
+    
+    renderPatronEnModal(data)
+    if (btnVerPatron) btnVerPatron.disabled = false
+
     const tbody = document.querySelector("#tablaPatrones tbody")
     if (!tbody) return
 
@@ -47,7 +52,8 @@ let patronActual = null
       const res = await apiFetch(`/api/patrones/generar-desde-ficha/${modelo_id}`)
       const data = await res.json()
 
-         patronActual = data
+        patronActual = data
+        modeloActualId = String(modelo_id)
 
       data.bloques.forEach(bloque => {
 
@@ -96,13 +102,15 @@ let patronActual = null
           tbody.appendChild(tr)
         })
       })
-
+if (btnVerPatron) btnVerPatron.disabled = false
             renderPatronEnModal(data)
 
     } catch (err) {
       console.error("Error cargando patrón:", err)
       alert("Error cargando patrón")
-    }
+    
+  if (btnVerPatron) btnVerPatron.disabled = false
+}
   }
 
     function cerrarModalPatron() {
@@ -218,23 +226,39 @@ let patronActual = null
     })
   }
 
-  function abrirModalPatron() {
+    async function abrirModalPatron() {
     const modal = document.getElementById("modalPatron")
     const modeloSelect = document.getElementById("modeloSelect")
 
     if (!modal) return
 
-    if (!modeloSelect?.value) {
+    const modeloId = modeloSelect?.value
+
+    if (!modeloId) {
       alert("Seleccioná un modelo")
       return
     }
 
-    if (!patronActual) {
-      alert("No hay patrón disponible para este modelo")
-      return
-    }
+    try {
+      const necesitaRecargar =
+        !patronActual ||
+        String(modeloActualId || "") !== String(modeloId)
 
-    modal.classList.remove("oculto")
+      if (necesitaRecargar) {
+        await cargarDesdeFicha(modeloId)
+      }
+
+      if (!patronActual || !Array.isArray(patronActual.bloques)) {
+        alert("No hay patrón disponible para este modelo")
+        return
+      }
+
+      renderPatronEnModal(patronActual)
+      modal.classList.remove("oculto")
+    } catch (err) {
+      console.error("Error abriendo modal de patrón:", err)
+      alert("No se pudo abrir el patrón")
+    }
   }
 
   async function guardarPatron() {
@@ -354,9 +378,8 @@ let patronActual = null
       })
     })
 
-    renderPatronEnModal(patronActual)
-    abrirModalPatron()
-    renderResultadoCalculoEnModal(agrupado)
+    await abrirModalPatron()
+renderResultadoCalculoEnModal(agrupado)
   }
 
 window.initPatrones = initPatrones
