@@ -2955,3 +2955,197 @@ body:not(.dark-mode) .resultado-calculo-bloque {
   background: #f8fafc;
   border: 1px solid #e5e7eb;
 }
+/* =========================
+   MODULOS EN CONSTRUCCION - TITULOS Y CONTRASTE
+========================= */
+
+.modulo-en-construccion-page,
+.modulo-en-construccion-page body {
+  background: transparent;
+}
+
+.modulo-en-construccion-page .placeholder-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 40px);
+  padding: 30px;
+}
+
+.modulo-en-construccion-page .placeholder-card {
+  width: 100%;
+  max-width: 760px;
+  background: #ffffff !important;
+  border: 1px solid #dcdcdc !important;
+  border-radius: 18px;
+  padding: 42px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  color: #111827 !important;
+}
+
+.modulo-en-construccion-page .placeholder-card h1 {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #111827 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.modulo-en-construccion-page .placeholder-card p {
+  font-size: 16px;
+  color: #475569 !important;
+  line-height: 1.6;
+  margin-bottom: 26px;
+}
+
+.modulo-en-construccion-page .placeholder-list .item {
+  background: #f7f7f7 !important;
+  border: 1px solid #ececec !important;
+  color: #334155 !important;
+}
+
+.modulo-en-construccion-page .placeholder-badge {
+  display: inline-block;
+  background: #111827 !important;
+  color: #ffffff !important;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  margin-bottom: 18px;
+}
+
+.modulo-en-construccion-page .placeholder-footer {
+  margin-top: 18px;
+  font-size: 14px;
+  color: #64748b !important;
+  line-height: 1.6;
+}
+
+.modulo-en-construccion-page .highlight {
+  color: #111827 !important;
+  font-weight: 700;
+}
+
+/* Dark mode real dentro del admin */
+body.admin-page.dark-mode .modulo-en-construccion-page .placeholder-card {
+  background: linear-gradient(180deg, #12131a, #0f1117) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.45) !important;
+  color: #f8fbff !important;
+}
+
+body.admin-page.dark-mode .modulo-en-construccion-page .placeholder-card h1 {
+  color: #f8fbff !important;
+}
+
+body.admin-page.dark-mode .modulo-en-construccion-page .placeholder-card p {
+  color: #cbd5e1 !important;
+}
+
+body.admin-page.dark-mode .modulo-en-construccion-page .placeholder-list .item {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #e2e8f0 !important;
+}
+
+body.admin-page.dark-mode .modulo-en-construccion-page .placeholder-badge {
+  background: linear-gradient(90deg, #7c3aed, #2563eb) !important;
+  color: #fff !important;
+}
+
+body.admin-page.dark-mode .modulo-en-construccion-page .placeholder-footer {
+  color: #cbd5e1 !important;
+}
+
+body.admin-page.dark-mode .modulo-en-construccion-page .highlight {
+  color: #ffffff !important;
+}
+/* =========================
+   TV MODE - BLOQUE FINAL AUTORITARIO
+========================= */
+
+body.admin-page.tv-mode {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #05070d !important;
+}
+
+body.admin-page.tv-mode .sidebar,
+body.admin-page.tv-mode .header,
+body.admin-page.tv-mode .btn-tema,
+body.admin-page.tv-mode button {
+  display: none !important;
+}
+
+body.admin-page.tv-mode .container {
+  display: block !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  background: #05070d !important;
+}
+
+body.admin-page.tv-mode .main {
+  display: block !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+body.admin-page.tv-mode #contenido {
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  border: none !important;
+  background: #05070d !important;
+}
+
+body.admin-page.tv-mode .dashboard-tv {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 16px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  height: calc(100vh - 40px) !important;
+  min-height: calc(100vh - 40px) !important;
+}
+
+body.admin-page.tv-mode .dashboard-tv .panel,
+body.admin-page.tv-mode .dashboard-tv .panel-alertas,
+body.admin-page.tv-mode .dashboard-tv .alertas {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+body.admin-page.tv-mode .dashboard-tv table {
+  width: 100% !important;
+  font-size: 18px !important;
+}
+
+body.admin-page.tv-mode .barra {
+  height: 30px !important;
+}
+
+body.admin-page.tv-mode h1,
+body.admin-page.tv-mode h2 {
+  font-size: 30px !important;
+}
+
+body.admin-page.tv-mode h3 {
+  font-size: 22px !important;
+}
