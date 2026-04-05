@@ -1492,20 +1492,19 @@ app.get("/api/patrones/generar-desde-ficha/:modelo_id", async (req, res) => {
       return res.status(500).json({ error: "Error buscando secciones de ficha" })
     }
 
-    const BLOQUES_PATRON = [
-  "CORTE REFUERZO",
-  "CORTE FORRO",
-  "CORTE CAPELLADA"
+   const SECCIONES_VALIDAS_PATRON = [
+  "SECCION N° 1",
+  "SECCIÓN N° 1",
+  "SECCION N° 6",
+  "SECCIÓN N° 6"
 ]
 
 const seccionesPatron = (secciones || []).filter(s => {
   const nombre = (s.nombre || "").trim().toUpperCase()
-  const titulo = (s.titulo_impresion || "").trim().toUpperCase()
-
-  return BLOQUES_PATRON.includes(nombre) || BLOQUES_PATRON.includes(titulo)
+  return SECCIONES_VALIDAS_PATRON.includes(nombre)
 })
 
-    const seccionIds = seccionesPatron.map(s => s.id)
+const seccionIds = seccionesPatron.map(s => s.id)
 
     if (!seccionIds.length) {
       return res.json({
@@ -1583,39 +1582,108 @@ const seccionesPatron = (secciones || []).filter(s => {
       materialesPorPieza.get(material.pieza_id).push(material)
     }
 
-    const bloques = seccionesPatron.map(seccion => {
-      const piezasDeSeccion = (piezas || []).filter(p => p.seccion_id === seccion.id)
+    function normalizarTexto(valor = "") {
+  return String(valor || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+}
 
-      const items = []
+function obtenerBloquePatron(nombreSeccion, nombrePieza) {
+  const seccion = normalizarTexto(nombreSeccion)
+  const pieza = normalizarTexto(nombrePieza)
 
-      for (const pieza of piezasDeSeccion) {
-        const mats = materialesPorPieza.get(pieza.id) || []
+  if (seccion === "SECCION N° 6" || seccion === "SECCION N° 6".normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+    return "CORTE REFUERZO"
+  }
 
-        for (const mat of mats) {
-          const patronGuardado = patronesMap.get(mat.id)
+  if (seccion === "SECCION N° 1" || seccion === "SECCION N° 1".normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+    const piezasForro = [
+      "FORRO",
+      "LENGUA",
+      "FORRO CAÑA/CUELLO",
+      "FORRO CAPELLADA",
+      "FORRO LENGUA"
+    ].map(normalizarTexto)
 
-          items.push({
-            ficha_material_id: mat.id,
-            pieza: pieza.nombre || "",
-            material: mat.material || "",
-            especificacion: mat.especificacion || "",
-            color: mat.color || "",
-            um: patronGuardado?.um || "",
-            t_tarea: patronGuardado?.t_tarea ?? null,
-            orden_pieza: pieza.orden ?? 0,
-            orden_material: mat.orden ?? 0
-          })
-        }
+    const piezasRefuerzo = [
+      "RELLENO CAÑA",
+      "RELLENO DE CAÑA",
+      "RELLENO CUELLO",
+      "RELLENO DE CUELLO",
+      "RELLENO LENGUA",
+      "RELLENO DE LENGUA"
+    ].map(normalizarTexto)
+
+    if (piezasForro.includes(pieza)) {
+      return "CORTE FORRO"
+    }
+
+    if (piezasRefuerzo.includes(pieza)) {
+      return "CORTE REFUERZO"
+    }
+
+    return "CORTE CAPELLADA"
+  }
+
+  return null
+}
+
+const bloquesMap = new Map()
+
+for (const seccion of seccionesPatron) {
+  const piezasDeSeccion = (piezas || []).filter(p => p.seccion_id === seccion.id)
+
+  for (const pieza of piezasDeSeccion) {
+    const mats = materialesPorPieza.get(pieza.id) || []
+
+    for (const mat of mats) {
+      const bloqueNombre = obtenerBloquePatron(seccion.nombre, pieza.nombre)
+
+      if (!bloqueNombre) continue
+
+      if (!bloquesMap.has(bloqueNombre)) {
+        bloquesMap.set(bloqueNombre, {
+          bloque: bloqueNombre,
+          items: []
+        })
       }
 
-      return {
-        seccion_id: seccion.id,
-        bloque: seccion.titulo_impresion || seccion.nombre || "SIN BLOQUE",
-        tipo_seccion: seccion.tipo_seccion || "",
-        orden: seccion.orden ?? 0,
-        items
+      const patronGuardado = patronesMap.get(mat.id)
+
+      bloquesMap.get(bloqueNombre).items.push({
+        ficha_material_id: mat.id,
+        pieza: pieza.nombre || "",
+        material: mat.material || "",
+        especificacion: mat.especificacion || "",
+        color: mat.color || "",
+        um: patronGuardado?.um || "",
+        t_tarea: patronGuardado?.t_tarea ?? null,
+        orden_pieza: pieza.orden ?? 0,
+        orden_material: mat.orden ?? 0
+      })
+    }
+  }
+}
+
+const ordenBloques = {
+  "CORTE REFUERZO": 1,
+  "CORTE FORRO": 2,
+  "CORTE CAPELLADA": 3
+}
+
+const bloques = Array.from(bloquesMap.values())
+  .map(b => ({
+    ...b,
+    items: b.items.sort((a, b) => {
+      if ((a.orden_pieza || 0) !== (b.orden_pieza || 0)) {
+        return (a.orden_pieza || 0) - (b.orden_pieza || 0)
       }
-    }).filter(b => b.items.length > 0)
+      return (a.orden_material || 0) - (b.orden_material || 0)
+    })
+  }))
+  .sort((a, b) => (ordenBloques[a.bloque] || 99) - (ordenBloques[b.bloque] || 99))
 
     return res.json({
       modelo_id: Number(modelo_id),
