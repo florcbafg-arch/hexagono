@@ -3072,7 +3072,6 @@ body.admin-page.tv-mode {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  background: #05070d !important;
 }
 
 body.admin-page.tv-mode .sidebar,
@@ -3088,7 +3087,6 @@ body.admin-page.tv-mode .container {
   height: 100vh !important;
   min-height: 100vh !important;
   overflow: hidden !important;
-  background: #05070d !important;
 }
 
 body.admin-page.tv-mode .main {
@@ -3110,7 +3108,6 @@ body.admin-page.tv-mode #contenido {
   box-sizing: border-box !important;
   overflow: auto !important;
   border: none !important;
-  background: #05070d !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv {
@@ -3196,4 +3193,40 @@ body.admin-page.tv-mode .dashboard-tv input {
   height: 26px !important;
   padding: 4px 6px !important;
   font-size: 12px !important;
+}
+body.admin-page.tv-mode:not(.dark-mode) {
+  background: linear-gradient(180deg, #e7ecf3, #dce3eb) !important;
+}
+
+body.admin-page.tv-mode:not(.dark-mode) .container,
+body.admin-page.tv-mode:not(.dark-mode) #contenido {
+  background: linear-gradient(180deg, #e7ecf3, #dce3eb) !important;
+}
+
+body.admin-page.tv-mode.dark-mode {
+  background: #05070d !important;
+}
+
+body.admin-page.tv-mode.dark-mode .container,
+body.admin-page.tv-mode.dark-mode #contenido {
+  background: #05070d !important;
+}
+body.admin-page.tv-mode:not(.dark-mode) h1,
+body.admin-page.tv-mode:not(.dark-mode) h2,
+body.admin-page.tv-mode:not(.dark-mode) h3,
+body.admin-page.tv-mode:not(.dark-mode) p,
+body.admin-page.tv-mode:not(.dark-mode) span,
+body.admin-page.tv-mode:not(.dark-mode) div,
+body.admin-page.tv-mode:not(.dark-mode) label {
+  color: #0f172a !important;
+}
+
+body.admin-page.tv-mode.dark-mode h1,
+body.admin-page.tv-mode.dark-mode h2,
+body.admin-page.tv-mode.dark-mode h3,
+body.admin-page.tv-mode.dark-mode p,
+body.admin-page.tv-mode.dark-mode span,
+body.admin-page.tv-mode.dark-mode div,
+body.admin-page.tv-mode.dark-mode label {
+  color: #e5eefc !important;
 }
