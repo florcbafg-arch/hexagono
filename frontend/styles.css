@@ -3065,7 +3065,7 @@ body.admin-page.dark-mode .modulo-en-construccion-page .highlight {
   color: #ffffff !important;
 }
 /* =========================
-   TV MODE - BLOQUE FINAL AUTORITARIO
+   TV MODE - BLOQUE FINAL LIMPIO
 ========================= */
 
 body.admin-page.tv-mode {
@@ -3106,7 +3106,7 @@ body.admin-page.tv-mode #contenido {
   min-height: 100vh !important;
   max-width: 100vw !important;
   margin: 0 !important;
-  padding: 14px 16px !important;
+  padding: 10px 14px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
   border: none !important;
@@ -3115,12 +3115,12 @@ body.admin-page.tv-mode #contenido {
 
 body.admin-page.tv-mode .dashboard-tv {
   display: grid !important;
-  grid-template-columns: 1fr 1fr 0.95fr !important;
-  gap: 14px !important;
+  grid-template-columns: 1fr 1fr 0.92fr !important;
+  gap: 12px !important;
   align-items: stretch !important;
   width: 100% !important;
-  height: calc(100vh - 120px) !important;
-  min-height: calc(100vh - 120px) !important;
+  height: calc(100vh - 78px) !important;
+  min-height: calc(100vh - 78px) !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv .panel,
@@ -3129,54 +3129,55 @@ body.admin-page.tv-mode .dashboard-tv .alertas {
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
-  overflow: hidden !important;
   min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 10px !important;
 }
 
-body.admin-page.tv-mode .dashboard-tv table {
-  width: 100% !important;
-  font-size: 18px !important;
-}
-
-body.admin-page.tv-mode .barra {
-  height: 30px !important;
-}
-
-body.admin-page.tv-mode h1,
-body.admin-page.tv-mode h2 {
-  font-size: 30px !important;
-}
-
-body.admin-page.tv-mode h3 {
-  font-size: 22px !important;
-}
-body.admin-page.tv-mode .dashboard-tv .panel table,
+body.admin-page.tv-mode .dashboard-tv table,
 body.admin-page.tv-mode .dashboard-tv .tabla-produccion {
   width: 100% !important;
   table-layout: fixed !important;
+  border-collapse: collapse !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv .tabla-produccion th,
 body.admin-page.tv-mode .dashboard-tv .tabla-produccion td {
-  padding: 6px 8px !important;
-  font-size: 15px !important;
+  padding: 5px 6px !important;
+  font-size: 13px !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv .panel h3 {
-  margin-bottom: 8px !important;
-  font-size: 18px !important;
+  margin: 0 0 8px 0 !important;
+  font-size: 16px !important;
 }
+
 body.admin-page.tv-mode h1,
 body.admin-page.tv-mode h2 {
-  font-size: 24px !important;
-  margin-bottom: 8px !important;
+  font-size: 22px !important;
+  margin: 0 0 6px 0 !important;
+  line-height: 1.1 !important;
 }
 
 body.admin-page.tv-mode h3 {
-  font-size: 18px !important;
+  font-size: 16px !important;
 }
 
-body.admin-page.tv-mode .barra-superior,
-body.admin-page.tv-mode .header-sistema {
-  margin-bottom: 10px !important;
+body.admin-page.tv-mode p,
+body.admin-page.tv-mode span,
+body.admin-page.tv-mode div,
+body.admin-page.tv-mode label {
+  font-size: 12px !important;
+}
+
+body.admin-page.tv-mode .barra {
+  height: 24px !important;
+}
+
+body.admin-page.tv-mode .panel table {
+  flex: 1 !important;
+}
+
+body.admin-page.tv-mode #contenido > *:first-child {
+  margin-top: 0 !important;
 }
