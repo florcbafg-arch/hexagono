@@ -141,8 +141,99 @@
     }
   }
 
-  window.initPatrones = initPatrones
-window.agregarFila = agregarFila
+  async function calcular() {
+  const modeloSelect = document.getElementById("modeloSelect")
+  const cantidadInput = document.getElementById("cantidad")
+  const resultado = document.getElementById("resultado")
+
+  if (!modeloSelect || !cantidadInput || !resultado) return
+
+  const modelo_id = modeloSelect.value
+  const cantidad = Number(cantidadInput.value)
+
+  if (!modelo_id) {
+    alert("Seleccioná un modelo")
+    return
+  }
+
+  if (!cantidad || cantidad <= 0) {
+    alert("Ingresá una cantidad válida")
+    return
+  }
+
+  const filas = document.querySelectorAll("#tablaPatrones tbody tr")
+  const items = []
+
+  filas.forEach(f => {
+    const id = f.dataset.ficha_material_id
+    if (!id) return
+
+    const pieza = f.children[0]?.textContent?.trim() || ""
+    const material = f.children[1]?.textContent?.trim() || ""
+    const color = f.children[2]?.textContent?.trim() || ""
+    const um = f.querySelector(".um")?.value || ""
+    const t_tarea = Number(f.querySelector(".t_tarea")?.value || 0)
+
+    if (!um || !t_tarea) return
+
+    let bloque = "GENERAL"
+
+    const filaBloque = f.previousElementSibling
+    if (filaBloque && filaBloque.children.length === 1) {
+      bloque = filaBloque.textContent.trim()
+    }
+
+    items.push({
+      ficha_material_id: Number(id),
+      pieza,
+      material,
+      color,
+      um,
+      t_tarea,
+      bloque
+    })
+  })
+
+  if (!items.length) {
+    alert("No hay datos cargados para calcular")
+    return
+  }
+
+  const agrupado = {}
+
+  items.forEach(item => {
+    const total = item.t_tarea * cantidad
+    const claveBloque = item.bloque || "GENERAL"
+
+    if (!agrupado[claveBloque]) {
+      agrupado[claveBloque] = []
+    }
+
+    agrupado[claveBloque].push({
+      pieza: item.pieza,
+      material: item.material,
+      color: item.color,
+      um: item.um,
+      total: Number(total.toFixed(4))
+    })
+  })
+
+  resultado.innerHTML = ""
+
+  Object.keys(agrupado).forEach(bloque => {
+    const titulo = document.createElement("h4")
+    titulo.textContent = bloque
+    resultado.appendChild(titulo)
+
+    agrupado[bloque].forEach(item => {
+      const p = document.createElement("p")
+      p.textContent = `${item.pieza} - ${item.material}${item.color ? ` (${item.color})` : ""} → ${item.total} ${item.um}`
+      resultado.appendChild(p)
+    })
+  })
+}
+
+window.initPatrones = initPatrones
 window.guardarPatron = guardarPatron
 window.calcular = calcular
 })()
