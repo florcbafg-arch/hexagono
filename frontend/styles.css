@@ -3116,8 +3116,8 @@ body.admin-page.tv-mode .dashboard-tv {
   gap: 12px !important;
   align-items: stretch !important;
   width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
+  height: calc(100vh - 110px) !important;
+  min-height: calc(100vh - 110px) !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv .panel,
@@ -3128,7 +3128,7 @@ body.admin-page.tv-mode .dashboard-tv .alertas {
   height: 100% !important;
   min-height: 0 !important;
   overflow: hidden !important;
-  padding: 10px !important;
+  padding: 12px !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv table,
@@ -3140,9 +3140,9 @@ body.admin-page.tv-mode .dashboard-tv .tabla-produccion {
 
 body.admin-page.tv-mode .dashboard-tv .tabla-produccion th,
 body.admin-page.tv-mode .dashboard-tv .tabla-produccion td {
-  padding: 4px 5px !important;
-  font-size: 12px !important;
-  line-height: 1.1 !important;
+  padding: 6px 7px !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
 }
 
 body.admin-page.tv-mode .dashboard-tv .panel h3 {
@@ -3190,9 +3190,9 @@ body.admin-page.tv-mode .dashboard-tv * {
   box-sizing: border-box !important;
 }
 body.admin-page.tv-mode .dashboard-tv input {
-  height: 26px !important;
-  padding: 4px 6px !important;
-  font-size: 12px !important;
+  height: 30px !important;
+  padding: 5px 6px !important;
+  font-size: 13px !important;
 }
 body.admin-page.tv-mode:not(.dark-mode) {
   background: linear-gradient(180deg, #e7ecf3, #dce3eb) !important;
@@ -3229,4 +3229,15 @@ body.admin-page.tv-mode.dark-mode span,
 body.admin-page.tv-mode.dark-mode div,
 body.admin-page.tv-mode.dark-mode label {
   color: #e5eefc !important;
+}
+body.admin-page.tv-mode .dashboard-tv .tabla-produccion {
+  height: 100% !important;
+}
+
+body.admin-page.tv-mode .dashboard-tv .panel > * {
+  flex-shrink: 0;
+}
+
+body.admin-page.tv-mode .dashboard-tv .panel table {
+  flex: 1 !important;
 }
