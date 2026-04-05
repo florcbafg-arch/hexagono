@@ -142,6 +142,7 @@
   }
 
   window.initPatrones = initPatrones
-  window.guardarPatron = guardarPatron
-
+window.agregarFila = agregarFila
+window.guardarPatron = guardarPatron
+window.calcular = calcular
 })()
