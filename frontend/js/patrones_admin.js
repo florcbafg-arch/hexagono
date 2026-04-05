@@ -38,80 +38,76 @@
     }
   }
 
-  async function cargarDesdeFicha(modelo_id) {
-    
-    renderPatronEnModal(data)
-    if (btnVerPatron) btnVerPatron.disabled = false
+async function cargarDesdeFicha(modelo_id) {
+  const btnVerPatron = document.getElementById("btnVerPatron")
+  if (btnVerPatron) btnVerPatron.disabled = true
 
-    const tbody = document.querySelector("#tablaPatrones tbody")
-    if (!tbody) return
+  const tbody = document.querySelector("#tablaPatrones tbody")
+  if (!tbody) return
 
-    tbody.innerHTML = ""
+  tbody.innerHTML = ""
 
-    try {
-      const res = await apiFetch(`/api/patrones/generar-desde-ficha/${modelo_id}`)
-      const data = await res.json()
+  try {
+    const res = await apiFetch(`/api/patrones/generar-desde-ficha/${modelo_id}`)
+    const data = await res.json()
 
-        patronActual = data
-        modeloActualId = String(modelo_id)
+    patronActual = data
+    modeloActualId = String(modelo_id)
 
-      data.bloques.forEach(bloque => {
+    data.bloques.forEach(bloque => {
+      const trTitulo = document.createElement("tr")
+      trTitulo.innerHTML = `
+        <td colspan="6" style="background:#eee;font-weight:bold;">
+          ${bloque.bloque}
+        </td>
+      `
+      tbody.appendChild(trTitulo)
 
-        // titulo bloque
-        const trTitulo = document.createElement("tr")
-        trTitulo.innerHTML = `
-          <td colspan="6" style="background:#eee;font-weight:bold;">
-            ${bloque.bloque}
+      bloque.items.forEach(item => {
+        const tr = document.createElement("tr")
+
+        tr.innerHTML = `
+          <td>${item.pieza}</td>
+          <td>${item.material}</td>
+          <td>${item.color || ""}</td>
+
+          <td>
+            <select class="um">
+              <option value="">-</option>
+              <option value="m">m</option>
+              <option value="m2">m2</option>
+              <option value="unidad">unidad</option>
+              <option value="plancha">plancha</option>
+            </select>
+          </td>
+
+          <td>
+            <input type="number" class="t_tarea" step="0.01" value="${item.t_tarea || ""}">
           </td>
         `
-        tbody.appendChild(trTitulo)
 
-        // items
-        bloque.items.forEach(item => {
-          const tr = document.createElement("tr")
+        tr.dataset.ficha_material_id = item.ficha_material_id
 
-          tr.innerHTML = `
-            <td>${item.pieza}</td>
-            <td>${item.material}</td>
-            <td>${item.color || ""}</td>
+        if (item.um) {
+          setTimeout(() => {
+            tr.querySelector(".um").value = item.um
+          }, 0)
+        }
 
-            <td>
-              <select class="um">
-                <option value="">-</option>
-                <option value="m">m</option>
-                <option value="m2">m2</option>
-                <option value="unidad">unidad</option>
-                <option value="plancha">plancha</option>
-              </select>
-            </td>
-
-            <td>
-              <input type="number" class="t_tarea" step="0.01" value="${item.t_tarea || ""}">
-            </td>
-          `
-
-          tr.dataset.ficha_material_id = item.ficha_material_id
-
-          // setear UM si ya existe
-          if (item.um) {
-            setTimeout(() => {
-              tr.querySelector(".um").value = item.um
-            }, 0)
-          }
-
-          tbody.appendChild(tr)
-        })
+        tbody.appendChild(tr)
       })
-if (btnVerPatron) btnVerPatron.disabled = false
-            renderPatronEnModal(data)
+    })
 
-    } catch (err) {
-      console.error("Error cargando patrón:", err)
-      alert("Error cargando patrón")
-    
-  if (btnVerPatron) btnVerPatron.disabled = false
-}
+    renderPatronEnModal(data)
+
+    if (btnVerPatron) btnVerPatron.disabled = false
+  } catch (err) {
+    console.error("Error cargando patrón:", err)
+    alert("Error cargando patrón")
+
+    if (btnVerPatron) btnVerPatron.disabled = false
   }
+}
 
     function cerrarModalPatron() {
     const modal = document.getElementById("modalPatron")
