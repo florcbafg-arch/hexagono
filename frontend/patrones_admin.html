@@ -22,14 +22,15 @@
   <div id="contenido">
     <h2>Patrones</h2>
 
-    <div style="margin-bottom: 20px;">
-      <label for="modeloSelect">Modelo:</label>
-      <select id="modeloSelect">
-        <option value="">Seleccionar modelo</option>
-      </select>
+   <div style="margin-bottom: 20px;">
+  <label for="modeloSelect">Modelo:</label>
+  <select id="modeloSelect">
+    <option value="">Seleccionar modelo</option>
+  </select>
 
-      <button onclick="guardarPatron()">💾 Guardar</button>
-    </div>
+  <button onclick="guardarPatron()">💾 Guardar</button>
+  <button onclick="abrirModalPatron()">👁 Ver patrón</button>
+</div>
 
     <table border="1" width="100%" id="tablaPatrones">
       <thead>
@@ -52,6 +53,22 @@
 
       <div id="resultado"></div>
     </div>
+
+        <div id="modalPatron" class="modal-patron oculto">
+      <div class="modal-patron-backdrop" onclick="cerrarModalPatron()"></div>
+
+      <div class="modal-patron-contenido">
+        <div class="modal-patron-header">
+          <h3>Patrón del artículo</h3>
+          <button class="modal-patron-cerrar" onclick="cerrarModalPatron()">✕</button>
+        </div>
+
+        <div id="modalPatronBody" class="modal-patron-body">
+          <div class="patron-vacio">Seleccioná un modelo para ver el patrón.</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/patrones_admin.js"></script>
