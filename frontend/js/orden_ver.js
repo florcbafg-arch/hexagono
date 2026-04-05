@@ -111,6 +111,124 @@ function renderSectoresGenerales(ficha) {
     `
   }
 }
+function renderHojasFichaSectores(ficha, orden) {
+  const contenedor = document.getElementById("hojasSectoresExtras")
+  if (!contenedor) return
+
+  contenedor.innerHTML = ""
+
+  if (!ficha?.secciones?.length) return
+
+  const grupos = agruparFichaPorSector(ficha)
+
+  const nombresSector = {
+    aparado: "APARADO",
+    armado: "ARMADO",
+    terminacion: "TERMINACIÓN",
+    general: "GENERAL"
+  }
+
+  Object.entries(grupos).forEach(([sector, secciones]) => {
+    if (sector === "corte") return
+    if (!secciones.length) return
+
+    const tituloSector = nombresSector[sector] || sector.toUpperCase()
+
+    let htmlSecciones = ""
+
+    secciones.forEach(seccion => {
+      const titulo = seccion.nombre || seccion.titulo || "Sección"
+      const observacion =
+        seccion.observaciones ||
+        seccion.detalle ||
+        seccion.titulo_impresion ||
+        "-"
+
+      const materiales = []
+
+      ;(seccion.materiales || []).forEach(material => materiales.push(material))
+      ;(seccion.piezas || []).forEach(pieza => {
+        ;(pieza.materiales || []).forEach(material => materiales.push(material))
+      })
+
+      let filasMateriales = ""
+
+      if (materiales.length) {
+        materiales.forEach(m => {
+          filasMateriales += `
+            <tr>
+              <td>${m.material || m.nombre || "-"}</td>
+              <td>${m.color || "-"}</td>
+              <td>${m.unidad_medida || m.unidad || "-"}</td>
+              <td>${m.consumo ?? m.cantidad ?? "-"}</td>
+            </tr>
+          `
+        })
+      } else {
+        filasMateriales = `
+          <tr>
+            <td colspan="4">Sin materiales en esta sección</td>
+          </tr>
+        `
+      }
+
+      htmlSecciones += `
+        <div class="subtitulo">${titulo}</div>
+        <div class="detalle-tecnico">${observacion}</div>
+
+        <table class="tabla-materiales">
+          <thead>
+            <tr>
+              <th>Materiales</th>
+              <th>Color / Variante</th>
+              <th>U.M.</th>
+              <th>T. Tarea</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filasMateriales}
+          </tbody>
+        </table>
+      `
+    })
+
+    contenedor.innerHTML += `
+      <section class="hoja print-page" data-sector="${sector}">
+        <div class="sector-titulo">${tituloSector}</div>
+
+        <div class="cabecera">
+          <div class="bloque">
+            <div class="campo"><strong>Tarea N°:</strong> ${orden.numero_tarea || orden.numero || "-"}</div>
+            <div class="campo"><strong>Modelo:</strong> ${ficha.nombre || orden.modelo_nombre || "-"}</div>
+            <div class="campo"><strong>Cod. interno:</strong> ${ficha.codigo || orden.codigo || "-"}</div>
+            <div class="campo"><strong>Marca:</strong> ${ficha.marca || orden.marca || "-"}</div>
+          </div>
+
+          <div class="bloque">
+            <div class="campo"><strong>Fecha emisión:</strong> ${formatearFecha(orden.fecha)}</div>
+            <div class="campo"><strong>Fecha entrega:</strong> ${formatearFecha(orden.fecha_entrega)}</div>
+            <div class="campo"><strong>Horma:</strong> ${ficha.horma || orden.horma || "-"}</div>
+            <div class="campo"><strong>Pares:</strong> ${orden.pares_plan || orden.pares || 0}</div>
+          </div>
+
+          <div class="bloque">
+            <div class="campo"><strong>Detalle técnico:</strong></div>
+            <div class="detalle-tecnico">
+              ${ficha.detalle_general || "Sin detalle técnico"}
+            </div>
+          </div>
+        </div>
+
+        ${htmlSecciones}
+
+        <div class="firma">
+          <div class="linea-firma">Operador:</div>
+          <div class="linea-firma">Fecha:</div>
+        </div>
+      </section>
+    `
+  })
+}
 
 function renderMaterialesFicha(ficha, sectorFiltro = null) {
   const body = document.getElementById("tablaMaterialesBody")
@@ -561,6 +679,8 @@ if (typeof renderSectoresGenerales === "function") {
 } else {
   console.error("renderSectoresGenerales no está disponible")
 }
+
+renderHojasFichaSectores(fichaActual, orden)
   } catch (err) {
   console.error("Error en orden_ver:", err)
   alert("Error inesperado al cargar la orden: " + err.message)
@@ -591,6 +711,12 @@ let sectorActual = null
     : "ORDEN GENERAL"
 }
 
+function imprimirTodo() {
+  const hojas = document.querySelectorAll(".print-page")
+  hojas.forEach(hoja => hoja.classList.remove("oculto-impresion"))
+  window.print()
+}
+
 function imprimirSector(sector) {
   const hojas = document.querySelectorAll(".print-page")
   if (!hojas.length) {
@@ -599,14 +725,9 @@ function imprimirSector(sector) {
   }
 
   hojas.forEach(hoja => {
-    const hojaSector = hoja.dataset.sector
     hoja.classList.remove("oculto-impresion")
 
-    if (sector !== "general" && sector !== "patron" && hojaSector !== sector) {
-      hoja.classList.add("oculto-impresion")
-    }
-
-    if ((sector === "general" || sector === "patron") && hojaSector !== sector) {
+    if (hoja.dataset.sector !== sector) {
       hoja.classList.add("oculto-impresion")
     }
   })
@@ -616,32 +737,6 @@ function imprimirSector(sector) {
   hojas.forEach(hoja => {
     hoja.classList.remove("oculto-impresion")
   })
-}
-function imprimirSector(sector) {
-  if (!fichaActual && !patronActual?.length) {
-    alert("Esta orden no tiene información para imprimir ese sector")
-    return
-  }
-
-  sectorActual = sector
-  actualizarTituloSector(sector)
-
-  if (patronActual?.length) {
-    renderMaterialesPatron(patronActual, sector)
-  } else {
-    renderMaterialesFicha(fichaActual, sector)
-  }
-
-  window.print()
-
-  sectorActual = null
-  actualizarTituloSector(null)
-
-  if (patronActual?.length) {
-    renderMaterialesPatron(patronActual, null)
-  } else {
-    renderMaterialesFicha(fichaActual, null)
-  }
 }
 
 cargarOrden()
