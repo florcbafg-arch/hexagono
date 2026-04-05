@@ -55,6 +55,63 @@ function renderTallesPatron(talles, totalPares) {
   })
 }
 
+function renderSectoresGenerales(ficha) {
+  const body = document.getElementById("tablaSectoresGeneral")
+  if (!body) return
+
+  body.innerHTML = ""
+
+  if (!ficha?.secciones?.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="2">No hay sectores cargados en la ficha técnica</td>
+      </tr>
+    `
+    return
+  }
+
+  const grupos = agruparFichaPorSector(ficha)
+
+  const nombresSector = {
+    aparado: "APARADO",
+    armado: "ARMADO",
+    terminacion: "TERMINACIÓN",
+    general: "GENERAL"
+  }
+
+  let hayContenido = false
+
+  Object.entries(grupos).forEach(([sector, secciones]) => {
+    if (sector === "corte") return
+    if (!secciones.length) return
+
+    secciones.forEach(seccion => {
+      const titulo = seccion.nombre || seccion.titulo || "Sección"
+      const detalle =
+        seccion.observaciones ||
+        seccion.detalle ||
+        seccion.titulo_impresion ||
+        "Con materiales cargados en ficha"
+
+      body.innerHTML += `
+        <tr>
+          <td>${nombresSector[sector] || sector.toUpperCase()} - ${titulo}</td>
+          <td>${detalle}</td>
+        </tr>
+      `
+      hayContenido = true
+    })
+  })
+
+  if (!hayContenido) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="2">No hay sectores adicionales para mostrar</td>
+      </tr>
+    `
+  }
+}
+
 function renderMaterialesFicha(ficha, sectorFiltro = null) {
   const body = document.getElementById("tablaMaterialesBody")
   if (!body) return
@@ -297,6 +354,7 @@ function renderCabeceraPatron(orden, ficha) {
   if (patronNroSeg) patronNroSeg.textContent = nroSeg
 }
 
+
 function limpiarFichaVisual() {
   const temporada = document.getElementById("temporada")
   const horma = document.getElementById("horma")
@@ -494,10 +552,14 @@ renderCabeceraPatron(orden, fichaActual)
 renderTallesPatron(orden.talles, orden.pares_plan || orden.pares || 0)
 renderHojaPatron(patronActual)
 
-if (fichaActual) {
-  renderSectoresGenerales(fichaActual)
+if (typeof renderSectoresGenerales === "function") {
+  if (fichaActual) {
+    renderSectoresGenerales(fichaActual)
+  } else {
+    renderSectoresGenerales(null)
+  }
 } else {
-  renderSectoresGenerales(null)
+  console.error("renderSectoresGenerales no está disponible")
 }
   } catch (err) {
   console.error("Error en orden_ver:", err)
@@ -511,7 +573,7 @@ let patronActual = null
 let sectorActual = null
 
    function actualizarTituloSector(sector = null) {
-  const titulo = document.getElementById("tituloSector")
+  const titulo = document.getElementById("tituloSectorGeneral")
   if (!titulo) return
 
   const nombres = {
@@ -529,22 +591,31 @@ let sectorActual = null
     : "ORDEN GENERAL"
 }
 
-function imprimirTodo() {
-  if (!fichaActual && !patronActual?.length) {
-    alert("Esta orden no tiene información para imprimir")
+function imprimirSector(sector) {
+  const hojas = document.querySelectorAll(".print-page")
+  if (!hojas.length) {
+    window.print()
     return
   }
 
-  sectorActual = null
-  actualizarTituloSector(null)
+  hojas.forEach(hoja => {
+    const hojaSector = hoja.dataset.sector
+    hoja.classList.remove("oculto-impresion")
 
-  if (patronActual?.length) {
-    renderMaterialesPatron(patronActual, null)
-  } else {
-    renderMaterialesFicha(fichaActual, null)
-  }
+    if (sector !== "general" && sector !== "patron" && hojaSector !== sector) {
+      hoja.classList.add("oculto-impresion")
+    }
+
+    if ((sector === "general" || sector === "patron") && hojaSector !== sector) {
+      hoja.classList.add("oculto-impresion")
+    }
+  })
 
   window.print()
+
+  hojas.forEach(hoja => {
+    hoja.classList.remove("oculto-impresion")
+  })
 }
 function imprimirSector(sector) {
   if (!fichaActual && !patronActual?.length) {
