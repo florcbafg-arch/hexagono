@@ -1492,7 +1492,20 @@ app.get("/api/patrones/generar-desde-ficha/:modelo_id", async (req, res) => {
       return res.status(500).json({ error: "Error buscando secciones de ficha" })
     }
 
-    const seccionIds = (secciones || []).map(s => s.id)
+    const BLOQUES_PATRON = [
+  "CORTE REFUERZO",
+  "CORTE FORRO",
+  "CORTE CAPELLADA"
+]
+
+const seccionesPatron = (secciones || []).filter(s => {
+  const nombre = (s.nombre || "").trim().toUpperCase()
+  const titulo = (s.titulo_impresion || "").trim().toUpperCase()
+
+  return BLOQUES_PATRON.includes(nombre) || BLOQUES_PATRON.includes(titulo)
+})
+
+    const seccionIds = seccionesPatron.map(s => s.id)
 
     if (!seccionIds.length) {
       return res.json({
@@ -1570,7 +1583,7 @@ app.get("/api/patrones/generar-desde-ficha/:modelo_id", async (req, res) => {
       materialesPorPieza.get(material.pieza_id).push(material)
     }
 
-    const bloques = (secciones || []).map(seccion => {
+    const bloques = seccionesPatron.map(seccion => {
       const piezasDeSeccion = (piezas || []).filter(p => p.seccion_id === seccion.id)
 
       const items = []
