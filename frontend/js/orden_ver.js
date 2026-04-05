@@ -284,6 +284,10 @@ async function cargarOrden() {
     const res = await apiFetch(`/api/ordenes/${id}`)
     const orden = await res.json()
 
+    console.log("🧪 ORDEN COMPLETA:", orden)
+    console.log("🧪 PATRON RECIBIDO:", orden.patron)
+    console.log("🧪 FICHA RECIBIDA:", orden.ficha)
+
     ordenActual = orden
 
     console.log("ORDEN:", orden)
