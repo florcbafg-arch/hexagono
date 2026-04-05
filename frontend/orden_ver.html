@@ -7,81 +7,191 @@
 </head>
 <body>
 
- <div class="acciones-impresion no-print">
-  <button onclick="imprimirTodo()">Imprimir Todo</button>
-  <button onclick="imprimirSector('corte')">Imprimir Corte</button>
-  <button onclick="imprimirSector('aparado')">Imprimir Aparado</button>
-  <button onclick="imprimirSector('armado')">Imprimir Armado</button>
-  <button onclick="imprimirSector('terminacion')">Imprimir Terminación</button>
-  <button onclick="window.close()">Cerrar</button>
-</div>
+  <div class="acciones-impresion no-print">
+    <button onclick="imprimirTodo()">Imprimir Todo</button>
+    <button onclick="imprimirSector('general')">Imprimir Orden General</button>
+    <button onclick="imprimirSector('patron')">Imprimir Patrón</button>
+    <button onclick="imprimirSector('aparado')">Imprimir Aparado</button>
+    <button onclick="imprimirSector('armado')">Imprimir Armado</button>
+    <button onclick="imprimirSector('terminacion')">Imprimir Terminación</button>
+    <button onclick="window.close()">Cerrar</button>
+  </div>
 
-  <div class="hoja">
-    <div class="sector-titulo" id="tituloSector">ORDEN GENERAL</div>
+  <div id="contenedorImpresion">
 
-    <div class="cabecera">
-      <div class="bloque">
-        <div class="campo"><strong>Tarea N°:</strong> <span id="numeroTarea">-</span></div>
-        <div class="campo"><strong>Modelo:</strong> <span id="modeloNombre">-</span></div>
-        <div class="campo"><strong>Cod. interno:</strong> <span id="codigoInterno">-</span></div>
-        <div class="campo"><strong>Marca:</strong> <span id="marcaNombre">-</span></div>
-        <div class="campo"><strong>Temporada:</strong> <span id="temporada">-</span></div>
-      </div>
+    <!-- HOJA 1: ORDEN GENERAL -->
+    <section class="hoja print-page" data-sector="general" id="hojaGeneral">
+      <div class="sector-titulo" id="tituloSectorGeneral">ORDEN GENERAL</div>
 
-      <div class="bloque">
-        <div class="campo"><strong>Fecha emisión:</strong> <span id="fechaEmision">-</span></div>
-        <div class="campo"><strong>Fecha entrega:</strong> <span id="fechaEntrega">-</span></div>
-        <div class="campo"><strong>Horma:</strong> <span id="horma">-</span></div>
-        <div class="campo"><strong>Pedido:</strong> <span id="pedido">-</span></div>
-        <div class="campo"><strong>Pares:</strong> <span id="pares">0</span></div>
-        <div class="campo"><strong>Nro. Seg.:</strong> <span id="nroSeg">0</span></div>
-      </div>
-
-      <div class="bloque">
-        <div class="campo"><strong>Artículo:</strong> <span id="articuloNombre">-</span></div>
-        <div class="campo"><strong>Detalle técnico:</strong></div>
-        <div id="detalleTecnico" style="font-size:13px; min-height:48px;">
-          Pendiente de conectar con ficha técnica.
+      <div class="cabecera">
+        <div class="bloque">
+          <div class="campo"><strong>Tarea N°:</strong> <span id="numeroTarea">-</span></div>
+          <div class="campo"><strong>Modelo:</strong> <span id="modeloNombre">-</span></div>
+          <div class="campo"><strong>Cod. interno:</strong> <span id="codigoInterno">-</span></div>
+          <div class="campo"><strong>Marca:</strong> <span id="marcaNombre">-</span></div>
+          <div class="campo"><strong>Temporada:</strong> <span id="temporada">-</span></div>
         </div>
-        <div class="barcode-box">CÓDIGO DE BARRAS</div>
+
+        <div class="bloque">
+          <div class="campo"><strong>Fecha emisión:</strong> <span id="fechaEmision">-</span></div>
+          <div class="campo"><strong>Fecha entrega:</strong> <span id="fechaEntrega">-</span></div>
+          <div class="campo"><strong>Horma:</strong> <span id="horma">-</span></div>
+          <div class="campo"><strong>Pedido:</strong> <span id="pedido">-</span></div>
+          <div class="campo"><strong>Pares:</strong> <span id="pares">0</span></div>
+          <div class="campo"><strong>Nro. Seg.:</strong> <span id="nroSeg">0</span></div>
+        </div>
+
+        <div class="bloque">
+          <div class="campo"><strong>Artículo:</strong> <span id="articuloNombre">-</span></div>
+          <div class="campo"><strong>Detalle técnico:</strong></div>
+          <div id="detalleTecnicoGeneral" class="detalle-tecnico">
+            Pendiente de conectar con ficha técnica.
+          </div>
+          <div class="barcode-box">CÓDIGO DE BARRAS</div>
+        </div>
       </div>
-    </div>
 
-    <div class="subtitulo">Talles</div>
-    <table class="tabla-talles">
-      <thead>
-        <tr id="tallesHead">
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr id="tallesRow">
-          <td id="totalPares">0</td>
-        </tr>
-      </tbody>
-    </table>
+      <div class="subtitulo">Talles</div>
+      <table class="tabla-talles">
+        <thead>
+          <tr id="tallesHead">
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="tallesRow">
+            <td id="totalPares">0</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <div class="subtitulo">Materiales por sector</div>
-    <table class="tabla-materiales">
-      <thead>
-        <tr>
-          <th>Materiales</th>
-          <th>Color / Variante</th>
-          <th>U.M.</th>
-          <th>T. Tarea</th>
-        </tr>
-      </thead>
-      <tbody id="tablaMaterialesBody">
-        <tr>
-          <td colspan="4">Pendiente de conectar con ficha técnica y patrones</td>
-        </tr>
-      </tbody>
-    </table>
+      <div class="subtitulo">Sectores de la ficha</div>
+      <table class="tabla-materiales">
+        <thead>
+          <tr>
+            <th>Sector</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody id="tablaSectoresGeneral">
+          <tr>
+            <td colspan="2">Pendiente de conectar sectores de ficha técnica</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <div class="firma">
-      <div class="linea-firma">Operador:</div>
-      <div class="linea-firma">Fecha:</div>
-    </div>
+      <div class="firma">
+        <div class="linea-firma">Operador:</div>
+        <div class="linea-firma">Fecha:</div>
+      </div>
+    </section>
+
+    <!-- HOJA 2: PATRÓN DEL ARTÍCULO -->
+    <section class="hoja print-page" data-sector="patron" id="hojaPatron">
+      <div class="titulo-patron">PATRON DEL ARTICULO</div>
+
+      <div class="cabecera cabecera-patron">
+        <div class="bloque bloque-logo">
+          <div class="logo-placeholder">LOGO / IMAGEN</div>
+        </div>
+
+        <div class="bloque">
+          <div class="campo"><strong>Cod. Interno:</strong> <span id="patronCodigoInterno">-</span></div>
+          <div class="campo"><strong>Fecha de Entrega:</strong> <span id="patronFechaEntrega">-</span></div>
+          <div class="campo"><strong>Temporada:</strong> <span id="patronTemporada">-</span></div>
+        </div>
+
+        <div class="bloque">
+          <div class="campo"><strong>Artículo:</strong> <span id="patronArticulo">-</span></div>
+          <div class="campo"><strong>Marca:</strong> <span id="patronMarca">-</span></div>
+          <div class="campo"><strong>Horma:</strong> <span id="patronHorma">-</span></div>
+        </div>
+      </div>
+
+      <div class="cabecera cabecera-patron cabecera-secundaria">
+        <div class="bloque">
+          <div class="campo"><strong>Tarea N°:</strong> <span id="patronNumeroTarea">-</span></div>
+          <div class="campo"><strong>Pedido:</strong> <span id="patronPedido">-</span></div>
+          <div class="campo"><strong>Nro. Seg.:</strong> <span id="patronNroSeg">0</span></div>
+        </div>
+
+        <div class="bloque bloque-detalle-patron">
+          <div class="campo"><strong>Detalle técnico:</strong></div>
+          <div id="detalleTecnicoPatron" class="detalle-tecnico">
+            Pendiente de conectar con ficha técnica.
+          </div>
+        </div>
+      </div>
+
+      <div class="subtitulo">Talles</div>
+      <table class="tabla-talles">
+        <thead>
+          <tr id="patronTallesHead">
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="patronTallesRow">
+            <td id="patronTotalPares">0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="subtitulo subtitulo-sector">CORTE REFUERZO</div>
+      <table class="tabla-materiales">
+        <thead>
+          <tr>
+            <th>Materiales</th>
+            <th>Color / Variante</th>
+            <th>U.M.</th>
+            <th>T. Tarea</th>
+          </tr>
+        </thead>
+        <tbody id="tablaPatronRefuerzo">
+          <tr>
+            <td colspan="4">Sin datos de corte refuerzo</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="subtitulo subtitulo-sector">CORTE FORRO</div>
+      <table class="tabla-materiales">
+        <thead>
+          <tr>
+            <th>Materiales</th>
+            <th>Color / Variante</th>
+            <th>U.M.</th>
+            <th>T. Tarea</th>
+          </tr>
+        </thead>
+        <tbody id="tablaPatronForro">
+          <tr>
+            <td colspan="4">Sin datos de corte forro</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="subtitulo subtitulo-sector">CORTE CAPELLADA</div>
+      <table class="tabla-materiales">
+        <thead>
+          <tr>
+            <th>Materiales</th>
+            <th>Color / Variante</th>
+            <th>U.M.</th>
+            <th>T. Tarea</th>
+          </tr>
+        </thead>
+        <tbody id="tablaPatronCapellada">
+          <tr>
+            <td colspan="4">Sin datos de corte capellada</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- HOJAS DINÁMICAS DE OTROS SECTORES -->
+    <div id="hojasSectoresExtras"></div>
+
   </div>
 
   <script src="js/api.js"></script>

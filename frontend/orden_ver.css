@@ -1,355 +1,255 @@
- body {
-      font-family: Arial, sans-serif;
-      margin: 16px;
-      color: #111;
-    }
+body {
+  font-family: Arial, sans-serif;
+  margin: 16px;
+  color: #111;
+  background: #f4f4f4;
+}
 
-    .hoja {
-      width: 100%;
-      max-width: 1100px;
-      margin: 0 auto;
-      border: 1px solid #000;
-      padding: 10px;
-      box-sizing: border-box;
-      background: #fff;
-    }
+#contenedorImpresion {
+  width: 100%;
+}
 
-    .sector-titulo {
+.acciones-impresion {
+  max-width: 1100px;
+  margin: 0 auto 16px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.acciones-impresion button {
+  padding: 8px 12px;
+  border: 1px solid #222;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.hoja {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto 20px auto;
+  border: 1px solid #000;
+  padding: 10px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.print-page {
+  page-break-after: always;
+  break-after: page;
+}
+
+.print-page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.sector-titulo,
+.titulo-patron {
   font-size: 20px;
   font-weight: bold;
   background: #000 !important;
   color: #fff !important;
   padding: 8px 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
   display: inline-block;
-  min-width: 260px;
+  min-width: 280px;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
-    .cabecera {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-      align-items: start;
-    }
 
-    .bloque {
-      border: 1px solid #000;
-      padding: 8px;
-      min-height: 80px;
-    }
+.cabecera {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: start;
+}
 
-    .campo {
-      margin-bottom: 4px;
-      font-size: 14px;
-    }
+.cabecera-patron {
+  grid-template-columns: 0.8fr 1fr 1fr;
+}
 
-    .campo strong {
-      display: inline-block;
-      min-width: 120px;
-    }
+.cabecera-secundaria {
+  grid-template-columns: 1fr 2fr;
+}
 
-    .barcode-box {
-      border: 1px solid #000;
-      height: 70px;
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-    }
+.bloque {
+  border: 1px solid #000;
+  padding: 8px;
+  min-height: 88px;
+  box-sizing: border-box;
+  background: #fff;
+}
 
-    .tabla-talles,
-    .tabla-materiales {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 12px;
-    }
+.bloque-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .tabla-talles th,
-    .tabla-talles td,
-    .tabla-materiales th,
-    .tabla-materiales td {
-      border: 1px solid #000;
-      padding: 6px;
-      text-align: center;
-      font-size: 13px;
-    }
+.logo-placeholder {
+  width: 100%;
+  min-height: 96px;
+  border: 1px solid #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #555;
+}
 
-    .tabla-talles th,
-    .tabla-materiales thead th {
-      background: #d9d9d9;
-    }
+.bloque-detalle-patron {
+  min-height: 110px;
+}
 
-    .subtitulo {
-      background: #d9d9d9;
-      border: 1px solid #000;
-      border-bottom: none;
-      padding: 6px 10px;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-top: 8px;
-    }
+.campo {
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 1.3;
+}
 
-    .firma {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 18px;
-    }
+.campo strong {
+  display: inline-block;
+  min-width: 110px;
+}
 
-    .linea-firma {
-      border-top: 1px solid #000;
-      padding-top: 6px;
-      font-size: 13px;
-      min-height: 28px;
-    }
+.detalle-tecnico {
+  font-size: 13px;
+  line-height: 1.3;
+  min-height: 48px;
+  margin-top: 4px;
+  white-space: pre-line;
+}
 
-    @media print {
-      body {
-        margin: 0;
-      }
+.barcode-box {
+  border: 1px solid #000;
+  height: 54px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+}
 
-      .hoja {
-        border: none;
-        max-width: 100%;
-        padding: 8mm;
-      }
+.subtitulo {
+  background: #d9d9d9;
+  border: 1px solid #000;
+  border-bottom: none;
+  padding: 6px 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-top: 10px;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
 
-      .no-print {
-        display: none;
-      }
-    }
-    @media print {
-  .no-print {
-    display: none !important;
-  }
-  @media print {
+.subtitulo-sector {
+  margin-top: 14px;
+}
+
+.tabla-talles,
+.tabla-materiales {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  table-layout: fixed;
+}
+
+.tabla-talles th,
+.tabla-talles td,
+.tabla-materiales th,
+.tabla-materiales td {
+  border: 1px solid #000;
+  padding: 6px;
+  text-align: center;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.tabla-talles th,
+.tabla-materiales thead th {
+  background: #e8e8e8;
+  font-weight: bold;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.tabla-materiales td:first-child,
+.tabla-materiales th:first-child {
+  text-align: left;
+}
+
+.firma {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.linea-firma {
+  border-top: 1px solid #000;
+  padding-top: 6px;
+  font-size: 13px;
+  min-height: 28px;
+}
+
+.oculto-impresion {
+  display: none !important;
+}
+
+@media print {
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-}
-    .sector-titulo {
-    font-size: 22px;
-    margin-bottom: 12px;
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
   }
 
-  .cabecera {
-    gap: 10px;
-    margin-bottom: 12px;
+  .no-print {
+    display: none !important;
+  }
+
+  .hoja {
+    border: none;
+    max-width: 100%;
+    margin: 0;
+    padding: 8mm;
+  }
+
+  .sector-titulo,
+  .titulo-patron {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .campo,
+  .detalle-tecnico,
+  .tabla-talles th,
+  .tabla-talles td,
+  .tabla-materiales th,
+  .tabla-materiales td {
+    font-size: 11px;
   }
 
   .bloque {
-    min-height: 110px;
-    padding: 8px;
+    min-height: 80px;
   }
 
-  .campo {
-    font-size: 10px;
-  }
-
-  #detalleTecnico {
-    font-size: 10px !important;
+  .logo-placeholder {
+    min-height: 80px;
   }
 
   .barcode-box {
-    min-height: 40px;
-    font-size: 9px;
+    height: 42px;
+    font-size: 10px;
   }
-
-  .subtitulo {
-    font-size: 12px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-  }
-}
-@media print {
-  body {
-    margin: 0;
-    padding: 10mm;
-  }
-}
-.bloque-talles {
-  margin-top: 14px;
-  margin-bottom: 14px;
-}
-
-.tabla-talles {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 12px;
-}
-
-.tabla-talles th,
-.tabla-talles td {
-  border: 1px solid #222;
-  padding: 6px 4px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.tabla-talles thead th {
-  background: #e9e9e9;
-  font-weight: bold;
-}
-
-.tabla-talles .col-total,
-.tabla-talles .fila-total td:first-child {
-  font-weight: bold;
-}
-
-.tabla-talles .fila-total td {
-  font-weight: bold;
-  background: #f5f5f5;
-}
-.encabezado-orden {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.encabezado-col {
-  flex: 1;
-}
-
-.encabezado-box {
-  border: 1px solid #222;
-  padding: 8px 10px;
-  min-height: 92px;
-  box-sizing: border-box;
-}
-
-.encabezado-box p {
-  margin: 2px 0;
-  font-size: 11px;
-  line-height: 1.25;
-}
-
-.encabezado-box strong {
-  font-weight: 700;
-}
-
-.titulo-sector,
-.titulo-orden {
-  text-align: center;
-  font-size: 24px;
-  font-weight: 800;
-  margin: 12px 0 14px;
-  letter-spacing: 0.5px;
-}
-
-.codigo-barras-box {
-  border: 1px solid #222;
-  padding: 8px;
-  min-height: 92px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-sizing: border-box;
-}
-
-.codigo-barras-box .titulo-codigo {
-  font-size: 10px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-.codigo-barras-box .codigo-placeholder {
-  flex: 1;
-  border: 1px solid #444;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  text-align: center;
-}
-.sector-titulo {
-  font-size: 20px;
-  font-weight: bold;
-  background: #000;
-  color: #fff;
-  padding: 8px;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.cabecera {
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.bloque {
-  flex: 1;
-  border: 1px solid #222;
-  padding: 8px 10px;
-  box-sizing: border-box;
-  min-height: 120px;
-  background: #fff;
-}
-
-.campo {
-  margin: 2px 0;
-  font-size: 11px;
-  line-height: 1.25;
-}
-
-.campo strong {
-  font-weight: 700;
-}
-
-#detalleTecnico {
-  font-size: 11px !important;
-  line-height: 1.25;
-  min-height: 42px !important;
-  margin-top: 4px;
-}
-
-.barcode-box {
-  margin-top: 8px;
-  border: 1px solid #333;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.subtitulo {
-  font-size: 13px;
-  font-weight: bold;
-  background: #eaeaea;
-  padding: 6px;
-  margin-top: 12px;
-  border-left: 4px solid #000;
-  text-transform: uppercase;
-}
-
-.firma {
-  display: none;
-}
-.tabla-talles th,
-.tabla-materiales th {
-  background: #f2f2f2;
-  font-weight: bold;
-}
-#detalleTecnico {
-  font-size: 11px !important;
-  line-height: 1.3;
-  min-height: 56px !important;
-  margin-top: 4px;
-  white-space: pre-line;
 }
