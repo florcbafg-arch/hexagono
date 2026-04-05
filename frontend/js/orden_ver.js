@@ -33,6 +33,28 @@ function renderTalles(talles, totalPares) {
   })
 }
 
+function renderTallesPatron(talles, totalPares) {
+  const head = document.getElementById("patronTallesHead")
+  const row = document.getElementById("patronTallesRow")
+
+  if (!head || !row) return
+
+  head.innerHTML = "<th>Total</th>"
+  row.innerHTML = `<td>${totalPares || 0}</td>`
+
+  if (!Array.isArray(talles) || !talles.length) return
+
+  talles.forEach(t => {
+    const th = document.createElement("th")
+    th.textContent = t.talle
+    head.appendChild(th)
+
+    const td = document.createElement("td")
+    td.textContent = t.cantidad
+    row.appendChild(td)
+  })
+}
+
 function renderMaterialesFicha(ficha, sectorFiltro = null) {
   const body = document.getElementById("tablaMaterialesBody")
   if (!body) return
@@ -181,12 +203,117 @@ function renderMaterialesPatron(patron, sectorFiltro = null) {
   })
 }
 
-function limpiarFichaVisual() {
-  document.getElementById("temporada").textContent = "-"
-  document.getElementById("horma").textContent = "-"
-  document.getElementById("detalleTecnico").textContent = "Sin ficha técnica asociada"
+function renderHojaPatron(patron = []) {
+  const refuerzoBody = document.getElementById("tablaPatronRefuerzo")
+  const forroBody = document.getElementById("tablaPatronForro")
+  const capelladaBody = document.getElementById("tablaPatronCapellada")
+
+  if (!refuerzoBody || !forroBody || !capelladaBody) return
+
+  refuerzoBody.innerHTML = ""
+  forroBody.innerHTML = ""
+  capelladaBody.innerHTML = ""
+
+  if (!Array.isArray(patron) || !patron.length) {
+    refuerzoBody.innerHTML = `<tr><td colspan="4">Sin patrón</td></tr>`
+    forroBody.innerHTML = `<tr><td colspan="4">Sin patrón</td></tr>`
+    capelladaBody.innerHTML = `<tr><td colspan="4">Sin patrón</td></tr>`
+    return
+  }
+
+  const bloques = {
+    "CORTE REFUERZO": refuerzoBody,
+    "CORTE FORRO": forroBody,
+    "CORTE CAPELLADA": capelladaBody
+  }
+
+  patron.forEach(bloque => {
+    const nombreBloque = (bloque.bloque || "").toUpperCase().trim()
+    const tbody = bloques[nombreBloque]
+
+    if (!tbody) return
+
+    const items = Array.isArray(bloque.items) ? bloque.items : []
+
+    if (!items.length) {
+      tbody.innerHTML = `<tr><td colspan="4">Sin datos en este bloque</td></tr>`
+      return
+    }
+
+    items.forEach(item => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.material || "-"}</td>
+          <td>${item.color || "-"}</td>
+          <td>${item.um || "-"}</td>
+          <td>${item.t_tarea ?? "-"}</td>
+        </tr>
+      `
+    })
+  })
+
+  if (!refuerzoBody.innerHTML.trim()) {
+    refuerzoBody.innerHTML = `<tr><td colspan="4">Sin datos de corte refuerzo</td></tr>`
+  }
+
+  if (!forroBody.innerHTML.trim()) {
+    forroBody.innerHTML = `<tr><td colspan="4">Sin datos de corte forro</td></tr>`
+  }
+
+  if (!capelladaBody.innerHTML.trim()) {
+    capelladaBody.innerHTML = `<tr><td colspan="4">Sin datos de corte capellada</td></tr>`
+  }
 }
 
+function renderCabeceraPatron(orden, ficha) {
+  const codigo = ficha?.codigo || orden?.codigo || "-"
+  const fechaEntrega = formatearFecha(ficha?.fecha_entrega || orden?.fecha_entrega)
+  const temporada = ficha?.temporada || "-"
+  const articulo = ficha?.nombre || orden?.modelo_nombre || "-"
+  const marca = ficha?.marca || orden?.marca || "-"
+  const horma = ficha?.horma || orden?.horma || "-"
+  const numeroTarea = orden?.numero_tarea || orden?.numero || "-"
+  const pedido = orden?.pedido || "-"
+  const nroSeg = orden?.nro_seg || "0"
+
+  const patronCodigoInterno = document.getElementById("patronCodigoInterno")
+  const patronFechaEntrega = document.getElementById("patronFechaEntrega")
+  const patronTemporada = document.getElementById("patronTemporada")
+  const patronArticulo = document.getElementById("patronArticulo")
+  const patronMarca = document.getElementById("patronMarca")
+  const patronHorma = document.getElementById("patronHorma")
+  const patronNumeroTarea = document.getElementById("patronNumeroTarea")
+  const patronPedido = document.getElementById("patronPedido")
+  const patronNroSeg = document.getElementById("patronNroSeg")
+
+  if (patronCodigoInterno) patronCodigoInterno.textContent = codigo
+  if (patronFechaEntrega) patronFechaEntrega.textContent = fechaEntrega
+  if (patronTemporada) patronTemporada.textContent = temporada
+  if (patronArticulo) patronArticulo.textContent = articulo
+  if (patronMarca) patronMarca.textContent = marca
+  if (patronHorma) patronHorma.textContent = horma
+  if (patronNumeroTarea) patronNumeroTarea.textContent = numeroTarea
+  if (patronPedido) patronPedido.textContent = pedido
+  if (patronNroSeg) patronNroSeg.textContent = nroSeg
+}
+
+function limpiarFichaVisual() {
+  const temporada = document.getElementById("temporada")
+  const horma = document.getElementById("horma")
+  const detalleGeneral = document.getElementById("detalleTecnicoGeneral")
+  const detallePatron = document.getElementById("detalleTecnicoPatron")
+
+  if (temporada) temporada.textContent = "-"
+  if (horma) horma.textContent = "-"
+
+  if (detalleGeneral) {
+    detalleGeneral.textContent = "Sin ficha técnica asociada"
+  }
+
+  if (detallePatron) {
+    detallePatron.textContent = "Sin ficha técnica asociada"
+  }
+}
 function obtenerNumeroSeccion(seccion, index) {
   if (typeof seccion?.numero === "number") return seccion.numero
 
@@ -340,8 +467,22 @@ if (ficha) {
   document.getElementById("horma").textContent = ficha.horma || "-"
   document.getElementById("articuloNombre").textContent =
     ficha.nombre || orden.modelo_nombre || "-"
-  document.getElementById("detalleTecnico").textContent =
-    ficha.detalle_general || "Sin detalle técnico"
+
+  const detalleGeneral = document.getElementById("detalleTecnicoGeneral")
+  const detallePatron = document.getElementById("detalleTecnicoPatron")
+
+  const detalleTexto =
+    ficha.detalle_general ||
+    orden.detalle_tecnico ||
+    "Sin detalle técnico"
+
+  if (detalleGeneral) {
+    detalleGeneral.textContent = detalleTexto
+  }
+
+  if (detallePatron) {
+    detallePatron.textContent = detalleTexto
+  }
 } else {
   limpiarFichaVisual()
 }
@@ -349,12 +490,14 @@ if (ficha) {
 sectorActual = null
 actualizarTituloSector(null)
 
-if (patronActual.length) {
-  renderMaterialesPatron(patronActual, null)
-} else if (fichaActual) {
-  renderMaterialesFicha(fichaActual, null)
+renderCabeceraPatron(orden, fichaActual)
+renderTallesPatron(orden.talles, orden.pares_plan || orden.pares || 0)
+renderHojaPatron(patronActual)
+
+if (fichaActual) {
+  renderSectoresGenerales(fichaActual)
 } else {
-  renderMaterialesFicha(null)
+  renderSectoresGenerales(null)
 }
   } catch (err) {
   console.error("Error en orden_ver:", err)
