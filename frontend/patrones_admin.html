@@ -29,7 +29,6 @@
   </select>
 
   <button onclick="abrirModalPatron()">👁 Ver patrón</button>
-<button onclick="calcular()">🧮 Calcular consumo</button>
 </div>
 
     <table border="1" width="100%" id="tablaPatrones">
@@ -48,7 +47,10 @@
     <div style="margin-top: 30px;">
   <h3>Simular producción</h3>
 
-  <input type="number" id="cantidad" placeholder="Cantidad de pares">
+  <div style="display:flex; gap:10px; align-items:center;">
+    <input type="number" id="cantidad" placeholder="Cantidad de pares">
+    <button onclick="calcular()">🧮 Calcular consumo</button>
+  </div>
 </div>
 
         <div id="modalPatron" class="modal-patron oculto">
