@@ -1120,6 +1120,106 @@ if (orden.modelo_id) {
     }
   }
 }
+    // 5.1 traer patrón del modelo
+    let patron = []
+
+    if (orden.modelo_id) {
+      const { data: patronesData, error: patronesError } = await supabase
+        .from("patrones")
+        .select("id, ficha_material_id, um, t_tarea")
+        .eq("modelo_id", orden.modelo_id)
+        .eq("empresa_id", empresaId)
+
+      if (patronesError) {
+        console.warn("⚠️ error patrones:", patronesError.message)
+      } else {
+        const patronesMap = new Map(
+          (patronesData || []).map(p => [p.ficha_material_id, p])
+        )
+
+        const patronAgrupado = []
+
+        if (ficha?.secciones?.length) {
+          const normalizarTexto = (valor = "") =>
+            String(valor || "")
+              .trim()
+              .toUpperCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+
+          const obtenerBloquePatron = (nombreSeccion, nombrePieza) => {
+            const seccion = normalizarTexto(nombreSeccion)
+            const pieza = normalizarTexto(nombrePieza)
+
+            if (seccion === "SECCION N° 6" || seccion === "SECCION N° 6".normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+              return "CORTE REFUERZO"
+            }
+
+            if (seccion === "SECCION N° 1" || seccion === "SECCION N° 1".normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+              const piezasForro = [
+                "FORRO",
+                "LENGUA",
+                "FORRO CAÑA/CUELLO",
+                "FORRO CAPELLADA",
+                "FORRO LENGUA"
+              ].map(normalizarTexto)
+
+              const piezasRefuerzo = [
+                "RELLENO CAÑA",
+                "RELLENO DE CAÑA",
+                "RELLENO CUELLO",
+                "RELLENO DE CUELLO",
+                "RELLENO LENGUA",
+                "RELLENO DE LENGUA"
+              ].map(normalizarTexto)
+
+              if (piezasForro.includes(pieza)) return "CORTE FORRO"
+              if (piezasRefuerzo.includes(pieza)) return "CORTE REFUERZO"
+
+              return "CORTE CAPELLADA"
+            }
+
+            return null
+          }
+
+          const bloquesMap = new Map()
+
+          ficha.secciones.forEach(seccion => {
+            ;(seccion.piezas || []).forEach(pieza => {
+              ;(pieza.materiales || []).forEach(material => {
+                const bloque = obtenerBloquePatron(seccion.nombre, pieza.nombre)
+                if (!bloque) return
+
+                const patronGuardado = patronesMap.get(material.id)
+
+                if (!patronGuardado) return
+
+                if (!bloquesMap.has(bloque)) {
+                  bloquesMap.set(bloque, [])
+                }
+
+                bloquesMap.get(bloque).push({
+                  pieza: pieza.nombre || "-",
+                  material: material.material || "-",
+                  color: material.color || material.especificacion || "-",
+                  um: patronGuardado.um || "-",
+                  t_tarea: patronGuardado.t_tarea ?? "-"
+                })
+              })
+            })
+          })
+
+          patronAgrupado.push(
+            ...Array.from(bloquesMap.entries()).map(([bloque, items]) => ({
+              bloque,
+              items
+            }))
+          )
+        }
+
+        patron = patronAgrupado
+      }
+    }
 
     // debug temporal
     console.log("✅ orden cargada:", orden.id)
@@ -1135,7 +1235,8 @@ if (orden.modelo_id) {
   marca: orden.modelos?.marca || orden.marca || "-",
   codigo: orden.modelos?.codigo || orden.codigo || "-",
   talles,
-  ficha
+  ficha,
+  patron
 })
 
   } catch (err) {

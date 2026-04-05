@@ -129,6 +129,58 @@ function renderMaterialesFicha(ficha, sectorFiltro = null) {
   }
 }
 
+function renderMaterialesPatron(patron, sectorFiltro = null) {
+  const body = document.getElementById("tablaMaterialesBody")
+  if (!body) return
+
+  body.innerHTML = ""
+
+  if (!Array.isArray(patron) || !patron.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="4">No hay patrón cargado para este modelo</td>
+      </tr>
+    `
+    return
+  }
+
+  const bloquesPermitidos = sectorFiltro
+    ? obtenerBloquesPorSector(sectorFiltro)
+    : ["CORTE REFUERZO", "CORTE FORRO", "CORTE CAPELLADA"]
+
+  const bloquesFiltrados = patron.filter(b =>
+    bloquesPermitidos.includes((b.bloque || "").toUpperCase())
+  )
+
+  if (!bloquesFiltrados.length) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="4">No hay materiales para este sector</td>
+      </tr>
+    `
+    return
+  }
+
+  bloquesFiltrados.forEach(bloque => {
+    body.innerHTML += `
+      <tr class="sector-row">
+        <td colspan="4"><strong>${bloque.bloque}</strong></td>
+      </tr>
+    `
+
+    ;(bloque.items || []).forEach(item => {
+      body.innerHTML += `
+        <tr>
+          <td>${item.material || "-"}</td>
+          <td>${item.color || "-"}</td>
+          <td>${item.um || "-"}</td>
+          <td>${item.t_tarea ?? "-"}</td>
+        </tr>
+      `
+    })
+  })
+}
+
 function limpiarFichaVisual() {
   document.getElementById("temporada").textContent = "-"
   document.getElementById("horma").textContent = "-"
@@ -156,6 +208,17 @@ function obtenerSectorPorSeccion(numeroSeccion) {
   }
 
   return mapa[numeroSeccion] || "general"
+}
+
+function obtenerBloquesPorSector(sector) {
+  const mapa = {
+    corte: ["CORTE REFUERZO", "CORTE FORRO", "CORTE CAPELLADA"],
+    aparado: [],
+    armado: [],
+    terminacion: []
+  }
+
+  return mapa[sector] || []
 }
 
 function agruparFichaPorSector(ficha) {
@@ -259,14 +322,14 @@ if (numeroTareaEl) {
     renderTalles(orden.talles, orden.pares_plan || orden.pares || 0)
 
     // limpiar tabla de materiales al arrancar
-    sectorActual = null
-    actualizarTituloSector(null)
-    renderMaterialesFicha(null)
+sectorActual = null
+actualizarTituloSector(null)
 
-    // usar ficha ya incluida en la orden
-    const ficha = normalizarFicha(orden.ficha || null)
+const ficha = normalizarFicha(orden.ficha || null)
+const patron = Array.isArray(orden.patron) ? orden.patron : []
 
-    fichaActual = ficha
+fichaActual = ficha
+patronActual = patron
 
 if (ficha) {
   document.getElementById("temporada").textContent = ficha.temporada || "-"
@@ -275,12 +338,18 @@ if (ficha) {
     ficha.nombre || orden.modelo_nombre || "-"
   document.getElementById("detalleTecnico").textContent =
     ficha.detalle_general || "Sin detalle técnico"
- 
-  sectorActual = null
-  actualizarTituloSector(null)
-  renderMaterialesFicha(ficha)
 } else {
   limpiarFichaVisual()
+}
+
+sectorActual = null
+actualizarTituloSector(null)
+
+if (patronActual.length) {
+  renderMaterialesPatron(patronActual, null)
+} else if (fichaActual) {
+  renderMaterialesFicha(fichaActual, null)
+} else {
   renderMaterialesFicha(null)
 }
   } catch (err) {
@@ -289,9 +358,10 @@ if (ficha) {
 }
 }
 
-  let ordenActual = null
-   let fichaActual = null
-   let sectorActual = null
+let ordenActual = null
+let fichaActual = null
+let patronActual = null
+let sectorActual = null
 
    function actualizarTituloSector(sector = null) {
   const titulo = document.getElementById("tituloSector")
@@ -313,33 +383,47 @@ if (ficha) {
 }
 
 function imprimirTodo() {
-  if (!fichaActual) {
-    alert("Esta orden no tiene ficha técnica para imprimir")
+  if (!fichaActual && !patronActual?.length) {
+    alert("Esta orden no tiene información para imprimir")
     return
   }
 
   sectorActual = null
   actualizarTituloSector(null)
-  renderMaterialesFicha(fichaActual, null)
+
+  if (patronActual?.length) {
+    renderMaterialesPatron(patronActual, null)
+  } else {
+    renderMaterialesFicha(fichaActual, null)
+  }
 
   window.print()
 }
-
 function imprimirSector(sector) {
-  if (!fichaActual) {
-    alert("Esta orden no tiene ficha técnica para imprimir ese sector")
+  if (!fichaActual && !patronActual?.length) {
+    alert("Esta orden no tiene información para imprimir ese sector")
     return
   }
 
   sectorActual = sector
   actualizarTituloSector(sector)
-  renderMaterialesFicha(fichaActual, sector)
+
+  if (patronActual?.length) {
+    renderMaterialesPatron(patronActual, sector)
+  } else {
+    renderMaterialesFicha(fichaActual, sector)
+  }
 
   window.print()
 
   sectorActual = null
   actualizarTituloSector(null)
-  renderMaterialesFicha(fichaActual, null)
+
+  if (patronActual?.length) {
+    renderMaterialesPatron(patronActual, null)
+  } else {
+    renderMaterialesFicha(fichaActual, null)
+  }
 }
 
 cargarOrden()
