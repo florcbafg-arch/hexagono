@@ -1104,20 +1104,34 @@ if (orden.modelo_id) {
     }
 
     ficha = {
-      ...fichaBase,
-      imagenes: imagenes || [],
-      secciones: (secciones || []).map(seccion => ({
-        ...seccion,
-        imagenes: (imagenes || []).filter(img => img.seccion_id === seccion.id),
-        piezas: piezas
-          .filter(p => p.seccion_id === seccion.id)
-          .map(pieza => ({
-            ...pieza,
-            materiales: materiales.filter(m => m.pieza_id === pieza.id),
-            operaciones: operaciones.filter(o => o.pieza_id === pieza.id)
-          }))
-      }))
+  ...fichaBase,
+  imagenes: imagenes || [],
+  secciones: (secciones || []).map(seccion => {
+    const piezasDeSeccion = piezas.filter(p => p.seccion_id === seccion.id)
+
+    const piezasConDetalle = piezasDeSeccion.map(pieza => {
+      const materialesDePieza = materiales.filter(m => m.pieza_id === pieza.id)
+      const operacionesDePieza = operaciones.filter(o => o.pieza_id === pieza.id)
+
+      return {
+        ...pieza,
+        materiales: materialesDePieza,
+        operaciones: operacionesDePieza
+      }
+    })
+
+    const materialesSeccion = piezasConDetalle.flatMap(p => p.materiales || [])
+    const operacionesSeccion = piezasConDetalle.flatMap(p => p.operaciones || [])
+
+    return {
+      ...seccion,
+      imagenes: (imagenes || []).filter(img => img.seccion_id === seccion.id),
+      piezas: piezasConDetalle,
+      materiales: materialesSeccion,
+      operaciones: operacionesSeccion
     }
+  })
+}
   }
 }
     // 5.1 traer patrón del modelo
@@ -1130,6 +1144,8 @@ if (orden.modelo_id) {
         .eq("modelo_id", orden.modelo_id)
         .eq("empresa_id", empresaId)
 
+        console.log("🧪 PATRONES DATA:", patronesData)
+
       if (patronesError) {
         console.warn("⚠️ error patrones:", patronesError.message)
       } else {
@@ -1138,6 +1154,8 @@ if (orden.modelo_id) {
         )
 
         const patronAgrupado = []
+
+        console.log("🧪 PATRON AGRUPADO FINAL:", patronAgrupado)
 
         if (ficha?.secciones?.length) {
           const normalizarTexto = (valor = "") =>
