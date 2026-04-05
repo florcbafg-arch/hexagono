@@ -123,7 +123,7 @@ let patronActual = null
 
     const cabecera = data.cabecera || {}
 
-    let html = `
+        let html = `
       <div class="patron-cabecera">
         <div class="patron-cabecera-grid">
           <div class="patron-campo"><strong>Código:</strong> ${cabecera.codigo || "-"}</div>
@@ -138,6 +138,8 @@ let patronActual = null
           <div>${cabecera.detalle_general || "Sin detalle técnico"}</div>
         </div>
       </div>
+
+      <div id="resultadoCalculoModal" class="resultado-calculo-modal"></div>
     `
 
     data.bloques.forEach(bloque => {
@@ -187,6 +189,35 @@ let patronActual = null
     body.innerHTML = html
   }
 
+    function renderResultadoCalculoEnModal(agrupado) {
+    const contenedor = document.getElementById("resultadoCalculoModal")
+    if (!contenedor) return
+
+    contenedor.innerHTML = ""
+
+    const bloques = Object.keys(agrupado || {})
+    if (!bloques.length) return
+
+    bloques.forEach(bloque => {
+      let htmlItems = ""
+
+      agrupado[bloque].forEach(item => {
+        htmlItems += `
+          <div class="resultado-calculo-item">
+            ${item.pieza} - ${item.material}${item.color ? ` (${item.color})` : ""} → ${item.total} ${item.um}
+          </div>
+        `
+      })
+
+      contenedor.innerHTML += `
+        <div class="resultado-calculo-bloque">
+          <h4>${bloque}</h4>
+          ${htmlItems}
+        </div>
+      `
+    })
+  }
+
   function abrirModalPatron() {
     const modal = document.getElementById("modalPatron")
     const modeloSelect = document.getElementById("modeloSelect")
@@ -198,7 +229,11 @@ let patronActual = null
       return
     }
 
-    renderPatronEnModal(patronActual)
+    if (!patronActual) {
+      alert("No hay patrón disponible para este modelo")
+      return
+    }
+
     modal.classList.remove("oculto")
   }
 
@@ -243,97 +278,86 @@ let patronActual = null
     }
   }
 
-  async function calcular() {
-  const modeloSelect = document.getElementById("modeloSelect")
-  const cantidadInput = document.getElementById("cantidad")
-  const resultado = document.getElementById("resultado")
+   async function calcular() {
+    const modeloSelect = document.getElementById("modeloSelect")
+    const cantidadInput = document.getElementById("cantidad")
 
-  if (!modeloSelect || !cantidadInput || !resultado) return
+    if (!modeloSelect || !cantidadInput) return
 
-  const modelo_id = modeloSelect.value
-  const cantidad = Number(cantidadInput.value)
+    const modelo_id = modeloSelect.value
+    const cantidad = Number(cantidadInput.value)
 
-  if (!modelo_id) {
-    alert("Seleccioná un modelo")
-    return
-  }
-
-  if (!cantidad || cantidad <= 0) {
-    alert("Ingresá una cantidad válida")
-    return
-  }
-
-  const filas = document.querySelectorAll("#tablaPatrones tbody tr")
-  const items = []
-
-  filas.forEach(f => {
-    const id = f.dataset.ficha_material_id
-    if (!id) return
-
-    const pieza = f.children[0]?.textContent?.trim() || ""
-    const material = f.children[1]?.textContent?.trim() || ""
-    const color = f.children[2]?.textContent?.trim() || ""
-    const um = f.querySelector(".um")?.value || ""
-    const t_tarea = Number(f.querySelector(".t_tarea")?.value || 0)
-
-    if (!um || !t_tarea) return
-
-    let bloque = "GENERAL"
-
-    const filaBloque = f.previousElementSibling
-    if (filaBloque && filaBloque.children.length === 1) {
-      bloque = filaBloque.textContent.trim()
+    if (!modelo_id) {
+      alert("Seleccioná un modelo")
+      return
     }
 
-    items.push({
-      ficha_material_id: Number(id),
-      pieza,
-      material,
-      color,
-      um,
-      t_tarea,
-      bloque
-    })
-  })
-
-  if (!items.length) {
-    alert("No hay datos cargados para calcular")
-    return
-  }
-
-  const agrupado = {}
-
-  items.forEach(item => {
-    const total = item.t_tarea * cantidad
-    const claveBloque = item.bloque || "GENERAL"
-
-    if (!agrupado[claveBloque]) {
-      agrupado[claveBloque] = []
+    if (!cantidad || cantidad <= 0) {
+      alert("Ingresá una cantidad válida")
+      return
     }
 
-    agrupado[claveBloque].push({
-      pieza: item.pieza,
-      material: item.material,
-      color: item.color,
-      um: item.um,
-      total: Number(total.toFixed(4))
+    const filas = document.querySelectorAll("#tablaPatrones tbody tr")
+    const items = []
+
+    filas.forEach(f => {
+      const id = f.dataset.ficha_material_id
+      if (!id) return
+
+      const pieza = f.children[0]?.textContent?.trim() || ""
+      const material = f.children[1]?.textContent?.trim() || ""
+      const color = f.children[2]?.textContent?.trim() || ""
+      const um = f.querySelector(".um")?.value || ""
+      const t_tarea = Number(f.querySelector(".t_tarea")?.value || 0)
+
+      if (!um || !t_tarea) return
+
+      let bloque = "GENERAL"
+
+      const filaBloque = f.previousElementSibling
+      if (filaBloque && filaBloque.children.length === 1) {
+        bloque = filaBloque.textContent.trim()
+      }
+
+      items.push({
+        ficha_material_id: Number(id),
+        pieza,
+        material,
+        color,
+        um,
+        t_tarea,
+        bloque
+      })
     })
-  })
 
-  resultado.innerHTML = ""
+    if (!items.length) {
+      alert("No hay datos cargados para calcular")
+      return
+    }
 
-  Object.keys(agrupado).forEach(bloque => {
-    const titulo = document.createElement("h4")
-    titulo.textContent = bloque
-    resultado.appendChild(titulo)
+    const agrupado = {}
 
-    agrupado[bloque].forEach(item => {
-      const p = document.createElement("p")
-      p.textContent = `${item.pieza} - ${item.material}${item.color ? ` (${item.color})` : ""} → ${item.total} ${item.um}`
-      resultado.appendChild(p)
+    items.forEach(item => {
+      const total = item.t_tarea * cantidad
+      const claveBloque = item.bloque || "GENERAL"
+
+      if (!agrupado[claveBloque]) {
+        agrupado[claveBloque] = []
+      }
+
+      agrupado[claveBloque].push({
+        pieza: item.pieza,
+        material: item.material,
+        color: item.color,
+        um: item.um,
+        total: Number(total.toFixed(4))
+      })
     })
-  })
-}
+
+    renderPatronEnModal(patronActual)
+    abrirModalPatron()
+    renderResultadoCalculoEnModal(agrupado)
+  }
 
 window.initPatrones = initPatrones
 window.guardarPatron = guardarPatron

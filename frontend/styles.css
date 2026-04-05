@@ -2904,3 +2904,54 @@ body:not(.dark-mode) .patron-tabla th {
 body:not(.dark-mode) .patron-tabla td {
   border-bottom: 1px solid #e5e7eb;
 }
+.modal-patron-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.modal-secundario {
+  background: transparent !important;
+  color: inherit !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+body:not(.dark-mode) .modal-patron-footer {
+  border-top: 1px solid #e5e7eb;
+}
+
+body:not(.dark-mode) .modal-secundario {
+  border: 1px solid #d1d5db !important;
+  background: #fff !important;
+  color: #111827 !important;
+}
+.resultado-calculo-modal {
+  margin-bottom: 18px;
+}
+
+.resultado-calculo-bloque {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+}
+
+.resultado-calculo-bloque h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+}
+
+.resultado-calculo-item {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+body:not(.dark-mode) .resultado-calculo-bloque {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}

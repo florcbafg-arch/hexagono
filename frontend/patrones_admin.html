@@ -28,8 +28,8 @@
     <option value="">Seleccionar modelo</option>
   </select>
 
-  <button onclick="guardarPatron()">💾 Guardar</button>
   <button onclick="abrirModalPatron()">👁 Ver patrón</button>
+<button onclick="calcular()">🧮 Calcular consumo</button>
 </div>
 
     <table border="1" width="100%" id="tablaPatrones">
@@ -46,13 +46,10 @@
     </table>
 
     <div style="margin-top: 30px;">
-      <h3>Simular producción</h3>
+  <h3>Simular producción</h3>
 
-      <input type="number" id="cantidad" placeholder="Cantidad de pares">
-      <button onclick="calcular()">Calcular consumo</button>
-
-      <div id="resultado"></div>
-    </div>
+  <input type="number" id="cantidad" placeholder="Cantidad de pares">
+</div>
 
         <div id="modalPatron" class="modal-patron oculto">
       <div class="modal-patron-backdrop" onclick="cerrarModalPatron()"></div>
@@ -66,6 +63,10 @@
         <div id="modalPatronBody" class="modal-patron-body">
           <div class="patron-vacio">Seleccioná un modelo para ver el patrón.</div>
         </div>
+        <div class="modal-patron-footer">
+  <button onclick="guardarPatron()">💾 Guardar patrón</button>
+  <button onclick="cerrarModalPatron()" class="modal-secundario">Cerrar</button>
+</div>
       </div>
     </div>
 
