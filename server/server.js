@@ -199,66 +199,62 @@ talles:[
 
 
 // 🔎 BUSCAR TAREA
-app.get("/api/tarea/:numero", async (req,res)=>{
+app.get("/api/tarea/:numero", async (req, res) => {
+  try {
+    const numero = req.params.numero
+    const empresaId = req.user?.empresa_id
 
-try{
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
 
-const numero=req.params.numero
+    const { data: orden, error: errorOrden } = await supabase
+      .from("ordenes")
+      .select(`
+        id,
+        numero_tarea,
+        pares_plan,
+        modelo_id,
+        modelos (
+          nombre,
+          marca,
+          codigo
+        )
+      `)
+      .eq("numero_tarea", numero)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
 
-const empresaId = req.user?.empresa_id
+    if (errorOrden) throw errorOrden
 
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
+    if (!orden) {
+      return res.status(404).json({ error: "Tarea no encontrada" })
+    }
 
-const {data,error}=await supabase
-.from("ordenes")
-.select(`
-id,
-numero_tarea,
-pares_plan,
-modelo_id
-`)
-.eq("numero_tarea",numero)
-.eq("empresa_id", empresaId)
-.single()
-.maybeSingle()
+    const { data: talles, error: errorTalles } = await supabase
+      .from("orden_talles")
+      .select("talle, cantidad")
+      .eq("orden_id", orden.id)
+      .eq("empresa_id", empresaId)
+      .order("talle", { ascending: true })
 
-if(error || !data){
-return res.status(404).send("no encontrada")
-}
+    if (errorTalles) throw errorTalles
 
-// obtener talles de la tarea
-
-const {data:talles,error:errorTalles} = await supabase
-.from("tarea_talles")
-.select("talle,cantidad")
-.eq("tarea_id",data.id)
-.eq("empresa_id", empresaId)
-
-if(errorTalles){
-throw errorTalles
-}
-
-res.json({
-id:data.id,
-numero:data.numero_tarea,
-marca:"Arcana",
-modelo:"Air Runner Pro",
-pares:data.pares_plan,
-talles: talles.map(t => ({
-talle: t.talle,
-plan: t.cantidad
-}))
-})
-
-}catch(err){
-
-console.log(err)
-res.status(500).send("error servidor")
-
-}
-
+    res.json({
+      id: orden.id,
+      numero: orden.numero_tarea,
+      marca: orden.modelos?.marca || "-",
+      modelo: orden.modelos?.nombre || "-",
+      pares: orden.pares_plan || 0,
+      talles: (talles || []).map(t => ({
+        talle: t.talle,
+        plan: t.cantidad
+      }))
+    })
+  } catch (err) {
+    console.error("Error en /api/tarea/:numero:", err)
+    res.status(500).json({ error: "Error servidor" })
+  }
 })
 
 // 📊 GUARDAR PRODUCCION (MEMORIA LOCAL)
@@ -287,109 +283,303 @@ app.get("/api/registros", (req, res) => {
 // VERIFICAR PRODUCCION EXISTENTE
 // ==========================
 
-app.get("/api/produccion/check/:numero", async (req,res)=>{
+app.get("/api/produccion/check/:numero", async (req, res) => {
+  try {
+    const numero = req.params.numero
+    const puestoId = Number(req.query.puesto)
+    const empresaId = req.user?.empresa_id
 
-try{
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
 
-const numero = req.params.numero
-const puesto = req.query.puesto
+    if (!puestoId) {
+      return res.json({
+        registrado: false,
+        habilitado: false,
+        siguiente_sector: null
+      })
+    }
 
-const empresaId = req.user?.empresa_id
+    // 1. Buscar orden
+    const { data: tarea, error: errTarea } = await supabase
+      .from("ordenes")
+      .select("id, numero_tarea, estado")
+      .eq("empresa_id", empresaId)
+      .eq("numero_tarea", numero)
+      .maybeSingle()
 
-if (!empresaId) {
-  return res.status(401).json({ error: "Empresa no identificada" })
-}
+    if (errTarea) throw errTarea
 
-if(!puesto){
- return res.json({registrado:false})
-}
+    if (!tarea) {
+      return res.json({
+        registrado: false,
+        habilitado: false,
+        siguiente_sector: null
+      })
+    }
 
-// buscar id de tarea
-const {data:tarea,error:errTarea} = await supabase
-.from("ordenes")
-.select("id")
-.eq("empresa_id", empresaId)
-.eq("numero_tarea", numero)
-.single()
+    // 2. Buscar puesto
+    const { data: puesto, error: errPuesto } = await supabase
+      .from("puestos")
+      .select("id, nombre, sector_id, orden")
+      .eq("id", puestoId)
+      .maybeSingle()
 
-if(errTarea || !tarea){
-return res.json({registrado:false})
-}
+    if (errPuesto) throw errPuesto
 
-// buscar produccion en ese puesto
-const {data,error} = await supabase
-.from("produccion")
-.select("*")
-.eq("orden_id", tarea.id)
-.eq("puesto_id", puesto)
-.eq("empresa_id", empresaId)
+    if (!puesto || !puesto.sector_id) {
+      return res.json({
+        registrado: false,
+        habilitado: false,
+        siguiente_sector: null
+      })
+    }
 
-if(error){
-console.log(error)
-return res.json({registrado:false})
-}
+    // 3. Verificar si ya registró ese puesto
+    const { data: prodExistente, error: errProd } = await supabase
+      .from("produccion")
+      .select("id")
+      .eq("orden_id", tarea.id)
+      .eq("puesto_id", puestoId)
+      .eq("empresa_id", empresaId)
 
-res.json({
-registrado: data.length > 0
+    if (errProd) throw errProd
+
+    const registrado = Array.isArray(prodExistente) && prodExistente.length > 0
+
+    // 4. Traer recorrido de sectores
+    const { data: recorrido, error: errRecorrido } = await supabase
+      .from("ordenes_sector")
+      .select(`
+        id,
+        sector_id,
+        estado,
+        sectores (
+          id,
+          nombre,
+          orden
+        )
+      `)
+      .eq("orden_id", tarea.id)
+      .eq("empresa_id", empresaId)
+
+    if (errRecorrido) throw errRecorrido
+
+    const recorridoOrdenado = [...(recorrido || [])].sort((a, b) => {
+      const ordenA = a?.sectores?.orden ?? 9999
+      const ordenB = b?.sectores?.orden ?? 9999
+      return ordenA - ordenB
+    })
+
+    const siguientePendiente = recorridoOrdenado.find(r => r.estado !== "completado")
+
+    const habilitado =
+      !!siguientePendiente &&
+      Number(siguientePendiente.sector_id) === Number(puesto.sector_id)
+
+    res.json({
+      registrado,
+      habilitado,
+      siguiente_sector: siguientePendiente?.sectores?.nombre || null,
+      orden_estado: tarea.estado || "pendiente"
+    })
+  } catch (err) {
+    console.error("Error en /api/produccion/check/:numero:", err)
+    res.json({
+      registrado: false,
+      habilitado: false,
+      siguiente_sector: null
+    })
+  }
 })
-
-}catch(err){
-
-console.log(err)
-res.json({registrado:false})
-
-}
-
-})
-
-// 🏭 GUARDAR PRODUCCION EN SUPABASE
+//🏭
 app.post("/api/produccion", async (req, res) => {
+  try {
+    const { orden_id, puesto_id, cantidad } = req.body
+    const usuario = req.user
+    const empresaId = usuario?.empresa_id
 
-  const { orden_id, puesto_id, cantidad } = req.body
-  const usuario = req.user
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
 
-  // VALIDACIONES
-  if(!orden_id || !puesto_id || !cantidad){
-    return res.status(400).json({
-      error:"Datos incompletos"
+    if (!orden_id || !puesto_id || !cantidad) {
+      return res.status(400).json({
+        error: "Datos incompletos"
+      })
+    }
+
+    if (Number(cantidad) <= 0) {
+      return res.status(400).json({
+        error: "Cantidad inválida"
+      })
+    }
+
+    // 1. Validar orden
+    const { data: orden, error: errorOrden } = await supabase
+      .from("ordenes")
+      .select("id, numero_tarea, estado")
+      .eq("id", orden_id)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+
+    if (errorOrden) throw errorOrden
+
+    if (!orden) {
+      return res.status(404).json({
+        error: "Orden no encontrada"
+      })
+    }
+
+    // 2. Validar puesto y obtener su sector
+    const { data: puesto, error: errorPuesto } = await supabase
+      .from("puestos")
+      .select("id, nombre, sector_id, orden")
+      .eq("id", puesto_id)
+      .maybeSingle()
+
+    if (errorPuesto) throw errorPuesto
+
+    if (!puesto) {
+      return res.status(404).json({
+        error: "Puesto no encontrado"
+      })
+    }
+
+    if (!puesto.sector_id) {
+      return res.status(400).json({
+        error: "El puesto no tiene sector asignado"
+      })
+    }
+
+    // 3. Verificar si ya existe producción en ese mismo puesto para esta orden
+    const { data: existente, error: errorExistente } = await supabase
+      .from("produccion")
+      .select("id")
+      .eq("orden_id", orden_id)
+      .eq("puesto_id", puesto_id)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+
+    if (errorExistente) throw errorExistente
+
+    if (existente) {
+      return res.status(400).json({
+        error: "Esta tarea ya tiene producción registrada en este sector"
+      })
+    }
+
+    // 4. Traer recorrido de sectores de la orden
+    const { data: recorrido, error: errorRecorrido } = await supabase
+      .from("ordenes_sector")
+      .select(`
+        id,
+        sector_id,
+        estado,
+        sectores (
+          id,
+          nombre,
+          orden
+        )
+      `)
+      .eq("orden_id", orden_id)
+      .eq("empresa_id", empresaId)
+
+    if (errorRecorrido) throw errorRecorrido
+
+    if (!Array.isArray(recorrido) || recorrido.length === 0) {
+      return res.status(400).json({
+        error: "La orden no tiene recorrido de sectores definido"
+      })
+    }
+
+    const recorridoOrdenado = [...recorrido].sort((a, b) => {
+      const ordenA = a?.sectores?.orden ?? 9999
+      const ordenB = b?.sectores?.orden ?? 9999
+      return ordenA - ordenB
+    })
+
+    const siguientePendiente = recorridoOrdenado.find(r => r.estado !== "completado")
+
+    if (!siguientePendiente) {
+      return res.status(400).json({
+        error: "La orden ya completó todo su recorrido"
+      })
+    }
+
+    // 5. Validar cadena: el puesto actual debe pertenecer al siguiente sector habilitado
+    if (Number(siguientePendiente.sector_id) !== Number(puesto.sector_id)) {
+      return res.status(400).json({
+        error: `Esta tarea todavía no está habilitada para este sector. Primero debe registrar ${siguientePendiente?.sectores?.nombre || "el sector anterior"}.`
+      })
+    }
+
+    // 6. Guardar producción
+    const { data, error } = await supabase
+      .from("produccion")
+      .insert([
+        {
+          orden_id,
+          puesto_id,
+          cantidad: Number(cantidad),
+          usuario: usuario?.nombre || "sistema",
+          empresa_id: empresaId
+        }
+      ])
+      .select()
+
+    if (error) {
+      console.log("❌ Error guardando producción:", error)
+      return res.status(500).json({
+        error: error.message
+      })
+    }
+
+    // 7. Marcar sector actual como completado
+    const { error: errorActualizarSector } = await supabase
+      .from("ordenes_sector")
+      .update({ estado: "completado" })
+      .eq("id", siguientePendiente.id)
+      .eq("empresa_id", empresaId)
+
+    if (errorActualizarSector) throw errorActualizarSector
+
+    // 8. Verificar si quedan sectores pendientes
+    const { data: pendientesPost, error: errorPendientesPost } = await supabase
+      .from("ordenes_sector")
+      .select("id, estado")
+      .eq("orden_id", orden_id)
+      .eq("empresa_id", empresaId)
+      .neq("estado", "completado")
+
+    if (errorPendientesPost) throw errorPendientesPost
+
+    const estadoFinalOrden =
+      Array.isArray(pendientesPost) && pendientesPost.length === 0
+        ? "terminada"
+        : "en_proceso"
+
+    const { error: errorActualizarOrden } = await supabase
+      .from("ordenes")
+      .update({ estado: estadoFinalOrden })
+      .eq("id", orden_id)
+      .eq("empresa_id", empresaId)
+
+    if (errorActualizarOrden) throw errorActualizarOrden
+
+    res.json({
+      mensaje: "Producción guardada",
+      data,
+      estado_orden: estadoFinalOrden
+    })
+  } catch (err) {
+    console.error("💥 Error en POST /api/produccion:", err)
+    res.status(500).json({
+      error: err.message || "Error guardando producción"
     })
   }
-
-  if(cantidad <= 0){
-    return res.status(400).json({
-      error:"Cantidad inválida"
-    })
-  }
-
-  // INSERT EN SUPABASE
-  const { data, error } = await supabase
-    .from("produccion")
-    .insert([
-      {
-        orden_id,
-        puesto_id,
-        cantidad,
-        usuario: usuario?.nombre || "sistema",
-        empresa_id: usuario?.empresa_id || null
-      }
-    ])
-
-  if (error) {
-    console.log("❌ Error guardando producción:", error)
-    return res.status(500).json({
-      error: error.message
-    })
-  }
-
-  console.log("✅ Producción guardada:", data)
-
-  res.json({
-    mensaje: "Producción guardada",
-    data
-  })
-
 })
-
 // ============================
 // CREAR ADMIN (NUEVO SISTEMA)
 // ============================
@@ -816,28 +1006,30 @@ console.log("Insertando orden...")
 
     if (errorTarea) throw errorTarea
 
-    const { data: sectores, error: errorSectores } = await supabase
-      .from("sectores")
-      .select("id,nombre")
+const { data: sectores, error: errorSectores } = await supabase
+  .from("sectores")
+  .select("id, nombre, orden")
+  .eq("empresa_id", empresaId)
+  .order("orden", { ascending: true })
 
-    if (errorSectores) throw errorSectores
+if (errorSectores) throw errorSectores
 
-    if (sectores && sectores.length > 0) {
-      const sectoresInsert = sectores.map(s => ({
-  orden_id: tarea.id,
-  sector_id: s.id,
-  estado: "pendiente",
-  empresa_id: empresaId
-}))
+if (sectores && sectores.length > 0) {
+  const sectoresInsert = sectores.map(s => ({
+    orden_id: tarea.id,
+    sector_id: s.id,
+    estado: "pendiente",
+    empresa_id: empresaId
+  }))
 
-      console.log("Insertando sectores...")
+  console.log("Insertando sectores ordenados...", sectoresInsert)
 
-      const { error: errorInsertSectores } = await supabase
-        .from("ordenes_sector")
-        .insert(sectoresInsert)
+  const { error: errorInsertSectores } = await supabase
+    .from("ordenes_sector")
+    .insert(sectoresInsert)
 
-      if (errorInsertSectores) throw errorInsertSectores
-    }
+  if (errorInsertSectores) throw errorInsertSectores
+}
 
     const tallesInsert = talles
   .filter(t => Number(t.cantidad) > 0)

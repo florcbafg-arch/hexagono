@@ -72,7 +72,7 @@ let tareaActual = null
 
 async function obtenerSector(){
 
-const res = await fetch("/api/puestos")
+const res = await apiFetch("/api/puestos")
 
 const puestos = await res.json()
 
@@ -88,7 +88,7 @@ async function buscarTarea(){
 
 const numero = document.getElementById("tarea").value
 
-const res = await fetch("/tarea/"+numero)
+const res = await apiFetch("/api/tarea/" + numero)
 
 if(res.status!=200){
 
@@ -105,37 +105,50 @@ tareaActual = tarea
 
 // verificar si ya existe producción registrada
 
-const check = await fetch(
-"/api/produccion/check/"+tarea.numero+
-"?puesto="+puestoActivo
+const check = await apiFetch(
+  "/api/produccion/check/" + tarea.numero + "?puesto=" + puestoActivo
 )
 const checkData = await check.json()
 
-if(checkData.registrado){
+if (checkData.registrado) {
+  document.getElementById("info").innerHTML = `
+    <div class="alerta-produccion">
+      <div class="alerta-icono">⚠</div>
+      <div class="alerta-texto">
+        <h2>Tarea ${tarea.numero}</h2>
+        <p>Esta tarea ya tiene producción registrada en este sector.</p>
+        <button class="btn-secundario" onclick="limpiarBusqueda()">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  `
+  document.getElementById("tabla").innerHTML = ""
+  return
+}
 
-document.getElementById("info").innerHTML = `
-<div class="alerta-produccion">
-
-<div class="alerta-icono">⚠</div>
-
-<div class="alerta-texto">
-
-<h2>Tarea ${tarea.numero}</h2>
-
-<p>Esta tarea ya tiene producción registrada en este sector.</p>
-
-<button class="btn-secundario" onclick="limpiarBusqueda()">
-Limpiar
-</button>
-
-</div>
-
-</div>
-`
-
-document.getElementById("tabla").innerHTML = ""
-
-return
+if (!checkData.habilitado) {
+  document.getElementById("info").innerHTML = `
+    <div class="alerta-produccion">
+      <div class="alerta-icono">⛔</div>
+      <div class="alerta-texto">
+        <h2>Tarea ${tarea.numero}</h2>
+        <p>
+          Esta tarea todavía no está habilitada para este sector.
+          ${
+            checkData.siguiente_sector
+              ? `Primero debe registrar: <b>${checkData.siguiente_sector}</b>.`
+              : ""
+          }
+        </p>
+        <button class="btn-secundario" onclick="limpiarBusqueda()">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  `
+  document.getElementById("tabla").innerHTML = ""
+  return
 }
 
 document.getElementById("info").innerHTML=
@@ -329,13 +342,18 @@ window.location.href="operario.html"
 
 }
 
-function logout(){
+function logout() {
+  localStorage.removeItem("hexagono_user")
+  localStorage.removeItem("token")
+  localStorage.removeItem("usuario")
+  localStorage.removeItem("puesto_id")
+  localStorage.removeItem("rol")
+  window.location.href = "login.html"
+}
 
-localStorage.removeItem("hexagono_user")
 
 window.location.href="login.html"
 
-}
 
 obtenerSector()
 
