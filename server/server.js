@@ -846,6 +846,105 @@ error:"error dashboard"
 
 })
 
+app.get("/api/dashboard/ordenes", async (req, res) => {
+  try {
+    const empresaId = req.user?.empresa_id
+
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
+
+    const { data: ordenes, error: errorOrdenes } = await supabase
+      .from("ordenes")
+      .select(`
+        id,
+        numero_tarea,
+        pares_plan,
+        estado,
+        modelo_id,
+        modelos (
+          nombre,
+          marca,
+          codigo
+        )
+      `)
+      .eq("empresa_id", empresaId)
+      .order("id", { ascending: false })
+
+    if (errorOrdenes) throw errorOrdenes
+
+    if (!ordenes || ordenes.length === 0) {
+      return res.json([])
+    }
+
+    const ordenIds = ordenes.map(o => o.id)
+
+    const { data: recorrido, error: errorRecorrido } = await supabase
+      .from("ordenes_sector")
+      .select(`
+        id,
+        orden_id,
+        estado,
+        sector_id,
+        sectores (
+          id,
+          nombre,
+          orden
+        )
+      `)
+      .in("orden_id", ordenIds)
+      .eq("empresa_id", empresaId)
+
+    if (errorRecorrido) throw errorRecorrido
+
+    const recorridoPorOrden = {}
+
+    ;(recorrido || []).forEach(r => {
+      if (!recorridoPorOrden[r.orden_id]) {
+        recorridoPorOrden[r.orden_id] = []
+      }
+      recorridoPorOrden[r.orden_id].push(r)
+    })
+
+    const resultado = ordenes.map(orden => {
+      const pasos = (recorridoPorOrden[orden.id] || []).sort((a, b) => {
+        const ordenA = a?.sectores?.orden ?? 9999
+        const ordenB = b?.sectores?.orden ?? 9999
+        return ordenA - ordenB
+      })
+
+      const completados = pasos.filter(p => p.estado === "completado")
+      const pendientes = pasos.filter(p => p.estado !== "completado")
+
+      const ultimoCompletado =
+        completados.length > 0
+          ? completados[completados.length - 1]?.sectores?.nombre || "-"
+          : "-"
+
+      const sectorActual =
+        pendientes.length > 0
+          ? pendientes[0]?.sectores?.nombre || "-"
+          : "Finalizada"
+
+      return {
+        id: orden.id,
+        numero: orden.numero_tarea,
+        modelo: orden.modelos?.nombre || "-",
+        marca: orden.modelos?.marca || "-",
+        pares: orden.pares_plan || 0,
+        estado: orden.estado || "pendiente",
+        ultimo_sector: ultimoCompletado,
+        sector_actual: sectorActual
+      }
+    })
+
+    res.json(resultado)
+  } catch (err) {
+    console.error("Error en /api/dashboard/ordenes:", err)
+    res.status(500).json({ error: "error dashboard ordenes" })
+  }
+})
+
 // =======================
 // LISTAR MODELOS
 // =======================
