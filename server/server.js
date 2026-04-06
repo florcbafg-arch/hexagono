@@ -1554,26 +1554,27 @@ res.json({ok:true})
 // LISTAR PUESTOS
 // ==========================
 
-app.get("/api/puestos", async (req,res)=>{
+app.get("/api/puestos", async (req, res) => {
+  try {
+    const empresaId = req.user?.empresa_id
 
-try{
+    if (!empresaId) {
+      return res.status(401).json({ error: "Empresa no identificada" })
+    }
 
-const { data, error } = await supabase
-.from("puestos")
-.select("id,nombre")
-.order("orden",{ascending:true})
+    const { data, error } = await supabase
+      .from("puestos")
+      .select("id, nombre, sector_id, orden")
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
 
-if(error) throw error
+    if (error) throw error
 
-res.json(data)
-
-}catch(err){
-
-console.error("Error obteniendo puestos:",err)
-res.status(500).json({error:"error puestos"})
-
-}
-
+    res.json(data || [])
+  } catch (err) {
+    console.error("Error obteniendo puestos:", err)
+    res.status(500).json({ error: "error puestos" })
+  }
 })
 
 // ==========================
