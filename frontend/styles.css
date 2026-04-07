@@ -3296,3 +3296,11 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
 .tabla-ordenes-wrap {
   overflow-x: auto;
 }
+.dashboard-tv {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.panel-ordenes {
+  grid-column: 1 / -1;
+}
