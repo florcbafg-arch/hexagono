@@ -319,6 +319,29 @@ style="width:70px">
 
 </div>
 
+<div class="panel panel-ordenes">
+  <h3>📦 ÓRDENES EN PROCESO</h3>
+
+  <div class="tabla-ordenes-wrap">
+    <table class="tabla-produccion">
+      <thead>
+        <tr>
+          <th>Orden</th>
+          <th>Modelo</th>
+          <th>Pares</th>
+          <th>Último sector</th>
+          <th>Sector actual</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaOrdenesProceso">
+        <tr>
+          <td colspan="6">Cargando órdenes...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
 <!-- PANEL FALTANTES -->
 
@@ -333,6 +356,69 @@ style="width:70px">
 </div>
 
 
+<script>
+async function cargarOrdenesProceso() {
+  const tbody = document.getElementById("tablaOrdenesProceso")
+  if (!tbody) return
+
+  try {
+    const res = await apiFetch("/api/dashboard/ordenes")
+    const data = await res.json()
+
+    if (!Array.isArray(data) || data.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6">No hay órdenes en proceso</td>
+        </tr>
+      `
+      return
+    }
+
+    tbody.innerHTML = ""
+
+    data.forEach(orden => {
+      tbody.innerHTML += `
+        <tr>
+          <td><b>${orden.numero || "-"}</b></td>
+          <td>${orden.modelo || "-"}</td>
+          <td>${orden.pares || 0}</td>
+          <td>${orden.ultimo_sector || "-"}</td>
+          <td>${orden.sector_actual || "-"}</td>
+          <td>${orden.estado || "-"}</td>
+        </tr>
+      `
+    })
+  } catch (err) {
+    console.error("Error cargando órdenes:", err)
+  }
+}
+
+function initDashboard() {
+  actualizarTiempo()
+  setInterval(actualizarTiempo, 1000)
+
+  cargarObjetivos()
+  actualizarDashboard()
+  cargarOrdenesProceso()
+
+  setInterval(actualizarDashboard, 3000)
+  setInterval(cargarOrdenesProceso, 5000)
+
+  document.querySelectorAll(".objetivo-input").forEach((input, index, arr) => {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        if (arr[index + 1]) {
+          arr[index + 1].focus()
+        }
+      }
+    })
+  })
+}
+
+window.addEventListener("DOMContentLoaded", initDashboard)
+</script>
 
 </body>
 </html>
+
