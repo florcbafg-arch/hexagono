@@ -3274,3 +3274,25 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
   background: rgba(245, 158, 11, 0.15);
   color: #d97706;
 }
+.dashboard-tv {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.panel {
+  width: 100%;
+}
+
+.panel-alertas {
+  grid-column: span 1;
+}
+
+.panel-ordenes {
+  grid-column: 1 / -1;
+}
+
+.tabla-ordenes-wrap {
+  overflow-x: auto;
+}
