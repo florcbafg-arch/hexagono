@@ -553,394 +553,340 @@
     </div> <!-- cierra .content -->
   </div> <!-- cierra .page -->
 
-  <script>
-    const modelosMock = [
-      {
-        id: 1,
-        nombre: "Tora Azabache Hombre",
-        marca: "AMERIKA SB",
-        codigo: "TORA-001",
-        horma: "40/45",
-        tipo_calzado: "Vulcanizada",
-        temporada: "Invierno",
-        imagen_modelo_url: "https://via.placeholder.com/800x800?text=Tora+Azabache",
-        datosRapidos: {
-          hilo: "Nylon negro 20/3",
-          cordon: "Cordón negro",
-          base: "Vulcanizada blanca",
-          refuerzo: "Contrafuerte PU"
-        },
-        materiales: [
-          "Capellada en material negro",
-          "Cordón poliéster negro",
-          "Forro textil negro",
-          "Base vulcanizada blanca",
-          "Refuerzo interno PU"
-        ],
-        procesos: [
-          "Costura reforzada en talón",
-          "Controlar posición de lengua",
-          "Verificar ojalillado metálico",
-          "Revisar alineación general antes de cerrar"
-        ],
-        observaciones: "Modelo de uso intensivo. Confirmar color de cordón, hilo y terminación del talón antes de liberar.",
-        imagenes: [
-          "https://via.placeholder.com/500x500?text=Detalle+1",
-          "https://via.placeholder.com/500x500?text=Detalle+2",
-          "https://via.placeholder.com/500x500?text=Detalle+3"
-        ]
+ <script>
+  const modelosMock = [
+    {
+      id: 1,
+      nombre: "Tora Azabache Hombre",
+      marca: "AMERIKA SB",
+      codigo: "TORA-001",
+      horma: "40/45",
+      tipo_calzado: "Vulcanizada",
+      temporada: "Invierno",
+      imagen_modelo_url: "https://via.placeholder.com/800x800?text=Tora+Azabache",
+      datosRapidos: {
+        hilo: "Nylon negro 20/3",
+        cordon: "Cordón negro",
+        base: "Vulcanizada blanca",
+        refuerzo: "Contrafuerte PU"
       },
-      {
-        id: 2,
-        nombre: "Grecia White Black Dama",
-        marca: "ARCANA",
-        codigo: "GRC-203",
-        horma: "35/40",
-        tipo_calzado: "Pegada",
-        temporada: "Verano",
-        imagen_modelo_url: "https://via.placeholder.com/800x800?text=Grecia+White+Black",
-        datosRapidos: {
-          hilo: "Blanco 20/3",
-          cordon: "Blanco liso",
-          base: "Pegada blanca",
-          refuerzo: "Espuma lateral"
-        },
-        materiales: [
-          "Capellada blanca y negra",
-          "Cordón blanco liso",
-          "Forro textil blanco",
-          "Base pegada",
-          "Refuerzo lateral de espuma"
-        ],
-        procesos: [
-          "Controlar simetría de piezas",
-          "Revisar unión de base",
-          "Verificar terminación de lengua"
-        ],
-        observaciones: "Atención al contraste blanco/negro y limpieza visual del modelo.",
-        imagenes: [
-          "https://via.placeholder.com/500x500?text=Grecia+1",
-          "https://via.placeholder.com/500x500?text=Grecia+2"
-        ]
-      }
-    ]
-
-    let modelosCache = []
-
-async function cargarModelos() {
-  try {
-    const token = localStorage.getItem("token")
-
-    if (!token) {
-      console.warn("Sin token, usando modelos mock en fichas_operario")
-      modelosCache = modelosMock
-      return
+      materiales: [
+        "Capellada en material negro",
+        "Cordón poliéster negro",
+        "Forro textil negro",
+        "Base vulcanizada blanca",
+        "Refuerzo interno PU"
+      ],
+      procesos: [
+        "Costura reforzada en talón",
+        "Controlar posición de lengua",
+        "Verificar ojalillado metálico",
+        "Revisar alineación general antes de cerrar"
+      ],
+      observaciones: "Modelo de uso intensivo. Confirmar color de cordón, hilo y terminación del talón antes de liberar.",
+      imagenes: [
+        "https://via.placeholder.com/500x500?text=Detalle+1",
+        "https://via.placeholder.com/500x500?text=Detalle+2",
+        "https://via.placeholder.com/500x500?text=Detalle+3"
+      ]
+    },
+    {
+      id: 2,
+      nombre: "Grecia White Black Dama",
+      marca: "ARCANA",
+      codigo: "GRC-203",
+      horma: "35/40",
+      tipo_calzado: "Pegada",
+      temporada: "Verano",
+      imagen_modelo_url: "https://via.placeholder.com/800x800?text=Grecia+White+Black",
+      datosRapidos: {
+        hilo: "Blanco 20/3",
+        cordon: "Blanco liso",
+        base: "Pegada blanca",
+        refuerzo: "Espuma lateral"
+      },
+      materiales: [
+        "Capellada blanca y negra",
+        "Cordón blanco liso",
+        "Forro textil blanco",
+        "Base pegada",
+        "Refuerzo lateral de espuma"
+      ],
+      procesos: [
+        "Controlar simetría de piezas",
+        "Revisar unión de base",
+        "Verificar terminación de lengua"
+      ],
+      observaciones: "Atención al contraste blanco/negro y limpieza visual del modelo.",
+      imagenes: [
+        "https://via.placeholder.com/500x500?text=Grecia+1",
+        "https://via.placeholder.com/500x500?text=Grecia+2"
+      ]
     }
+  ]
 
-    const res = await apiFetch("/api/modelos")
-    const data = await res.json()
+  let modelosCache = []
 
-    if (!res.ok) {
-      console.warn("No se pudo cargar /api/modelos, usando modelos mock")
-      modelosCache = modelosMock
-      return
-    }
+  const buscador = document.getElementById("buscadorModelo")
+  const suggestions = document.getElementById("suggestions")
+  const panelIzquierdo = document.getElementById("panelIzquierdo")
+  const panelDerecho = document.getElementById("panelDerecho")
 
-    modelosCache = Array.isArray(data) && data.length ? data : modelosMock
-  } catch (err) {
-    console.warn("Error cargando modelos, usando mock:", err)
-    modelosCache = modelosMock
+  function volverPanelOperario() {
+    window.location.href = "/operario.html"
   }
-}
 
-function filtrarModelos(texto) {
-  const valor = String(texto || "").toLowerCase().trim()
+  function limpiarFicha() {
+    buscador.value = ""
+    suggestions.innerHTML = ""
+    suggestions.style.display = "none"
 
-  return modelosCache.filter(m =>
-    String(m?.nombre || "").toLowerCase().includes(valor)
-  )
-}
-
-    const buscador = document.getElementById("buscadorModelo")
-    const suggestions = document.getElementById("suggestions")
-    const panelIzquierdo = document.getElementById("panelIzquierdo")
-    const panelDerecho = document.getElementById("panelDerecho")
-
-    buscador.addEventListener("input", (e) => {
-  const valor = e.target.value
-
-  if (valor.length < 2) return
-
-  const resultados = filtrarModelos(valor)
-
-  mostrarSugerencias(resultados)
-})
-
-    function volverPanelOperario() {
-      window.location.href = "/operario.html"
-    }
-
-    function limpiarFicha() {
-      buscador.value = ""
-      suggestions.style.display = "none"
-
-      panelIzquierdo.innerHTML = `
-        <div class="empty-state">
-          Buscá un modelo para ver su imagen y datos principales
-        </div>
-      `
-
-      panelDerecho.innerHTML = `
-        <div class="empty-state">
-          Acá se van a mostrar los materiales, procesos, observaciones e imágenes de la ficha
-        </div>
-      `
-    }
-
-    function mostrarSugerencias(lista) {
-  if (!Array.isArray(lista) || lista.length === 0) {
-    suggestions.innerHTML = `
-      <div class="suggestion-item">
-        <div class="suggestion-name">No se encontraron modelos</div>
+    panelIzquierdo.innerHTML = `
+      <div class="empty-state">
+        Buscá un modelo para ver su imagen y datos principales
       </div>
     `
-    suggestions.style.display = "block"
-    return
+
+    panelDerecho.innerHTML = `
+      <div class="empty-state">
+        Acá se van a mostrar los materiales, procesos, observaciones e imágenes de la ficha
+      </div>
+    `
   }
 
-  suggestions.innerHTML = lista.slice(0, 6).map(modelo => `
-    <div class="suggestion-item" onclick="seleccionarModelo(${modelo.id})">
-      <div class="suggestion-name">${modelo.nombre}</div>
-      <div class="suggestion-meta">
-        ${modelo.marca || "-"} · ${modelo.codigo || "-"} · ${modelo.tipo_calzado || "-"}
-      </div>
-    </div>
-  `).join("")
+  function filtrarModelos(texto) {
+    const valor = String(texto || "").toLowerCase().trim()
 
-  suggestions.style.display = "block"
-}
+    return modelosCache.filter(modelo =>
+      String(modelo?.nombre || "").toLowerCase().includes(valor)
+    )
+  }
+
+  function mostrarSugerencias(lista) {
+    if (!Array.isArray(lista) || lista.length === 0) {
+      suggestions.innerHTML = `
+        <div class="suggestion-item">
+          <div class="suggestion-name">No se encontraron modelos</div>
+        </div>
+      `
+      suggestions.style.display = "block"
+      return
+    }
+
+    suggestions.innerHTML = lista.slice(0, 6).map(modelo => `
+      <div class="suggestion-item" onclick="seleccionarModelo(${modelo.id})">
+        <div class="suggestion-name">${modelo.nombre || "Sin nombre"}</div>
+        <div class="suggestion-meta">
+          ${modelo.marca || "-"} · ${modelo.codigo || "-"} · ${modelo.tipo_calzado || "-"}
+        </div>
+      </div>
+    `).join("")
+
+    suggestions.style.display = "block"
+  }
 
   function seleccionarModelo(id) {
-  const modelo = modelosCache.find(m => m.id === id)
-  if (!modelo) return
+    const modelo = modelosCache.find(m => String(m.id) === String(id))
+    if (!modelo) return
 
-  buscador.value = modelo.nombre
-  suggestions.style.display = "none"
+    buscador.value = modelo.nombre || ""
+    suggestions.style.display = "none"
 
-  cargarFicha(modelo.id)
-}
-
-    function renderPanelIzquierdo(modelo) {
-      panelIzquierdo.innerHTML = `
-      <div class="image-box" ${modelo.imagen_modelo_url ? `onclick="abrirImagenGrande('${modelo.imagen_modelo_url}')"` : ""}>
-  ${
-    modelo.imagen_modelo_url
-      ? `<img src="${modelo.imagen_modelo_url}" alt="${modelo.nombre}">`
-      : `<div class="image-placeholder">Sin imagen del modelo</div>`
+    renderPanelIzquierdo(modelo)
+    renderPanelDerecho(modelo)
   }
-</div>
 
-        <h2 class="model-title">${modelo.nombre}</h2>
-        <p class="model-subtitle">${modelo.marca} · ${modelo.codigo}</p>
+  function renderPanelIzquierdo(modelo) {
+    const imagenPrincipal =
+      modelo.imagen_modelo_url ||
+      modelo.imagen ||
+      modelo.imagen_url ||
+      modelo.url_imagen ||
+      ""
 
-        <div class="quick-grid">
-          <div class="quick-card">
-            <div class="quick-label">Marca</div>
-            <div class="quick-value">${modelo.marca || "-"}</div>
-          </div>
+    panelIzquierdo.innerHTML = `
+      <div class="image-box" ${imagenPrincipal ? `onclick="abrirImagenGrande('${imagenPrincipal}')"` : ""}>
+        ${
+          imagenPrincipal
+            ? `<img src="${imagenPrincipal}" alt="${modelo.nombre || "Modelo"}">`
+            : `<div class="image-placeholder">Sin imagen del modelo</div>`
+        }
+      </div>
 
-          <div class="quick-card">
-            <div class="quick-label">Código</div>
-            <div class="quick-value">${modelo.codigo || "-"}</div>
-          </div>
+      <h2 class="model-title">${modelo.nombre || "Sin nombre"}</h2>
+      <p class="model-subtitle">${modelo.marca || "-"} · ${modelo.codigo || "-"}</p>
 
-          <div class="quick-card">
-            <div class="quick-label">Horma</div>
-            <div class="quick-value">${modelo.horma || "-"}</div>
-          </div>
-
-          <div class="quick-card">
-            <div class="quick-label">Tipo</div>
-            <div class="quick-value">${modelo.tipo_calzado || "-"}</div>
-          </div>
-
-          <div class="quick-card">
-            <div class="quick-label">Temporada</div>
-            <div class="quick-value">${modelo.temporada || "-"}</div>
-          </div>
-
-          <div class="quick-card">
-            <div class="quick-label">Estado</div>
-            <div class="quick-value">Ficha disponible</div>
-          </div>
+      <div class="quick-grid">
+        <div class="quick-card">
+          <div class="quick-label">Marca</div>
+          <div class="quick-value">${modelo.marca || "-"}</div>
         </div>
 
+        <div class="quick-card">
+          <div class="quick-label">Código</div>
+          <div class="quick-value">${modelo.codigo || "-"}</div>
+        </div>
+
+        <div class="quick-card">
+          <div class="quick-label">Horma</div>
+          <div class="quick-value">${modelo.horma || "-"}</div>
+        </div>
+
+        <div class="quick-card">
+          <div class="quick-label">Tipo</div>
+          <div class="quick-value">${modelo.tipo_calzado || "-"}</div>
+        </div>
+
+        <div class="quick-card">
+          <div class="quick-label">Temporada</div>
+          <div class="quick-value">${modelo.temporada || "-"}</div>
+        </div>
+
+        <div class="quick-card">
+          <div class="quick-label">Estado</div>
+          <div class="quick-value">Ficha disponible</div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <h3 class="section-title">Datos rápidos</h3>
+        <div class="chips">
+          <div class="chip"><b>Hilo:</b> ${modelo.datosRapidos?.hilo || "-"}</div>
+          <div class="chip"><b>Cordón:</b> ${modelo.datosRapidos?.cordon || "-"}</div>
+          <div class="chip"><b>Base:</b> ${modelo.datosRapidos?.base || "-"}</div>
+          <div class="chip"><b>Refuerzo:</b> ${modelo.datosRapidos?.refuerzo || "-"}</div>
+        </div>
+      </div>
+    `
+  }
+
+  function renderPanelDerecho(modelo) {
+    const imagenesExtra = Array.isArray(modelo.imagenes) ? modelo.imagenes : []
+
+    panelDerecho.innerHTML = `
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="materiales" onclick="cambiarTab(this, 'materiales')">Materiales</button>
+        <button class="tab-btn" data-tab="procesos" onclick="cambiarTab(this, 'procesos')">Procesos</button>
+        <button class="tab-btn" data-tab="observaciones" onclick="cambiarTab(this, 'observaciones')">Observaciones</button>
+        <button class="tab-btn" data-tab="imagenes" onclick="cambiarTab(this, 'imagenes')">Imágenes</button>
+      </div>
+
+      <div class="tab-content active" id="tab-materiales">
         <div class="section-block">
-          <h3 class="section-title">Datos rápidos</h3>
-          <div class="chips">
-            <div class="chip"><b>Hilo:</b> ${modelo.datosRapidos?.hilo || "-"}</div>
-            <div class="chip"><b>Cordón:</b> ${modelo.datosRapidos?.cordon || "-"}</div>
-            <div class="chip"><b>Base:</b> ${modelo.datosRapidos?.base || "-"}</div>
-            <div class="chip"><b>Refuerzo:</b> ${modelo.datosRapidos?.refuerzo || "-"}</div>
+          <h3 class="section-title">Materiales clave</h3>
+          <ul class="list-clean">
+            ${(modelo.materiales || []).map(item => `<li>${item}</li>`).join("") || `<li>Sin materiales cargados</li>`}
+          </ul>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-procesos">
+        <div class="section-block">
+          <h3 class="section-title">Procesos y referencias</h3>
+          <ul class="list-clean">
+            ${(modelo.procesos || []).map(item => `<li>${item}</li>`).join("") || `<li>Sin procesos cargados</li>`}
+          </ul>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-observaciones">
+        <div class="section-block">
+          <h3 class="section-title">Observaciones</h3>
+          <div class="obs-box">
+            ${modelo.observaciones || "Sin observaciones cargadas"}
           </div>
         </div>
-      `
-    }
+      </div>
 
-    function renderPanelDerecho(modelo) {
-      panelDerecho.innerHTML = `
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="materiales" onclick="cambiarTab(this, 'materiales')">Materiales</button>
-          <button class="tab-btn" data-tab="procesos" onclick="cambiarTab(this, 'procesos')">Procesos</button>
-          <button class="tab-btn" data-tab="observaciones" onclick="cambiarTab(this, 'observaciones')">Observaciones</button>
-          <button class="tab-btn" data-tab="imagenes" onclick="cambiarTab(this, 'imagenes')">Imágenes</button>
+      <div class="tab-content" id="tab-imagenes">
+        <div class="section-block">
+          <h3 class="section-title">Imágenes adicionales</h3>
+          ${
+            imagenesExtra.length
+              ? `
+                <div class="thumb-grid">
+                  ${imagenesExtra.map(src => `
+                    <div class="thumb" onclick="abrirImagenGrande('${src}')" style="cursor: zoom-in;">
+                      <img src="${src}" alt="Imagen técnica">
+                    </div>
+                  `).join("")}
+                </div>
+              `
+              : `<div class="obs-box">Sin imágenes adicionales</div>`
+          }
         </div>
-
-        <div class="tab-content active" id="tab-materiales">
-          <div class="section-block">
-            <h3 class="section-title">Materiales clave</h3>
-            <ul class="list-clean">
-              ${(modelo.materiales || []).map(item => `<li>${item}</li>`).join("")}
-            </ul>
-          </div>
-        </div>
-
-        <div class="tab-content" id="tab-procesos">
-          <div class="section-block">
-            <h3 class="section-title">Procesos y referencias</h3>
-            <ul class="list-clean">
-              ${(modelo.procesos || []).map(item => `<li>${item}</li>`).join("")}
-            </ul>
-          </div>
-        </div>
-
-        <div class="tab-content" id="tab-observaciones">
-          <div class="section-block">
-            <h3 class="section-title">Observaciones</h3>
-            <div class="obs-box">
-              ${modelo.observaciones || "Sin observaciones cargadas"}
-            </div>
-          </div>
-        </div>
-
-        <div class="tab-content" id="tab-imagenes">
-          <div class="section-block">
-            <h3 class="section-title">Imágenes adicionales</h3>
-            <div class="thumb-grid">
-              ${(modelo.imagenes || []).map(src => `
-                <div class="thumb" onclick="abrirImagenGrande('${src}')" style="cursor: zoom-in;">
-  <img src="${src}" alt="Imagen técnica">
-</div>
-              `).join("")}
-            </div>
-          </div>
-        </div>
-      `
-    }
-
-    function cambiarTab(btn, tab) {
-      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"))
-      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"))
-
-      btn.classList.add("active")
-      const panel = document.getElementById(`tab-${tab}`)
-      if (panel) panel.classList.add("active")
-    }
-
-    document.addEventListener("click", (e) => {
-      const dentroBuscador = e.target.closest(".search-input-wrap")
-      if (!dentroBuscador) {
-        suggestions.style.display = "none"
-      }
-    })
-
-    function abrirImagenGrande(src) {
-  const modal = document.getElementById("modalImagen")
-  const modalImg = document.getElementById("modalImagenSrc")
-
-  if (!modal || !modalImg || !src) return
-
-  modalImg.src = src
-  modal.classList.remove("hidden")
-}
-
-function cerrarImagenGrande(e) {
-  const modal = document.getElementById("modalImagen")
-  const modalImg = document.getElementById("modalImagenSrc")
-
-  if (!modal || !modalImg) return
-
-  const clickEnFondo = e.target.id === "modalImagen"
-  const clickEnBoton = e.target.classList.contains("image-modal-close")
-
-  if (clickEnFondo || clickEnBoton) {
-    modal.classList.add("hidden")
-    modalImg.src = ""
+      </div>
+    `
   }
-}
 
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
+  function cambiarTab(btn, tab) {
+    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"))
+    document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"))
+
+    btn.classList.add("active")
+
+    const panel = document.getElementById(`tab-${tab}`)
+    if (panel) panel.classList.add("active")
+  }
+
+  function abrirImagenGrande(src) {
     const modal = document.getElementById("modalImagen")
     const modalImg = document.getElementById("modalImagenSrc")
 
-    if (modal && !modal.classList.contains("hidden")) {
+    if (!modal || !modalImg || !src) return
+
+    modalImg.src = src
+    modal.classList.remove("hidden")
+  }
+
+  function cerrarImagenGrande(e) {
+    const modal = document.getElementById("modalImagen")
+    const modalImg = document.getElementById("modalImagenSrc")
+
+    if (!modal || !modalImg) return
+
+    const clickEnFondo = e.target.id === "modalImagen"
+    const clickEnBoton = e.target.classList.contains("image-modal-close")
+
+    if (clickEnFondo || clickEnBoton) {
       modal.classList.add("hidden")
-      if (modalImg) modalImg.src = ""
+      modalImg.src = ""
     }
   }
-})
 
-async function cargarFicha(modeloId) {
-  try {
-    const token = localStorage.getItem("token")
+  buscador.addEventListener("input", (e) => {
+    const valor = e.target.value
 
-    if (!token) {
-      const fichaMock = modelosMock.find(m => m.id === modeloId)
-      if (!fichaMock) return
-
-      renderPanelIzquierdo(fichaMock)
-      renderPanelDerecho(fichaMock)
+    if (valor.trim().length < 2) {
+      suggestions.innerHTML = ""
+      suggestions.style.display = "none"
       return
     }
 
-    const res = await apiFetch(`/api/fichas/modelo/${modeloId}`)
-    const ficha = await res.json()
+    const resultados = filtrarModelos(valor)
+    mostrarSugerencias(resultados)
+  })
 
-    if (!res.ok) {
-      const fichaMock = modelosMock.find(m => m.id === modeloId)
-      if (!fichaMock) return
-
-      renderPanelIzquierdo(fichaMock)
-      renderPanelDerecho(fichaMock)
-      return
+  document.addEventListener("click", (e) => {
+    const dentroBuscador = e.target.closest(".search-input-wrap")
+    if (!dentroBuscador) {
+      suggestions.style.display = "none"
     }
+  })
 
-    renderPanelIzquierdo(ficha)
-    renderPanelDerecho(ficha)
-  } catch (err) {
-    console.error("Error cargando ficha", err)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const modal = document.getElementById("modalImagen")
+      const modalImg = document.getElementById("modalImagenSrc")
 
-    const fichaMock = modelosMock.find(m => m.id === modeloId)
-    if (!fichaMock) return
+      if (modal && !modal.classList.contains("hidden")) {
+        modal.classList.add("hidden")
+        if (modalImg) modalImg.src = ""
+      }
+    }
+  })
 
-    renderPanelIzquierdo(fichaMock)
-    renderPanelDerecho(fichaMock)
-  }
-}
-window.addEventListener("DOMContentLoaded", () => {
-  modelosCache = modelosMock
-})
-
-
-  </script>
-
-<div id="modalImagen" class="image-modal hidden" onclick="cerrarImagenGrande(event)">
-  <div class="image-modal-content">
-    <button class="image-modal-close" onclick="cerrarImagenGrande(event)">✕</button>
-    <img id="modalImagenSrc" src="" alt="Imagen ampliada" />
-  </div>
-</div>
-
-</body>
-</html>
+  window.addEventListener("DOMContentLoaded", () => {
+    modelosCache = [...modelosMock]
+  })
+</script>
