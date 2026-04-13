@@ -3337,3 +3337,44 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
   margin-bottom: 8px;
   line-height: 1.4;
 }
+/* =========================
+   FIX FINAL DASHBOARD TV
+========================= */
+
+body.admin-page.tv-mode .dashboard-tv,
+body.tv-mode .dashboard-tv {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 0.9fr !important;
+  gap: 12px !important;
+  align-items: start !important;
+}
+
+body.admin-page.tv-mode .dashboard-tv > .panel,
+body.tv-mode .dashboard-tv > .panel {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  align-self: start !important;
+}
+
+body.admin-page.tv-mode .panel-alertas,
+body.tv-mode .panel-alertas {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  align-self: start !important;
+}
+
+body.admin-page.tv-mode .panel-ordenes,
+body.tv-mode .panel-ordenes {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+}
+
+body.admin-page.tv-mode .panel-alertas ul,
+body.tv-mode .panel-alertas ul {
+  margin: 0 !important;
+  padding-left: 18px !important;
+}
