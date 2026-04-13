@@ -779,10 +779,9 @@
 
  async function cargarFichaReal(base) {
   try {
-    const usuario = obtenerUsuarioStorage()
-    const empresaId = usuario?.empresa_id
+   const empresaId = obtenerEmpresaId()
 
-    if (!empresaId) return null
+if (!empresaId) return null
 
     const fichaId = base.ficha_id || base.id
     if (!fichaId) return null
@@ -809,15 +808,14 @@
 
 async function cargarFichasReales() {
   try {
-    const usuario = obtenerUsuarioStorage()
-    const empresaId = usuario?.empresa_id
+    const empresaId = obtenerEmpresaId()
 
-    if (!empresaId) {
-      console.warn("usuario sin empresa_id, usando mock")
-      fichasCache = []
-      modelosCache = [...modelosMock]
-      return
-    }
+if (!empresaId) {
+  console.warn("usuario sin empresa_id, usando mock")
+  fichasCache = []
+  modelosCache = [...modelosMock]
+  return
+}
 
     console.log("USUARIO OPERARIO NORMALIZADO:", usuario)
 console.log("EMPRESA ID USADA:", empresaId)
@@ -900,34 +898,34 @@ console.log("EMPRESA ID USADA:", empresaId)
     renderPanelDerecho(base)
   }
 
-  function obtenerUsuarioStorage() {
+function obtenerUsuarioStorage() {
   const raw = localStorage.getItem("usuario")
-  const empresaIdDirecta =
-    localStorage.getItem("empresa_id") ||
-    localStorage.getItem("empresaId") ||
-    localStorage.getItem("empresa")
 
-  if (!raw) {
-    return empresaIdDirecta ? { empresa_id: empresaIdDirecta } : {}
-  }
+  if (!raw) return {}
 
   try {
-    const parsed = JSON.parse(raw)
-
-    return {
-      ...parsed,
-      empresa_id:
-        parsed?.empresa_id ||
-        parsed?.empresaId ||
-        empresaIdDirecta ||
-        null
-    }
+    return JSON.parse(raw)
   } catch (err) {
     return {
-      nombre: raw,
-      empresa_id: empresaIdDirecta || null
+      nombre: raw
     }
   }
+}
+
+function obtenerEmpresaId() {
+  const usuario = obtenerUsuarioStorage()
+
+  const empresaId =
+    usuario?.empresa_id ||
+    usuario?.empresaId ||
+    localStorage.getItem("empresa_id") ||
+    localStorage.getItem("empresaId") ||
+    localStorage.getItem("empresa") ||
+    "0296f388-92bc-495d-a395-3093c6250d61"
+
+  console.log("EMPRESA ID FINAL:", empresaId)
+
+  return empresaId
 }
 
   function renderPanelIzquierdo(modelo) {
