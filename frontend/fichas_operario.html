@@ -777,28 +777,33 @@
     }
   }
 
-  async function cargarFichasReales() {
+ async function cargarFichaReal(base) {
   try {
-    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
+    const usuario = obtenerUsuarioStorage()
     const empresaId = usuario?.empresa_id
 
-    if (!empresaId) {
-      throw new Error("empresa_id no disponible en usuario")
+    if (!empresaId) return null
+
+    const fichaId = base.ficha_id || base.id
+    if (!fichaId) return null
+
+    const res = await fetch(`/api/fichas-operario/${fichaId}?empresa_id=${empresaId}`)
+
+    // 🔥 IMPORTANTE: validar antes de parsear
+    if (!res.ok) {
+      console.warn("Error API ficha operario:", res.status)
+      return null
     }
 
-    const res = await fetch(`/api/fichas-operario?empresa_id=${empresaId}`)
     const data = await res.json()
 
-    if (!res.ok || !Array.isArray(data)) {
-      throw new Error("Respuesta inválida de /api/fichas-operario")
-    }
+    if (!data) return null
 
-    fichasCache = data.map(normalizarFicha)
-    modelosCache = fichasCache.length ? fichasCache : [...modelosMock]
+    return normalizarFicha(data)
+
   } catch (err) {
-    console.warn("No se pudieron cargar fichas reales, usando mock:", err)
-    fichasCache = []
-    modelosCache = [...modelosMock]
+    console.warn("No se pudo cargar detalle real de ficha:", err)
+    return null
   }
 }
 
@@ -853,10 +858,24 @@
     renderPanelDerecho(base)
   }
 
+  function obtenerUsuarioStorage() {
+  const raw = localStorage.getItem("usuario")
+
+  if (!raw) return {}
+
+  try {
+    return JSON.parse(raw)
+  } catch (err) {
+    return {
+      nombre: raw
+    }
+  }
+}
+
   async function cargarFichaReal(base) {
   try {
-    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
-    const empresaId = usuario?.empresa_id
+    const usuario = obtenerUsuarioStorage()
+const empresaId = usuario?.empresa_id
 
     if (!empresaId) return null
 
