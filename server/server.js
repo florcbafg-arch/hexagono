@@ -57,6 +57,215 @@ const { data, error } = await supabase.rpc("produccion_resumen")
 
 })
 
+// ==========================
+// LOGIN OPERARIO SIMPLE PARA CONSULTA
+// ==========================
+app.post("/api/operario/login-ficha", async (req, res) => {
+  try {
+    const { codigo_acceso, pin } = req.body
+
+    if (!codigo_acceso || !pin) {
+      return res.status(400).json({ error: "Faltan datos" })
+    }
+
+    const codigo = String(codigo_acceso).trim().toUpperCase()
+
+    const { data: operario, error } = await supabase
+      .from("usuarios")
+      .select("id, nombre, rol, empresa_id, codigo_acceso, pin_hash, activo")
+      .eq("codigo_acceso", codigo)
+      .eq("rol", "operario")
+      .eq("activo", true)
+      .maybeSingle()
+
+    if (error) throw error
+
+    if (!operario) {
+      return res.status(404).json({ error: "Operario no encontrado" })
+    }
+
+    const ok = await bcrypt.compare(pin, operario.pin_hash || "")
+    if (!ok) {
+      return res.status(401).json({ error: "PIN incorrecto" })
+    }
+
+    res.json({
+      ok: true,
+      operario: {
+        id: operario.id,
+        nombre: operario.nombre,
+        rol: operario.rol,
+        empresa_id: operario.empresa_id
+      }
+    })
+  } catch (err) {
+    console.error("Error login operario ficha:", err)
+    res.status(500).json({ error: "Error login operario" })
+  }
+})
+
+// ==========================
+// FICHAS SOLO LECTURA OPERARIO
+// ==========================
+app.get("/api/fichas-operario", async (req, res) => {
+  try {
+    const empresaId = req.query.empresa_id
+
+    if (!empresaId) {
+      return res.status(400).json({ error: "empresa_id requerido" })
+    }
+
+    const { data, error } = await supabase
+      .from("fichas_tecnicas")
+      .select(`
+        id,
+        modelo_id,
+        codigo,
+        nombre,
+        marca,
+        horma,
+        temporada,
+        detalle_general,
+        observaciones_generales,
+        imagen_modelo_url,
+        modelos (
+          id,
+          nombre,
+          marca,
+          codigo,
+          imagen,
+          tipo_curva
+        )
+      `)
+      .eq("empresa_id", empresaId)
+      .order("id", { ascending: false })
+
+    if (error) throw error
+
+    res.json(data || [])
+  } catch (err) {
+    console.error("Error en /api/fichas-operario:", err)
+    res.status(500).json({ error: "Error cargando fichas operario" })
+  }
+})
+
+app.get("/api/fichas-operario/:id", async (req, res) => {
+  try {
+    const fichaId = req.params.id
+    const empresaId = req.query.empresa_id
+
+    if (!empresaId) {
+      return res.status(400).json({ error: "empresa_id requerido" })
+    }
+
+    const { data: fichaBase, error: fichaError } = await supabase
+      .from("fichas_tecnicas")
+      .select("*")
+      .eq("id", fichaId)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+
+    if (fichaError) throw fichaError
+
+    if (!fichaBase) {
+      return res.status(404).json({ error: "Ficha no encontrada" })
+    }
+
+    const { data: secciones, error: secError } = await supabase
+      .from("fichas_secciones")
+      .select("*")
+      .eq("ficha_id", fichaBase.id)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (secError) throw secError
+
+    const seccionIds = (secciones || []).map(s => s.id)
+
+    let piezas = []
+    if (seccionIds.length) {
+      const { data: piezasData, error: piezasError } = await supabase
+        .from("fichas_piezas")
+        .select("*")
+        .in("seccion_id", seccionIds)
+        .eq("empresa_id", empresaId)
+        .order("orden", { ascending: true })
+
+      if (piezasError) throw piezasError
+      piezas = piezasData || []
+    }
+
+    const piezaIds = piezas.map(p => p.id)
+
+    let materiales = []
+    if (piezaIds.length) {
+      const { data: materialesData, error: materialesError } = await supabase
+        .from("fichas_materiales")
+        .select("*")
+        .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId)
+        .order("orden", { ascending: true })
+
+      if (materialesError) throw materialesError
+      materiales = materialesData || []
+    }
+
+    let operaciones = []
+    if (piezaIds.length) {
+      const { data: operacionesData, error: operacionesError } = await supabase
+        .from("fichas_operaciones")
+        .select("*")
+        .in("pieza_id", piezaIds)
+        .eq("empresa_id", empresaId)
+        .order("orden", { ascending: true })
+
+      if (operacionesError) throw operacionesError
+      operaciones = operacionesData || []
+    }
+
+    const { data: imagenes, error: imagenesError } = await supabase
+      .from("fichas_imagenes")
+      .select("*")
+      .eq("ficha_id", fichaBase.id)
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (imagenesError) throw imagenesError
+
+    const ficha = {
+      ...fichaBase,
+      imagenes: imagenes || [],
+      secciones: (secciones || []).map(seccion => {
+        const piezasDeSeccion = piezas.filter(p => p.seccion_id === seccion.id)
+
+        const piezasConDetalle = piezasDeSeccion.map(pieza => {
+          const materialesDePieza = materiales.filter(m => m.pieza_id === pieza.id)
+          const operacionesDePieza = operaciones.filter(o => o.pieza_id === pieza.id)
+
+          return {
+            ...pieza,
+            materiales: materialesDePieza,
+            operaciones: operacionesDePieza
+          }
+        })
+
+        return {
+          ...seccion,
+          piezas: piezasConDetalle,
+          materiales: piezasConDetalle.flatMap(p => p.materiales || []),
+          operaciones: piezasConDetalle.flatMap(p => p.operaciones || []),
+          imagenes: (imagenes || []).filter(img => img.seccion_id === seccion.id)
+        }
+      })
+    }
+
+    res.json(ficha)
+  } catch (err) {
+    console.error("Error en /api/fichas-operario/:id:", err)
+    res.status(500).json({ error: "Error cargando detalle de ficha operario" })
+  }
+})
+
 // =======================
 // CONFIGURAR SUBIDA ARCHIVOS
 // =======================

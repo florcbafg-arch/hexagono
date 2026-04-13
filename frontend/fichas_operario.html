@@ -778,22 +778,29 @@
   }
 
   async function cargarFichasReales() {
-    try {
-      const res = await apiFetch("/api/fichas")
-      const data = await res.json()
+  try {
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
+    const empresaId = usuario?.empresa_id
 
-      if (!res.ok || !Array.isArray(data)) {
-        throw new Error("Respuesta inválida de /api/fichas")
-      }
-
-      fichasCache = data.map(normalizarFicha)
-      modelosCache = fichasCache.length ? fichasCache : [...modelosMock]
-    } catch (err) {
-      console.warn("No se pudieron cargar fichas reales, usando mock:", err)
-      fichasCache = []
-      modelosCache = [...modelosMock]
+    if (!empresaId) {
+      throw new Error("empresa_id no disponible en usuario")
     }
+
+    const res = await fetch(`/api/fichas-operario?empresa_id=${empresaId}`)
+    const data = await res.json()
+
+    if (!res.ok || !Array.isArray(data)) {
+      throw new Error("Respuesta inválida de /api/fichas-operario")
+    }
+
+    fichasCache = data.map(normalizarFicha)
+    modelosCache = fichasCache.length ? fichasCache : [...modelosMock]
+  } catch (err) {
+    console.warn("No se pudieron cargar fichas reales, usando mock:", err)
+    fichasCache = []
+    modelosCache = [...modelosMock]
   }
+}
 
   function filtrarModelos(texto) {
     const valor = String(texto || "").toLowerCase().trim()
@@ -847,32 +854,26 @@
   }
 
   async function cargarFichaReal(base) {
-    try {
-      let res = null
-      let data = null
+  try {
+    const usuario = JSON.parse(localStorage.getItem("usuario") || "{}")
+    const empresaId = usuario?.empresa_id
 
-      if (base.modelo_id) {
-        res = await apiFetch(`/api/fichas/modelo/${base.modelo_id}`)
-        if (res.ok) {
-          data = await res.json()
-        }
-      }
+    if (!empresaId) return null
 
-      if ((!res || !res.ok) && base.ficha_id) {
-        res = await apiFetch(`/api/fichas/${base.ficha_id}`)
-        if (res.ok) {
-          data = await res.json()
-        }
-      }
+    const fichaId = base.ficha_id || base.id
+    if (!fichaId) return null
 
-      if (!data) return null
+    const res = await fetch(`/api/fichas-operario/${fichaId}?empresa_id=${empresaId}`)
+    const data = await res.json()
 
-      return normalizarFicha(data)
-    } catch (err) {
-      console.warn("No se pudo cargar detalle real de ficha:", err)
-      return null
-    }
+    if (!res.ok || !data) return null
+
+    return normalizarFicha(data)
+  } catch (err) {
+    console.warn("No se pudo cargar detalle real de ficha:", err)
+    return null
   }
+}
 
   function renderPanelIzquierdo(modelo) {
     const imagenPrincipal = extraerImagen(modelo)
