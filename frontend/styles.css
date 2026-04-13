@@ -3425,3 +3425,13 @@ body.tv-mode .panel-alertas ul {
   margin: 0 !important;
   padding-left: 18px !important;
 }
+.dashboard-tv {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.9fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.panel-ordenes {
+  grid-column: 1 / -1;
+}
