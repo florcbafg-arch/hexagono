@@ -563,7 +563,7 @@
       horma: "40/45",
       tipo_calzado: "Vulcanizada",
       temporada: "Invierno",
-      imagen_modelo_url: "https://via.placeholder.com/800x800?text=Tora+Azabache",
+      imagen_modelo_url: "",
       datosRapidos: {
         hilo: "Nylon negro 20/3",
         cordon: "Cordón negro",
@@ -584,11 +584,7 @@
         "Revisar alineación general antes de cerrar"
       ],
       observaciones: "Modelo de uso intensivo. Confirmar color de cordón, hilo y terminación del talón antes de liberar.",
-      imagenes: [
-        "https://via.placeholder.com/500x500?text=Detalle+1",
-        "https://via.placeholder.com/500x500?text=Detalle+2",
-        "https://via.placeholder.com/500x500?text=Detalle+3"
-      ]
+      imagenes: []
     },
     {
       id: 2,
@@ -598,7 +594,7 @@
       horma: "35/40",
       tipo_calzado: "Pegada",
       temporada: "Verano",
-      imagen_modelo_url: "https://via.placeholder.com/800x800?text=Grecia+White+Black",
+      imagen_modelo_url: "",
       datosRapidos: {
         hilo: "Blanco 20/3",
         cordon: "Blanco liso",
@@ -618,14 +614,12 @@
         "Verificar terminación de lengua"
       ],
       observaciones: "Atención al contraste blanco/negro y limpieza visual del modelo.",
-      imagenes: [
-        "https://via.placeholder.com/500x500?text=Grecia+1",
-        "https://via.placeholder.com/500x500?text=Grecia+2"
-      ]
+      imagenes: []
     }
   ]
 
   let modelosCache = []
+  let fichasCache = []
 
   const buscador = document.getElementById("buscadorModelo")
   const suggestions = document.getElementById("suggestions")
@@ -654,6 +648,153 @@
     `
   }
 
+  function extraerImagen(obj) {
+    return (
+      obj?.imagen_modelo_url ||
+      obj?.imagen ||
+      obj?.imagen_url ||
+      obj?.url_imagen ||
+      obj?.modelo?.imagen ||
+      ""
+    )
+  }
+
+  function extraerImagenes(obj) {
+    const candidatas =
+      obj?.imagenes ||
+      obj?.fichas_imagenes ||
+      obj?.imagenes_adicionales ||
+      obj?.imagenes_extra ||
+      []
+
+    if (!Array.isArray(candidatas)) return []
+
+    return candidatas
+      .map(img => {
+        if (typeof img === "string") return img
+        return img?.url || img?.imagen_url || img?.src || img?.archivo_url || ""
+      })
+      .filter(Boolean)
+  }
+
+  function extraerMateriales(ficha) {
+    if (Array.isArray(ficha?.materiales) && ficha.materiales.length) {
+      return ficha.materiales
+    }
+
+    if (Array.isArray(ficha?.fichas_materiales) && ficha.fichas_materiales.length) {
+      return ficha.fichas_materiales.map(m =>
+        [
+          m?.material || m?.nombre || m?.descripcion,
+          m?.color ? `(${m.color})` : "",
+          m?.unidad ? `- ${m.unidad}` : ""
+        ].filter(Boolean).join(" ")
+      )
+    }
+
+    if (Array.isArray(ficha?.secciones)) {
+      const materiales = []
+      ficha.secciones.forEach(sec => {
+        if (Array.isArray(sec?.materiales)) {
+          sec.materiales.forEach(m => {
+            materiales.push(
+              [
+                m?.material || m?.nombre || m?.descripcion,
+                m?.color ? `(${m.color})` : "",
+                m?.unidad ? `- ${m.unidad}` : ""
+              ].filter(Boolean).join(" ")
+            )
+          })
+        }
+      })
+      if (materiales.length) return materiales
+    }
+
+    return []
+  }
+
+  function extraerProcesos(ficha) {
+    if (Array.isArray(ficha?.procesos) && ficha.procesos.length) {
+      return ficha.procesos
+    }
+
+    if (Array.isArray(ficha?.fichas_operaciones) && ficha.fichas_operaciones.length) {
+      return ficha.fichas_operaciones.map(op =>
+        op?.operacion || op?.nombre || op?.descripcion || "Operación"
+      )
+    }
+
+    if (Array.isArray(ficha?.secciones)) {
+      const procesos = []
+      ficha.secciones.forEach(sec => {
+        if (Array.isArray(sec?.operaciones)) {
+          sec.operaciones.forEach(op => {
+            procesos.push(op?.operacion || op?.nombre || op?.descripcion || "Operación")
+          })
+        }
+      })
+      if (procesos.length) return procesos
+    }
+
+    return []
+  }
+
+  function construirDatosRapidos(ficha) {
+    const materiales = extraerMateriales(ficha)
+
+    const buscarPrimero = (palabras) => {
+      const item = materiales.find(m =>
+        palabras.some(p => String(m).toLowerCase().includes(p))
+      )
+      return item || "-"
+    }
+
+    return {
+      hilo: ficha?.datosRapidos?.hilo || buscarPrimero(["hilo"]),
+      cordon: ficha?.datosRapidos?.cordon || buscarPrimero(["cordon", "cordón"]),
+      base: ficha?.datosRapidos?.base || buscarPrimero(["base", "suela", "vulcanizada", "pegada"]),
+      refuerzo: ficha?.datosRapidos?.refuerzo || buscarPrimero(["refuerzo", "contrafuerte", "espuma"])
+    }
+  }
+
+  function normalizarFicha(ficha) {
+    return {
+      id: ficha?.id ?? ficha?.ficha_id ?? ficha?.modelo_id,
+      ficha_id: ficha?.id ?? ficha?.ficha_id ?? null,
+      modelo_id: ficha?.modelo_id ?? ficha?.id_modelo ?? ficha?.modelo?.id ?? null,
+      nombre: ficha?.nombre || ficha?.modelo || ficha?.modelo_nombre || ficha?.modelo?.nombre || "Sin nombre",
+      marca: ficha?.marca || ficha?.modelo?.marca || "-",
+      codigo: ficha?.codigo || ficha?.modelo?.codigo || "-",
+      horma: ficha?.horma || ficha?.modelo?.horma || "-",
+      tipo_calzado: ficha?.tipo_calzado || ficha?.modelo?.tipo_calzado || "-",
+      temporada: ficha?.temporada || ficha?.modelo?.temporada || "-",
+      imagen_modelo_url: extraerImagen(ficha),
+      imagenes: extraerImagenes(ficha),
+      materiales: extraerMateriales(ficha),
+      procesos: extraerProcesos(ficha),
+      observaciones: ficha?.observaciones_generales || ficha?.observaciones || ficha?.detalle_general || "",
+      datosRapidos: construirDatosRapidos(ficha)
+    }
+  }
+
+  async function cargarFichasReales() {
+    try {
+      const res = await apiFetch("/api/fichas")
+      const data = await res.json()
+
+      if (!res.ok || !Array.isArray(data)) {
+        throw new Error("Respuesta inválida de /api/fichas")
+      }
+
+      fichasCache = data.map(normalizarFicha)
+      modelosCache = fichasCache.length ? fichasCache : [...modelosMock]
+    } catch (err) {
+      console.warn("No se pudieron cargar fichas reales, usando mock:", err)
+      fichasCache = []
+      modelosCache = [...modelosMock]
+    }
+  }
+
   function filtrarModelos(texto) {
     const valor = String(texto || "").toLowerCase().trim()
 
@@ -674,7 +815,7 @@
     }
 
     suggestions.innerHTML = lista.slice(0, 6).map(modelo => `
-      <div class="suggestion-item" onclick="seleccionarModelo(${modelo.id})">
+      <div class="suggestion-item" onclick="seleccionarModelo('${modelo.id}')">
         <div class="suggestion-name">${modelo.nombre || "Sin nombre"}</div>
         <div class="suggestion-meta">
           ${modelo.marca || "-"} · ${modelo.codigo || "-"} · ${modelo.tipo_calzado || "-"}
@@ -685,24 +826,56 @@
     suggestions.style.display = "block"
   }
 
-  function seleccionarModelo(id) {
-    const modelo = modelosCache.find(m => String(m.id) === String(id))
-    if (!modelo) return
+  async function seleccionarModelo(id) {
+    const base = modelosCache.find(m => String(m.id) === String(id))
+    if (!base) return
 
-    buscador.value = modelo.nombre || ""
+    buscador.value = base.nombre || ""
     suggestions.style.display = "none"
 
-    renderPanelIzquierdo(modelo)
-    renderPanelDerecho(modelo)
+    if (base.ficha_id || base.modelo_id) {
+      const fichaDetallada = await cargarFichaReal(base)
+      if (fichaDetallada) {
+        renderPanelIzquierdo(fichaDetallada)
+        renderPanelDerecho(fichaDetallada)
+        return
+      }
+    }
+
+    renderPanelIzquierdo(base)
+    renderPanelDerecho(base)
+  }
+
+  async function cargarFichaReal(base) {
+    try {
+      let res = null
+      let data = null
+
+      if (base.modelo_id) {
+        res = await apiFetch(`/api/fichas/modelo/${base.modelo_id}`)
+        if (res.ok) {
+          data = await res.json()
+        }
+      }
+
+      if ((!res || !res.ok) && base.ficha_id) {
+        res = await apiFetch(`/api/fichas/${base.ficha_id}`)
+        if (res.ok) {
+          data = await res.json()
+        }
+      }
+
+      if (!data) return null
+
+      return normalizarFicha(data)
+    } catch (err) {
+      console.warn("No se pudo cargar detalle real de ficha:", err)
+      return null
+    }
   }
 
   function renderPanelIzquierdo(modelo) {
-    const imagenPrincipal =
-      modelo.imagen_modelo_url ||
-      modelo.imagen ||
-      modelo.imagen_url ||
-      modelo.url_imagen ||
-      ""
+    const imagenPrincipal = extraerImagen(modelo)
 
     panelIzquierdo.innerHTML = `
       <div class="image-box" ${imagenPrincipal ? `onclick="abrirImagenGrande('${imagenPrincipal}')"` : ""}>
@@ -761,7 +934,7 @@
   }
 
   function renderPanelDerecho(modelo) {
-    const imagenesExtra = Array.isArray(modelo.imagenes) ? modelo.imagenes : []
+    const imagenesExtra = extraerImagenes(modelo)
 
     panelDerecho.innerHTML = `
       <div class="tabs">
@@ -886,7 +1059,7 @@
     }
   })
 
-  window.addEventListener("DOMContentLoaded", () => {
-    modelosCache = [...modelosMock]
+  window.addEventListener("DOMContentLoaded", async () => {
+    await cargarFichasReales()
   })
 </script>
