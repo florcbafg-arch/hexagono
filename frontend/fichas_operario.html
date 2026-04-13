@@ -1,94 +1,758 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEXAFLOW - Ficha Técnica Operario</title>
 
-<meta charset="UTF-8">
-<title>Ficha Técnica</title>
-
-<link rel="stylesheet" href="styles.css">
-
-  <!-- 🔐 AUTH -->
   <script src="js/authGuard.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
 
   <script>
-    checkAuth("admin")
+    checkAuth("operario")
   </script>
+
+  <style>
+    :root {
+      --bg: #eef3f9;
+      --panel: #ffffff;
+      --panel-soft: #f8fbff;
+      --border: #d8e2ee;
+      --text: #0f172a;
+      --text-soft: #475569;
+      --primary: #7c3aed;
+      --primary-2: #2563eb;
+      --ok: #16a34a;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #eef3f9 0%, #dde7f2 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 22px;
+    }
+
+    .topbar-left h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .topbar-left p {
+      margin: 6px 0 0 0;
+      color: var(--text-soft);
+      font-size: 14px;
+    }
+
+    .btn-volver {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+    }
+
+    .search-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+      position: relative;
+    }
+
+    .search-title {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 56px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 0 18px;
+      font-size: 18px;
+      outline: none;
+      background: #fff;
+    }
+
+    .search-input:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08);
+    }
+
+    .btn-limpiar {
+      height: 56px;
+      padding: 0 18px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+      z-index: 20;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 14px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+      background: #f8fafc;
+    }
+
+    .suggestion-name {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .suggestion-meta {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 520px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-inner {
+      padding: 20px;
+    }
+
+    .empty-state {
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-soft);
+      font-size: 18px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      background: #f8fbff;
+      padding: 30px;
+    }
+
+    .image-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .image-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .image-placeholder {
+      color: #64748b;
+      font-size: 18px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .model-title {
+      margin: 0 0 6px 0;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .model-subtitle {
+      margin: 0 0 18px 0;
+      color: var(--text-soft);
+      font-size: 15px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .quick-card {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .quick-label {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .quick-value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-block {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .obs-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      color: #1e293b;
+      line-height: 1.5;
+      min-height: 90px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-color: transparent;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .list-clean {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .list-clean li {
+      margin-bottom: 10px;
+      line-height: 1.45;
+    }
+
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .thumb {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1280px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 14px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-row {
+        flex-direction: column;
+      }
+
+      .btn-limpiar {
+        width: 100%;
+      }
+
+      .quick-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .thumb-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="page">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Consulta de Ficha Técnica</h1>
+        <p>Buscá un modelo para ver imagen, materiales, procesos y observaciones.</p>
+      </div>
 
-<body>
+      <button class="btn-volver" onclick="volverPanelOperario()">
+        ← Volver
+      </button>
+    </div>
 
-<div class="auth-container">
-<div class="auth-card">
+    <div class="search-card">
+      <h2 class="search-title">Buscar modelo</h2>
 
-<div class="logo">HEXAFLOW</div>
-<div class="subtitulo">Ficha Técnica</div>
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <input
+            id="buscadorModelo"
+            class="search-input"
+            type="text"
+            placeholder="Escribí el nombre del modelo..."
+            autocomplete="off"
+          />
 
-<input 
-type="text" 
-id="buscar" 
-placeholder="Marca o Modelo">
+          <div id="suggestions" class="suggestions"></div>
+        </div>
 
-<button class="boton-principal" onclick="buscarFicha()">
-Buscar
-</button>
+        <button class="btn-limpiar" onclick="limpiarFicha()">
+          Limpiar
+        </button>
+      </div>
+    </div>
 
-<div id="resultado"></div>
+    <div class="content">
+      <!-- IZQUIERDA -->
+      <div class="panel">
+        <div class="panel-inner" id="panelIzquierdo">
+          <div class="empty-state">
+            Buscá un modelo para ver su imagen y datos principales
+          </div>
+        </div>
+      </div>
 
-<button class="boton-salir" onclick="volver()">
-Volver
-</button>
+      <!-- DERECHA -->
+      <div class="panel">
+        <div class="panel-inner" id="panelDerecho">
+          <div class="empty-state">
+            Acá se van a mostrar los materiales, procesos, observaciones e imágenes de la ficha
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</div>
-</div>
+  <script>
+    const modelosMock = [
+      {
+        id: 1,
+        nombre: "Tora Azabache Hombre",
+        marca: "AMERIKA SB",
+        codigo: "TORA-001",
+        horma: "40/45",
+        tipo_calzado: "Vulcanizada",
+        temporada: "Invierno",
+        imagen_modelo_url: "https://via.placeholder.com/800x800?text=Tora+Azabache",
+        datosRapidos: {
+          hilo: "Nylon negro 20/3",
+          cordon: "Cordón negro",
+          base: "Vulcanizada blanca",
+          refuerzo: "Contrafuerte PU"
+        },
+        materiales: [
+          "Capellada en material negro",
+          "Cordón poliéster negro",
+          "Forro textil negro",
+          "Base vulcanizada blanca",
+          "Refuerzo interno PU"
+        ],
+        procesos: [
+          "Costura reforzada en talón",
+          "Controlar posición de lengua",
+          "Verificar ojalillado metálico",
+          "Revisar alineación general antes de cerrar"
+        ],
+        observaciones: "Modelo de uso intensivo. Confirmar color de cordón, hilo y terminación del talón antes de liberar.",
+        imagenes: [
+          "https://via.placeholder.com/500x500?text=Detalle+1",
+          "https://via.placeholder.com/500x500?text=Detalle+2",
+          "https://via.placeholder.com/500x500?text=Detalle+3"
+        ]
+      },
+      {
+        id: 2,
+        nombre: "Grecia White Black Dama",
+        marca: "ARCANA",
+        codigo: "GRC-203",
+        horma: "35/40",
+        tipo_calzado: "Pegada",
+        temporada: "Verano",
+        imagen_modelo_url: "https://via.placeholder.com/800x800?text=Grecia+White+Black",
+        datosRapidos: {
+          hilo: "Blanco 20/3",
+          cordon: "Blanco liso",
+          base: "Pegada blanca",
+          refuerzo: "Espuma lateral"
+        },
+        materiales: [
+          "Capellada blanca y negra",
+          "Cordón blanco liso",
+          "Forro textil blanco",
+          "Base pegada",
+          "Refuerzo lateral de espuma"
+        ],
+        procesos: [
+          "Controlar simetría de piezas",
+          "Revisar unión de base",
+          "Verificar terminación de lengua"
+        ],
+        observaciones: "Atención al contraste blanco/negro y limpieza visual del modelo.",
+        imagenes: [
+          "https://via.placeholder.com/500x500?text=Grecia+1",
+          "https://via.placeholder.com/500x500?text=Grecia+2"
+        ]
+      }
+    ]
 
-<script>
+    const buscador = document.getElementById("buscadorModelo")
+    const suggestions = document.getElementById("suggestions")
+    const panelIzquierdo = document.getElementById("panelIzquierdo")
+    const panelDerecho = document.getElementById("panelDerecho")
 
-async function buscarFicha(){
+    function volverPanelOperario() {
+      window.location.href = "/operario.html"
+    }
 
-const texto = document.getElementById("buscar").value
+    function limpiarFicha() {
+      buscador.value = ""
+      suggestions.style.display = "none"
 
-const res = await fetch("http://localhost:3000/api/fichas?buscar="+texto)
+      panelIzquierdo.innerHTML = `
+        <div class="empty-state">
+          Buscá un modelo para ver su imagen y datos principales
+        </div>
+      `
 
-const fichas = await res.json()
+      panelDerecho.innerHTML = `
+        <div class="empty-state">
+          Acá se van a mostrar los materiales, procesos, observaciones e imágenes de la ficha
+        </div>
+      `
+    }
 
-let html=""
+    function mostrarSugerencias(texto) {
+      const valor = texto.trim().toLowerCase()
 
-fichas.forEach(f=>{
+      if (valor.length < 2) {
+        suggestions.innerHTML = ""
+        suggestions.style.display = "none"
+        return
+      }
 
-html+=`
-<div class="ficha">
+      const resultados = modelosMock.filter(modelo =>
+        modelo.nombre.toLowerCase().includes(valor)
+      )
 
-<b>Marca:</b> ${f.marca} <br>
-<b>Modelo:</b> ${f.modelo} <br>
-<b>Color:</b> ${f.color} <br>
-<b>Plantilla:</b> ${f.plantilla} <br>
-<b>Suela:</b> ${f.suela} <br>
-<b>Material:</b> ${f.material}
+      if (!resultados.length) {
+        suggestions.innerHTML = `
+          <div class="suggestion-item">
+            <div class="suggestion-name">No se encontraron modelos</div>
+          </div>
+        `
+        suggestions.style.display = "block"
+        return
+      }
 
-<hr>
+      suggestions.innerHTML = resultados.map(modelo => `
+        <div class="suggestion-item" onclick="seleccionarModelo(${modelo.id})">
+          <div class="suggestion-name">${modelo.nombre}</div>
+          <div class="suggestion-meta">
+            ${modelo.marca} · ${modelo.codigo} · ${modelo.tipo_calzado}
+          </div>
+        </div>
+      `).join("")
 
-</div>
-`
+      suggestions.style.display = "block"
+    }
 
-})
+    function seleccionarModelo(id) {
+      const modelo = modelosMock.find(m => m.id === id)
+      if (!modelo) return
 
-document.getElementById("resultado").innerHTML = html
+      buscador.value = modelo.nombre
+      suggestions.style.display = "none"
 
-}
+      renderPanelIzquierdo(modelo)
+      renderPanelDerecho(modelo)
+    }
 
-function volver(){
+    function renderPanelIzquierdo(modelo) {
+      panelIzquierdo.innerHTML = `
+        <div class="image-box">
+          ${
+            modelo.imagen_modelo_url
+              ? `<img src="${modelo.imagen_modelo_url}" alt="${modelo.nombre}">`
+              : `<div class="image-placeholder">Sin imagen del modelo</div>`
+          }
+        </div>
 
-window.location.href="operario.html"
+        <h2 class="model-title">${modelo.nombre}</h2>
+        <p class="model-subtitle">${modelo.marca} · ${modelo.codigo}</p>
 
-}
+        <div class="quick-grid">
+          <div class="quick-card">
+            <div class="quick-label">Marca</div>
+            <div class="quick-value">${modelo.marca || "-"}</div>
+          </div>
 
-</script>
+          <div class="quick-card">
+            <div class="quick-label">Código</div>
+            <div class="quick-value">${modelo.codigo || "-"}</div>
+          </div>
 
+          <div class="quick-card">
+            <div class="quick-label">Horma</div>
+            <div class="quick-value">${modelo.horma || "-"}</div>
+          </div>
 
+          <div class="quick-card">
+            <div class="quick-label">Tipo</div>
+            <div class="quick-value">${modelo.tipo_calzado || "-"}</div>
+          </div>
+
+          <div class="quick-card">
+            <div class="quick-label">Temporada</div>
+            <div class="quick-value">${modelo.temporada || "-"}</div>
+          </div>
+
+          <div class="quick-card">
+            <div class="quick-label">Estado</div>
+            <div class="quick-value">Ficha disponible</div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3 class="section-title">Datos rápidos</h3>
+          <div class="chips">
+            <div class="chip"><b>Hilo:</b> ${modelo.datosRapidos?.hilo || "-"}</div>
+            <div class="chip"><b>Cordón:</b> ${modelo.datosRapidos?.cordon || "-"}</div>
+            <div class="chip"><b>Base:</b> ${modelo.datosRapidos?.base || "-"}</div>
+            <div class="chip"><b>Refuerzo:</b> ${modelo.datosRapidos?.refuerzo || "-"}</div>
+          </div>
+        </div>
+      `
+    }
+
+    function renderPanelDerecho(modelo) {
+      panelDerecho.innerHTML = `
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="materiales" onclick="cambiarTab(this, 'materiales')">Materiales</button>
+          <button class="tab-btn" data-tab="procesos" onclick="cambiarTab(this, 'procesos')">Procesos</button>
+          <button class="tab-btn" data-tab="observaciones" onclick="cambiarTab(this, 'observaciones')">Observaciones</button>
+          <button class="tab-btn" data-tab="imagenes" onclick="cambiarTab(this, 'imagenes')">Imágenes</button>
+        </div>
+
+        <div class="tab-content active" id="tab-materiales">
+          <div class="section-block">
+            <h3 class="section-title">Materiales clave</h3>
+            <ul class="list-clean">
+              ${(modelo.materiales || []).map(item => `<li>${item}</li>`).join("")}
+            </ul>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-procesos">
+          <div class="section-block">
+            <h3 class="section-title">Procesos y referencias</h3>
+            <ul class="list-clean">
+              ${(modelo.procesos || []).map(item => `<li>${item}</li>`).join("")}
+            </ul>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-observaciones">
+          <div class="section-block">
+            <h3 class="section-title">Observaciones</h3>
+            <div class="obs-box">
+              ${modelo.observaciones || "Sin observaciones cargadas"}
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-imagenes">
+          <div class="section-block">
+            <h3 class="section-title">Imágenes adicionales</h3>
+            <div class="thumb-grid">
+              ${(modelo.imagenes || []).map(src => `
+                <div class="thumb">
+                  <img src="${src}" alt="Imagen técnica">
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `
+    }
+
+    function cambiarTab(btn, tab) {
+      document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"))
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"))
+
+      btn.classList.add("active")
+      const panel = document.getElementById(`tab-${tab}`)
+      if (panel) panel.classList.add("active")
+    }
+
+    buscador.addEventListener("input", (e) => {
+      mostrarSugerencias(e.target.value)
+    })
+
+    document.addEventListener("click", (e) => {
+      const dentroBuscador = e.target.closest(".search-input-wrap")
+      if (!dentroBuscador) {
+        suggestions.style.display = "none"
+      }
+    })
+  </script>
 </body>
 </html>
