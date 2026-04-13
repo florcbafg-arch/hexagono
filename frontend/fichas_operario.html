@@ -629,12 +629,27 @@
 
 async function cargarModelos() {
   try {
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      console.warn("Sin token, usando modelos mock en fichas_operario")
+      modelosCache = modelosMock
+      return
+    }
+
     const res = await apiFetch("/api/modelos")
     const data = await res.json()
 
-    modelosCache = data || []
+    if (!res.ok) {
+      console.warn("No se pudo cargar /api/modelos, usando modelos mock")
+      modelosCache = modelosMock
+      return
+    }
+
+    modelosCache = Array.isArray(data) && data.length ? data : modelosMock
   } catch (err) {
-    console.error("Error cargando modelos", err)
+    console.warn("Error cargando modelos, usando mock:", err)
+    modelosCache = modelosMock
   }
 }
 
@@ -878,19 +893,45 @@ document.addEventListener("keydown", (e) => {
 
 async function cargarFicha(modeloId) {
   try {
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      const fichaMock = modelosMock.find(m => m.id === modeloId)
+      if (!fichaMock) return
+
+      renderPanelIzquierdo(fichaMock)
+      renderPanelDerecho(fichaMock)
+      return
+    }
+
     const res = await apiFetch(`/api/fichas/modelo/${modeloId}`)
     const ficha = await res.json()
+
+    if (!res.ok) {
+      const fichaMock = modelosMock.find(m => m.id === modeloId)
+      if (!fichaMock) return
+
+      renderPanelIzquierdo(fichaMock)
+      renderPanelDerecho(fichaMock)
+      return
+    }
 
     renderPanelIzquierdo(ficha)
     renderPanelDerecho(ficha)
   } catch (err) {
     console.error("Error cargando ficha", err)
+
+    const fichaMock = modelosMock.find(m => m.id === modeloId)
+    if (!fichaMock) return
+
+    renderPanelIzquierdo(fichaMock)
+    renderPanelDerecho(fichaMock)
   }
 }
-
 window.addEventListener("DOMContentLoaded", () => {
-  cargarModelos()
+  modelosCache = modelosMock
 })
+
 
   </script>
 
