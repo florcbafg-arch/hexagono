@@ -3337,101 +3337,85 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
   margin-bottom: 8px;
   line-height: 1.4;
 }
+
 /* =========================
-   FIX FINAL DASHBOARD TV
-========================= */
-
-body.admin-page.tv-mode .dashboard-tv,
-body.tv-mode .dashboard-tv {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr 0.9fr !important;
-  gap: 12px !important;
-  align-items: start !important;
-}
-
-body.admin-page.tv-mode .dashboard-tv > .panel,
-body.tv-mode .dashboard-tv > .panel {
-  width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  align-self: start !important;
-}
-
-body.admin-page.tv-mode .panel-alertas,
-body.tv-mode .panel-alertas {
-  grid-column: 3 !important;
-  grid-row: 1 !important;
-  width: 100% !important;
-  min-height: 0 !important;
-  align-self: start !important;
-}
-
-body.admin-page.tv-mode .panel-ordenes,
-body.tv-mode .panel-ordenes {
-  grid-column: 1 / -1 !important;
-  grid-row: 2 !important;
-  width: 100% !important;
-}
-
-body.admin-page.tv-mode .panel-alertas ul,
-body.tv-mode .panel-alertas ul {
-  margin: 0 !important;
-  padding-left: 18px !important;
-}
-/* =========================
-   FIX FINAL DASHBOARD GRID
+   FIX CSS SOLO - DASHBOARD ALERTAS
 ========================= */
 
 .dashboard-tv {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 0.9fr) !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) !important;
   gap: 12px !important;
   align-items: start !important;
 }
 
-.dashboard-tv > .panel {
-  width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  align-self: start !important;
-}
-
-.dashboard-tv > .panel:nth-child(1) {
+/* primer panel */
+.dashboard-tv > .panel:first-child {
   grid-column: 1 !important;
   grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
+/* segundo panel: ahora contiene tabla + alertas lado a lado */
 .dashboard-tv > .panel:nth-child(2) {
   grid-column: 2 !important;
   grid-row: 1 !important;
+
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 260px !important;
+  grid-template-rows: auto 1fr !important;
+  column-gap: 12px !important;
+  row-gap: 12px !important;
+  align-items: start !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-.dashboard-tv > .panel-alertas {
-  grid-column: 3 !important;
+/* titulo PARES del segundo panel */
+.dashboard-tv > .panel:nth-child(2) > h3 {
+  grid-column: 1 !important;
   grid-row: 1 !important;
-  align-self: start !important;
+  margin: 0 0 6px 0 !important;
+  text-align: center !important;
 }
 
+/* tabla del segundo panel */
+.dashboard-tv > .panel:nth-child(2) > .tabla-produccion {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* alertas dentro del segundo panel, a la derecha */
+.dashboard-tv > .panel:nth-child(2) > .panel-alertas {
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 100% !important;
+  margin: 0 !important;
+  align-self: stretch !important;
+}
+
+/* ordenes abajo de todo */
 .dashboard-tv > .panel-ordenes {
   grid-column: 1 / -1 !important;
   grid-row: 2 !important;
+  width: 100% !important;
 }
 
-.panel-alertas {
-  min-height: 0 !important;
+/* prolijidad alertas */
+.panel-alertas h3 {
+  margin: 0 0 10px 0 !important;
+  text-align: center !important;
 }
 
 .panel-alertas ul {
   margin: 0 !important;
   padding-left: 18px !important;
-}
-.dashboard-tv {
-  display: grid;
-  grid-template-columns: 1fr 1fr 0.9fr;
-  gap: 12px;
-  align-items: start;
-}
-
-.panel-ordenes {
-  grid-column: 1 / -1;
 }
