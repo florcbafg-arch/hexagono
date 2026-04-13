@@ -819,6 +819,9 @@ async function cargarFichasReales() {
       return
     }
 
+    console.log("USUARIO OPERARIO NORMALIZADO:", usuario)
+console.log("EMPRESA ID USADA:", empresaId)
+
     const res = await fetch(`/api/fichas-operario?empresa_id=${empresaId}`)
 
     if (!res.ok) {
@@ -899,14 +902,30 @@ async function cargarFichasReales() {
 
   function obtenerUsuarioStorage() {
   const raw = localStorage.getItem("usuario")
+  const empresaIdDirecta =
+    localStorage.getItem("empresa_id") ||
+    localStorage.getItem("empresaId") ||
+    localStorage.getItem("empresa")
 
-  if (!raw) return {}
+  if (!raw) {
+    return empresaIdDirecta ? { empresa_id: empresaIdDirecta } : {}
+  }
 
   try {
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+
+    return {
+      ...parsed,
+      empresa_id:
+        parsed?.empresa_id ||
+        parsed?.empresaId ||
+        empresaIdDirecta ||
+        null
+    }
   } catch (err) {
     return {
-      nombre: raw
+      nombre: raw,
+      empresa_id: empresaIdDirecta || null
     }
   }
 }
