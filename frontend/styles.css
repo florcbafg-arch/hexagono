@@ -3301,6 +3301,39 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.dashboard-tv {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.9fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.dashboard-tv > .panel {
+  width: 100%;
+  min-width: 0;
+}
+
+.panel-alertas {
+  grid-column: auto;
+}
+
 .panel-ordenes {
   grid-column: 1 / -1;
+}
+
+.tabla-ordenes-wrap {
+  overflow-x: auto;
+}
+
+.panel-ordenes {
+  grid-column: 1 / -1;
+}
+.panel-alertas ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.panel-alertas li {
+  margin-bottom: 8px;
+  line-height: 1.4;
 }
