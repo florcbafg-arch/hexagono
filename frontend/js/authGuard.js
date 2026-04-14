@@ -41,22 +41,41 @@ async function validarSesionReal() {
 
 
 // 🔐 CHECK AUTH PRINCIPAL
-async function checkAuth(rolRequerido = null){
-
+async function checkAuth(rolRequerido = null) {
+  const userStorage = JSON.parse(localStorage.getItem("hexagono_user") || "null")
   const token = localStorage.getItem("token")
 
-  // ❌ sin token → afuera
-  if(!token){
+  // ✅ caso operario: no exigir token, usar sesión local
+  if (userStorage?.tipo_login === "operario") {
+    const user = await validarSesionReal()
+    if (!user) return
+
+    if (rolRequerido && user.rol !== rolRequerido) {
+      alert("No tenés permisos para acceder acá")
+      window.location.href = "login.html"
+      return
+    }
+
+    console.log("🔐 Usuario autenticado:", user.nombre)
+
+    const nombreUsuario = document.getElementById("nombreUsuario")
+    if (nombreUsuario) {
+      nombreUsuario.textContent = user.nombre || "Usuario"
+    }
+
+    return user
+  }
+
+  // ✅ caso admin: sí exigir token
+  if (!token) {
     window.location.href = "login.html"
     return
   }
 
-  // 🔥 validamos sesión REAL contra backend
   const user = await validarSesionReal()
   if (!user) return
 
-  // ❌ rol incorrecto → afuera
-  if(rolRequerido && user.rol !== rolRequerido){
+  if (rolRequerido && user.rol !== rolRequerido) {
     alert("No tenés permisos para acceder acá")
     window.location.href = "login.html"
     return
@@ -64,7 +83,6 @@ async function checkAuth(rolRequerido = null){
 
   console.log("🔐 Usuario autenticado:", user.nombre)
 
-  // opcional: pintar nombre si existe elemento
   const nombreUsuario = document.getElementById("nombreUsuario")
   if (nombreUsuario) {
     nombreUsuario.textContent = user.nombre || "Usuario"
@@ -72,7 +90,6 @@ async function checkAuth(rolRequerido = null){
 
   return user
 }
-
 
 // 🔗 export global (para HTML)
 window.checkAuth = checkAuth
