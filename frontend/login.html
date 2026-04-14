@@ -82,11 +82,17 @@ const res = await fetch(endpoint, {
           
 
           const data = await res.json()
+          console.log("RESP LOGIN:", data)
 
-          if (!esEmail && data.ok) {
-  // 👉 LOGIN OPERARIO
-  localStorage.setItem("usuario", JSON.stringify(data.operario))
-  localStorage.setItem("empresa_id", data.operario.empresa_id)
+if (!esEmail && data.ok) {
+  const operario = data.operario || data.usuario || data.user || null
+
+  if (!operario) {
+    throw new Error("La respuesta del login operario no trajo datos del usuario")
+  }
+
+  localStorage.setItem("usuario", JSON.stringify(operario))
+  localStorage.setItem("empresa_id", operario.empresa_id || "")
 
   window.location.href = "/fichas_operario.html"
 }
