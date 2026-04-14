@@ -836,7 +836,7 @@ async function cargarFichasReales() {
       modelosCache = [...modelosMock]
       return
     }
-
+    console.log("DETALLE FICHA REAL:", data)
     const data = await res.json()
 
     if (!Array.isArray(data)) {
