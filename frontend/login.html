@@ -83,6 +83,14 @@ const res = await fetch(endpoint, {
 
           const data = await res.json()
 
+          if (!esEmail && data.ok) {
+  // 👉 LOGIN OPERARIO
+  localStorage.setItem("usuario", JSON.stringify(data.operario))
+  localStorage.setItem("empresa_id", data.operario.empresa_id)
+
+  window.location.href = "/fichas_operario.html"
+}
+
           console.log("RESPUESTA:", data)
 
          if (data.ok && data.usuario) {
