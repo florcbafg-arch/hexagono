@@ -91,8 +91,16 @@ if (!esEmail && data.ok) {
     throw new Error("La respuesta del login operario no trajo datos del usuario")
   }
 
-  localStorage.setItem("usuario", JSON.stringify(operario))
-  localStorage.setItem("empresa_id", operario.empresa_id || "")
+localStorage.setItem("hexagono_user", JSON.stringify({
+  id: operario.id,
+  nombre: operario.nombre,
+  rol: operario.rol,
+  empresa_id: operario.empresa_id,
+  tipo_login: "operario",
+  login_time: Date.now()
+}))
+
+localStorage.setItem("empresa_id", operario.empresa_id)
 
   window.location.href = "/fichas_operario.html"
 }
