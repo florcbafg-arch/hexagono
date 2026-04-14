@@ -808,17 +808,18 @@ if (!empresaId) return null
 
 async function cargarFichasReales() {
   try {
+    const usuario = obtenerUsuarioStorage()
     const empresaId = obtenerEmpresaId()
 
-if (!empresaId) {
-  console.warn("usuario sin empresa_id, usando mock")
-  fichasCache = []
-  modelosCache = [...modelosMock]
-  return
-}
+    if (!empresaId) {
+      console.warn("usuario sin empresa_id, usando mock")
+      fichasCache = []
+      modelosCache = [...modelosMock]
+      return
+    }
 
     console.log("USUARIO OPERARIO NORMALIZADO:", usuario)
-console.log("EMPRESA ID USADA:", empresaId)
+    console.log("EMPRESA ID USADA:", empresaId)
 
     const res = await fetch(`/api/fichas-operario?empresa_id=${empresaId}`)
 
@@ -920,12 +921,11 @@ function obtenerEmpresaId() {
     usuario?.empresaId ||
     localStorage.getItem("empresa_id") ||
     localStorage.getItem("empresaId") ||
-    localStorage.getItem("empresa") ||
-    "0296f388-92bc-495d-a395-3093c6250d61"
+    localStorage.getItem("empresa")
 
   console.log("EMPRESA ID FINAL:", empresaId)
 
-  return empresaId
+  return empresaId || null
 }
 
   function renderPanelIzquierdo(modelo) {

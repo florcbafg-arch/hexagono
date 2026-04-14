@@ -42,21 +42,6 @@ app.use("/api/modelos", authMiddleware);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 
-app.use("/api", authMiddleware, fichasRoutes);
-console.log("✅ montando rutas sacabocados en /api")
-app.use("/api", authMiddleware, sacabocadosRoutes);
-app.get("/api/produccion/resumen", async (req, res) => {
-
-const { data, error } = await supabase.rpc("produccion_resumen")
-
-  if(error){
-    return res.status(500).json({ error })
-  }
-
-  res.json(data)
-
-})
-
 // ==========================
 // LOGIN OPERARIO SIMPLE PARA CONSULTA
 // ==========================
@@ -148,6 +133,23 @@ app.get("/api/fichas-operario", async (req, res) => {
     res.status(500).json({ error: "Error cargando fichas operario" })
   }
 })
+
+app.use("/api", authMiddleware, fichasRoutes);
+console.log("✅ montando rutas sacabocados en /api")
+app.use("/api", authMiddleware, sacabocadosRoutes);
+app.get("/api/produccion/resumen", async (req, res) => {
+
+const { data, error } = await supabase.rpc("produccion_resumen")
+
+  if(error){
+    return res.status(500).json({ error })
+  }
+
+  res.json(data)
+
+})
+
+
 
 app.get("/api/fichas-operario/:id", async (req, res) => {
   try {
