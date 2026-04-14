@@ -907,27 +907,20 @@ async function cargarFichasReales() {
   }
 
 function obtenerUsuarioStorage() {
-  const raw = localStorage.getItem("usuario")
+  const raw = localStorage.getItem("hexagono_user")
 
-  if (!raw) return {}
+  if (!raw) return null
 
   try {
     return JSON.parse(raw)
   } catch (err) {
-    return {
-      nombre: raw
-    }
+    console.error("Error parseando hexagono_user")
+    return null
   }
 }
 
 function obtenerEmpresaId() {
-  let usuario = null
-
-  try {
-    usuario = JSON.parse(localStorage.getItem("usuario"))
-  } catch (e) {
-    console.warn("Error parseando usuario")
-  }
+  const usuario = obtenerUsuarioStorage()
 
   console.log("USUARIO RAW:", usuario)
 
