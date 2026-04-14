@@ -914,14 +914,19 @@ function obtenerUsuarioStorage() {
 }
 
 function obtenerEmpresaId() {
-  const usuario = obtenerUsuarioStorage()
+  let usuario = null
+
+  try {
+    usuario = JSON.parse(localStorage.getItem("usuario"))
+  } catch (e) {
+    console.warn("Error parseando usuario")
+  }
+
+  console.log("USUARIO RAW:", usuario)
 
   const empresaId =
     usuario?.empresa_id ||
-    usuario?.empresaId ||
-    localStorage.getItem("empresa_id") ||
-    localStorage.getItem("empresaId") ||
-    localStorage.getItem("empresa")
+    localStorage.getItem("empresa_id")
 
   console.log("EMPRESA ID FINAL:", empresaId)
 
