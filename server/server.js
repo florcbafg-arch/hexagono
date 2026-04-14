@@ -57,7 +57,7 @@ app.post("/api/operario/login-ficha", async (req, res) => {
 
     const { data: operario, error } = await supabase
       .from("usuarios")
-      .select("id, nombre, rol, empresa_id, codigo_acceso, pin_hash, activo")
+      .select("id, nombre, rol, empresa_id, puesto_id, codigo_acceso, pin_hash, activo")
       .eq("codigo_acceso", codigo)
       .eq("rol", "operario")
       .eq("activo", true)
@@ -75,14 +75,15 @@ app.post("/api/operario/login-ficha", async (req, res) => {
     }
 
     res.json({
-      ok: true,
-      operario: {
-        id: operario.id,
-        nombre: operario.nombre,
-        rol: operario.rol,
-        empresa_id: operario.empresa_id
-      }
-    })
+  ok: true,
+  operario: {
+    id: operario.id,
+    nombre: operario.nombre,
+    rol: operario.rol,
+    empresa_id: operario.empresa_id,
+    puesto_id: operario.puesto_id
+  }
+})
   } catch (err) {
     console.error("Error login operario ficha:", err)
     res.status(500).json({ error: "Error login operario" })
@@ -248,6 +249,356 @@ app.get("/api/fichas-operario/:id", async (req, res) => {
   } catch (err) {
     console.error("Error en /api/fichas-operario/:id:", err)
     res.status(500).json({ error: "Error cargando detalle de ficha operario" })
+  }
+})
+
+app.get("/api/operario/puestos", async (req, res) => {
+  try {
+    const empresaId = req.query.empresa_id
+
+    if (!empresaId) {
+      return res.status(400).json({ error: "empresa_id requerido" })
+    }
+
+    const { data, error } = await supabase
+      .from("puestos")
+      .select("id, nombre, sector_id, orden")
+      .eq("empresa_id", empresaId)
+      .order("orden", { ascending: true })
+
+    if (error) throw error
+
+    res.json(data || [])
+  } catch (err) {
+    console.error("Error en /api/operario/puestos:", err)
+    res.status(500).json({ error: "Error cargando puestos operario" })
+  }
+})
+
+app.get("/api/operario/tarea/:numero", async (req, res) => {
+  try {
+    const numero = req.params.numero
+    const empresaId = req.query.empresa_id
+
+    if (!empresaId) {
+      return res.status(400).json({ error: "empresa_id requerido" })
+    }
+
+    const { data: orden, error: errorOrden } = await supabase
+      .from("ordenes")
+      .select(`
+        id,
+        numero_tarea,
+        pares_plan,
+        modelo_id,
+        modelos (
+          nombre,
+          marca,
+          codigo
+        )
+      `)
+      .eq("numero_tarea", numero)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+
+    if (errorOrden) throw errorOrden
+
+    if (!orden) {
+      return res.status(404).json({ error: "Tarea no encontrada" })
+    }
+
+    const { data: talles, error: errorTalles } = await supabase
+      .from("orden_talles")
+      .select("talle, cantidad")
+      .eq("orden_id", orden.id)
+      .eq("empresa_id", empresaId)
+      .order("talle", { ascending: true })
+
+    if (errorTalles) throw errorTalles
+
+    res.json({
+      id: orden.id,
+      numero: orden.numero_tarea,
+      marca: orden.modelos?.marca || "-",
+      modelo: orden.modelos?.nombre || "-",
+      pares: orden.pares_plan || 0,
+      talles: (talles || []).map(t => ({
+        talle: t.talle,
+        plan: t.cantidad
+      }))
+    })
+  } catch (err) {
+    console.error("Error en /api/operario/tarea/:numero:", err)
+    res.status(500).json({ error: "Error servidor" })
+  }
+})
+
+app.get("/api/operario/produccion/check/:numero", async (req, res) => {
+  try {
+    const numero = req.params.numero
+    const puestoId = Number(req.query.puesto)
+    const empresaId = req.query.empresa_id
+
+    if (!empresaId) {
+      return res.status(400).json({ error: "empresa_id requerido" })
+    }
+
+    if (!puestoId) {
+      return res.json({
+        registrado: false,
+        habilitado: false,
+        siguiente_sector: null
+      })
+    }
+
+    const { data: tarea, error: errTarea } = await supabase
+      .from("ordenes")
+      .select("id, numero_tarea, estado")
+      .eq("empresa_id", empresaId)
+      .eq("numero_tarea", numero)
+      .maybeSingle()
+
+    if (errTarea) throw errTarea
+
+    if (!tarea) {
+      return res.json({
+        registrado: false,
+        habilitado: false,
+        siguiente_sector: null
+      })
+    }
+
+    const { data: puesto, error: errPuesto } = await supabase
+      .from("puestos")
+      .select("id, nombre, sector_id, orden")
+      .eq("id", puestoId)
+      .maybeSingle()
+
+    if (errPuesto) throw errPuesto
+
+    if (!puesto || !puesto.sector_id) {
+      return res.json({
+        registrado: false,
+        habilitado: false,
+        siguiente_sector: null
+      })
+    }
+
+    const { data: prodExistente, error: errProd } = await supabase
+      .from("produccion")
+      .select("id")
+      .eq("orden_id", tarea.id)
+      .eq("puesto_id", puestoId)
+      .eq("empresa_id", empresaId)
+
+    if (errProd) throw errProd
+
+    const registrado = Array.isArray(prodExistente) && prodExistente.length > 0
+
+    const { data: recorrido, error: errRecorrido } = await supabase
+      .from("ordenes_sector")
+      .select(`
+        id,
+        sector_id,
+        estado,
+        sectores (
+          id,
+          nombre,
+          orden
+        )
+      `)
+      .eq("orden_id", tarea.id)
+      .eq("empresa_id", empresaId)
+
+    if (errRecorrido) throw errRecorrido
+
+    const recorridoOrdenado = [...(recorrido || [])].sort((a, b) => {
+      const ordenA = a?.sectores?.orden ?? 9999
+      const ordenB = b?.sectores?.orden ?? 9999
+      return ordenA - ordenB
+    })
+
+    const siguientePendiente = recorridoOrdenado.find(r => r.estado !== "completado")
+
+    const habilitado =
+      !!siguientePendiente &&
+      Number(siguientePendiente.sector_id) === Number(puesto.sector_id)
+
+    res.json({
+      registrado,
+      habilitado,
+      siguiente_sector: siguientePendiente?.sectores?.nombre || null,
+      orden_estado: tarea.estado || "pendiente"
+    })
+  } catch (err) {
+    console.error("Error en /api/operario/produccion/check/:numero:", err)
+    res.json({
+      registrado: false,
+      habilitado: false,
+      siguiente_sector: null
+    })
+  }
+})
+
+app.post("/api/operario/produccion", async (req, res) => {
+  try {
+    const { orden_id, puesto_id, cantidad, empresa_id, usuario_nombre } = req.body
+
+    if (!empresa_id) {
+      return res.status(400).json({ error: "empresa_id requerido" })
+    }
+
+    if (!orden_id || !puesto_id || !cantidad) {
+      return res.status(400).json({ error: "Datos incompletos" })
+    }
+
+    if (Number(cantidad) <= 0) {
+      return res.status(400).json({ error: "Cantidad inválida" })
+    }
+
+    const { data: orden, error: errorOrden } = await supabase
+      .from("ordenes")
+      .select("id, numero_tarea, estado")
+      .eq("id", orden_id)
+      .eq("empresa_id", empresa_id)
+      .maybeSingle()
+
+    if (errorOrden) throw errorOrden
+
+    if (!orden) {
+      return res.status(404).json({ error: "Orden no encontrada" })
+    }
+
+    const { data: puesto, error: errorPuesto } = await supabase
+      .from("puestos")
+      .select("id, nombre, sector_id, orden")
+      .eq("id", puesto_id)
+      .maybeSingle()
+
+    if (errorPuesto) throw errorPuesto
+
+    if (!puesto) {
+      return res.status(404).json({ error: "Puesto no encontrado" })
+    }
+
+    if (!puesto.sector_id) {
+      return res.status(400).json({ error: "El puesto no tiene sector asignado" })
+    }
+
+    const { data: existente, error: errorExistente } = await supabase
+      .from("produccion")
+      .select("id")
+      .eq("orden_id", orden_id)
+      .eq("puesto_id", puesto_id)
+      .eq("empresa_id", empresa_id)
+      .maybeSingle()
+
+    if (errorExistente) throw errorExistente
+
+    if (existente) {
+      return res.status(400).json({
+        error: "Esta tarea ya tiene producción registrada en este sector"
+      })
+    }
+
+    const { data: recorrido, error: errorRecorrido } = await supabase
+      .from("ordenes_sector")
+      .select(`
+        id,
+        sector_id,
+        estado,
+        sectores (
+          id,
+          nombre,
+          orden
+        )
+      `)
+      .eq("orden_id", orden_id)
+      .eq("empresa_id", empresa_id)
+
+    if (errorRecorrido) throw errorRecorrido
+
+    if (!Array.isArray(recorrido) || recorrido.length === 0) {
+      return res.status(400).json({
+        error: "La orden no tiene recorrido de sectores definido"
+      })
+    }
+
+    const recorridoOrdenado = [...recorrido].sort((a, b) => {
+      const ordenA = a?.sectores?.orden ?? 9999
+      const ordenB = b?.sectores?.orden ?? 9999
+      return ordenA - ordenB
+    })
+
+    const siguientePendiente = recorridoOrdenado.find(r => r.estado !== "completado")
+
+    if (!siguientePendiente) {
+      return res.status(400).json({
+        error: "La orden ya completó todo su recorrido"
+      })
+    }
+
+    if (Number(siguientePendiente.sector_id) !== Number(puesto.sector_id)) {
+      return res.status(400).json({
+        error: `Esta tarea todavía no está habilitada para este sector. Primero debe registrar ${siguientePendiente?.sectores?.nombre || "el sector anterior"}.`
+      })
+    }
+
+    const { data, error } = await supabase
+      .from("produccion")
+      .insert([{
+        orden_id,
+        puesto_id,
+        cantidad: Number(cantidad),
+        usuario: usuario_nombre || "operario",
+        empresa_id: empresa_id
+      }])
+      .select()
+
+    if (error) {
+      return res.status(500).json({ error: error.message })
+    }
+
+    const { error: errorActualizarSector } = await supabase
+      .from("ordenes_sector")
+      .update({ estado: "completado" })
+      .eq("id", siguientePendiente.id)
+      .eq("empresa_id", empresa_id)
+
+    if (errorActualizarSector) throw errorActualizarSector
+
+    const { data: pendientesPost, error: errorPendientesPost } = await supabase
+      .from("ordenes_sector")
+      .select("id, estado")
+      .eq("orden_id", orden_id)
+      .eq("empresa_id", empresa_id)
+      .neq("estado", "completado")
+
+    if (errorPendientesPost) throw errorPendientesPost
+
+    const estadoFinalOrden =
+      Array.isArray(pendientesPost) && pendientesPost.length === 0
+        ? "terminada"
+        : "en_proceso"
+
+    const { error: errorActualizarOrden } = await supabase
+      .from("ordenes")
+      .update({ estado: estadoFinalOrden })
+      .eq("id", orden_id)
+      .eq("empresa_id", empresa_id)
+
+    if (errorActualizarOrden) throw errorActualizarOrden
+
+    res.json({
+      mensaje: "Producción guardada",
+      data,
+      estado_orden: estadoFinalOrden
+    })
+  } catch (err) {
+    console.error("💥 Error en POST /api/operario/produccion:", err)
+    res.status(500).json({
+      error: err.message || "Error guardando producción"
+    })
   }
 })
 

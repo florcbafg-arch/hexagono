@@ -830,14 +830,15 @@ async function cargarFichasReales() {
 
     const res = await fetch(`/api/fichas-operario?empresa_id=${empresaId}`)
 
-    if (!res.ok) {
+       if (!res.ok) {
       console.warn("Error API fichas operario:", res.status)
       fichasCache = []
       modelosCache = [...modelosMock]
       return
     }
-    console.log("DETALLE FICHA REAL:", data)
+
     const data = await res.json()
+    console.log("FICHAS REALES:", data)
 
     if (!Array.isArray(data)) {
       console.warn("Respuesta inválida de /api/fichas-operario")

@@ -56,41 +56,39 @@ Cerrar sesión
 
   console.log("PRODUCCION NUEVA CARGADA V2")
 
-const usuarioActivo = localStorage.getItem("usuario")
-const puestoActivo = localStorage.getItem("puesto_id")
+const usuarioActivo = JSON.parse(localStorage.getItem("hexagono_user") || "null")
+const puestoActivo = usuarioActivo?.puesto_id || localStorage.getItem("puesto_id")
+const empresaId = usuarioActivo?.empresa_id || localStorage.getItem("empresa_id")
 
 // 🛡️ BLINDAJE SESION
-if(!usuarioActivo || !puestoActivo){
-alert("Sesión inválida")
-window.location.href="login.html"
+if (!usuarioActivo || !puestoActivo || !empresaId) {
+  alert("Sesión inválida")
+  window.location.href = "login.html"
 }
 
-console.log("Usuario:", usuarioActivo)
+console.log("Usuario:", usuarioActivo?.nombre || usuarioActivo)
 console.log("Puesto:", puestoActivo)
+console.log("Empresa:", empresaId)
 
 
 let sectorNombre = ""
 let tareaActual = null
 
-async function obtenerSector(){
+async function obtenerSector() {
+  const res = await fetch(`/api/operario/puestos?empresa_id=${empresaId}`)
+  const puestos = await res.json()
+  const puesto = puestos.find(p => p.id == puestoActivo)
 
-const res = await apiFetch("/api/puestos")
-
-const puestos = await res.json()
-
-const puesto = puestos.find(p => p.id == puestoActivo)
-
-if(puesto){
-sectorNombre = puesto.nombre
-}
-
+  if (puesto) {
+    sectorNombre = puesto.nombre
+  }
 }
 
 async function buscarTarea(){
 
 const numero = document.getElementById("tarea").value
 
-const res = await apiFetch("/api/tarea/" + numero)
+const res = await fetch(`/api/operario/tarea/${numero}?empresa_id=${empresaId}`)
 
 if(res.status!=200){
 
@@ -107,8 +105,8 @@ tareaActual = tarea
 
 // verificar si ya existe producción registrada
 
-const check = await apiFetch(
-  "/api/produccion/check/" + tarea.numero + "?puesto=" + puestoActivo
+const check = await fetch(
+  `/api/operario/produccion/check/${tarea.numero}?puesto=${puestoActivo}&empresa_id=${empresaId}`
 )
 const checkData = await check.json()
 
@@ -275,12 +273,18 @@ return
 }
 
 const datos = {
-  orden_id: tareaActual.id, // 🔥 CAMBIO CLAVE
+  orden_id: tareaActual.id,
   puesto_id: Number(puestoActivo),
-  cantidad: total
+  cantidad: total,
+  empresa_id: empresaId,
+  usuario_nombre: usuarioActivo?.nombre || "operario"
 }
-  const res = await apiFetch("/api/produccion", {
+
+const res = await fetch("/api/operario/produccion", {
   method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
   body: JSON.stringify(datos)
 })
   const data = await res.json()
