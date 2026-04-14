@@ -553,6 +553,13 @@
     </div> <!-- cierra .content -->
   </div> <!-- cierra .page -->
 
+  <div id="modalImagen" class="image-modal hidden" onclick="cerrarImagenGrande(event)">
+  <div class="image-modal-content">
+    <button class="image-modal-close" type="button" onclick="cerrarImagenGrande(event)">✕</button>
+    <img id="modalImagenSrc" src="" alt="Vista ampliada">
+  </div>
+</div>
+
  <script>
   const modelosMock = [
     {
