@@ -134,23 +134,6 @@ app.get("/api/fichas-operario", async (req, res) => {
   }
 })
 
-app.use("/api", authMiddleware, fichasRoutes);
-console.log("✅ montando rutas sacabocados en /api")
-app.use("/api", authMiddleware, sacabocadosRoutes);
-app.get("/api/produccion/resumen", async (req, res) => {
-
-const { data, error } = await supabase.rpc("produccion_resumen")
-
-  if(error){
-    return res.status(500).json({ error })
-  }
-
-  res.json(data)
-
-})
-
-
-
 app.get("/api/fichas-operario/:id", async (req, res) => {
   try {
     const fichaId = req.params.id
@@ -266,6 +249,21 @@ app.get("/api/fichas-operario/:id", async (req, res) => {
     console.error("Error en /api/fichas-operario/:id:", err)
     res.status(500).json({ error: "Error cargando detalle de ficha operario" })
   }
+})
+
+app.use("/api", authMiddleware, fichasRoutes);
+console.log("✅ montando rutas sacabocados en /api")
+app.use("/api", authMiddleware, sacabocadosRoutes);
+app.get("/api/produccion/resumen", async (req, res) => {
+
+const { data, error } = await supabase.rpc("produccion_resumen")
+
+  if(error){
+    return res.status(500).json({ error })
+  }
+
+  res.json(data)
+
 })
 
 // =======================
