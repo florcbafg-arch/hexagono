@@ -3459,3 +3459,17 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
 .logo-header-img {
   height: 40px;
 }
+.titulo-hexaflow-header {
+  font-family: "Orbitron", Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #a855f7 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+  text-shadow: 0 0 18px rgba(168, 85, 247, 0.16);
+}
