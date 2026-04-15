@@ -420,6 +420,10 @@ app.get("/api/operario/produccion/check/:numero", async (req, res) => {
 
     const siguientePendiente = recorridoOrdenado.find(r => r.estado !== "completado")
 
+    console.log("RECORRIDO ORDENADO:", recorridoOrdenado)
+console.log("SIGUIENTE PENDIENTE:", siguientePendiente)
+console.log("PUESTO ACTUAL:", puesto)
+
     const habilitado =
       !!siguientePendiente &&
       Number(siguientePendiente.sector_id) === Number(puesto.sector_id)
@@ -1671,10 +1675,27 @@ const { data: sectores, error: errorSectores } = await supabase
   .eq("empresa_id", empresaId)
   .order("orden", { ascending: true })
 
+  if (errorSectores) throw errorSectores
+
+if (!Array.isArray(sectores) || sectores.length === 0) {
+  return res.status(400).json({
+    mensaje: "No se puede crear la orden: la empresa no tiene sectores configurados"
+  })
+}
+
+const sectoresSinOrden = sectores.filter(s => s.orden == null)
+
+if (sectoresSinOrden.length > 0) {
+  return res.status(400).json({
+    mensaje: "No se puede crear la orden: hay sectores sin orden configurado"
+  })
+}
+const sectoresOrdenados = [...sectores].sort((a, b) => a.orden - b.orden)
+
 if (errorSectores) throw errorSectores
 
 if (sectores && sectores.length > 0) {
-  const sectoresInsert = sectores.map(s => ({
+  const sectoresInsert = sectoresOrdenados.map(s => ({
     orden_id: tarea.id,
     sector_id: s.id,
     estado: "pendiente",

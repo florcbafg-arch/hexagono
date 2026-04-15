@@ -86,7 +86,7 @@ async function obtenerSector() {
 
 async function buscarTarea(){
 
-const numero = document.getElementById("tarea").value
+const empresaId = localStorage.getItem("empresa_id")
 
 const res = await fetch(`/api/operario/tarea/${numero}?empresa_id=${empresaId}`)
 
