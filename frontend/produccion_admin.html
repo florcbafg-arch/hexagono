@@ -55,22 +55,6 @@
       min-height: 100vh;
     }
 
-    .app-shell {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      width: var(--sidebar-w);
-      background: linear-gradient(180deg, rgba(6, 10, 20, 0.98), rgba(9, 14, 28, 0.98));
-      border-right: 1px solid var(--border);
-      padding: 22px 18px;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      flex-shrink: 0;
-    }
-
     .brand {
       display: flex;
       align-items: center;
@@ -509,26 +493,7 @@
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <img src="img/hexaflow-loco-pro.png" alt="HEXAFLOW">
-        <h1>HEXAFLOW</h1>
-      </div>
-
-      <nav class="nav">
-        <a href="admin.html">Dashboard</a>
-        <a href="ordenes_admin.html">Órdenes</a>
-        <a href="produccion_admin.html" class="active">Producción</a>
-        <a href="usuarios_admin.html">Usuarios</a>
-        <a href="patrones_admin.html">Patrones</a>
-        <a href="fichas_detalle_admin.html">Fichas Técnicas</a>
-        <a href="programacion_admin.html">Programación</a>
-        <a href="stock_admin.html">Stock</a>
-        <a href="#" onclick="logout()">Cerrar sesión</a>
-      </nav>
-    </aside>
-
+  
     <main class="main">
       <div class="topbar">
         <div class="topbar-left">
