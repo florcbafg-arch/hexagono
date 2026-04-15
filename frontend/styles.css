@@ -3434,3 +3434,13 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
 .tabla-produccion th {
   color: #ffffff;
 }
+.tabla-produccion td,
+.tabla-produccion th {
+  color: #ffffff;
+}
+
+.tabla-produccion .dato-fijo {
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+}

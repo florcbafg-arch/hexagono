@@ -86,20 +86,32 @@ async function obtenerSector() {
 
 async function buscarTarea(){
 
-const empresaId = localStorage.getItem("empresa_id")
+const numero = document.getElementById("tarea").value.trim()
+
+if (!numero) {
+  alert("Ingresá un número de tarea")
+  return
+}
 
 const res = await fetch(`/api/operario/tarea/${numero}?empresa_id=${empresaId}`)
 
-if(res.status!=200){
-
-document.getElementById("info").innerHTML=""
-document.getElementById("tabla").innerHTML=""
-
-return
-
+if (res.status !== 200) {
+  document.getElementById("info").innerHTML = `
+    <div class="alerta-produccion">
+      <div class="alerta-icono">⚠</div>
+      <div class="alerta-texto">
+        <h2>Tarea no encontrada</h2>
+        <p>No existe una tarea con ese número para esta empresa.</p>
+      </div>
+    </div>
+  `
+  document.getElementById("tabla").innerHTML = ""
+  return
 }
 
 const tarea = await res.json()
+
+console.log("TAREA CARGADA:", tarea)
 
 tareaActual = tarea
 
