@@ -179,23 +179,21 @@ let html=`
 </tr>
 `
 
-tarea.talles.forEach(t=>{
-
-html+=`
-<tr>
-<td>${t.talle}</td>
-<td>${t.plan}</td>
-<td>
-<input 
-type="number"
-inputmode="numeric"
-class="prod-input"
-oninput="sumar()"
-onkeydown="enterInput(event)">
-</td>
-</tr>
-`
-
+tarea.talles.forEach(t => {
+  html += `
+  <tr>
+    <td class="dato-fijo">${t.talle ?? "-"}</td>
+    <td class="dato-fijo">${t.plan ?? t.cantidad ?? "-"}</td>
+    <td>
+      <input 
+        type="number"
+        inputmode="numeric"
+        class="prod-input"
+        oninput="sumar()"
+        onkeydown="enterInput(event)">
+    </td>
+  </tr>
+  `
 })
 
 html+=`</table>

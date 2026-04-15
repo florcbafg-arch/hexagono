@@ -3419,3 +3419,18 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
   margin: 0 !important;
   padding-left: 18px !important;
 }
+
+.tabla-produccion td {
+  color: #ffffff;
+}
+
+.tabla-produccion .dato-fijo {
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.tabla-produccion td,
+.tabla-produccion th {
+  color: #ffffff;
+}
