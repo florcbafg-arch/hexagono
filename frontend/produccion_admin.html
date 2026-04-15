@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Producción Admin</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEXAFLOW - Producción</title>
 
   <script src="js/authGuard.js"></script>
   <script src="js/auth.js"></script>
@@ -12,25 +12,774 @@
   <script>
     checkAuth("admin")
   </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #070b14;
+      --bg-2: #0b1220;
+      --panel: rgba(12, 18, 32, 0.88);
+      --panel-2: rgba(17, 24, 39, 0.92);
+      --panel-soft: rgba(255, 255, 255, 0.03);
+      --border: rgba(148, 163, 184, 0.14);
+      --text: #eef2ff;
+      --text-soft: #94a3b8;
+      --primary: #8b5cf6;
+      --primary-2: #38bdf8;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      --radius: 20px;
+      --sidebar-w: 240px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: "Inter", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(139, 92, 246, 0.16), transparent 26%),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 24%),
+        linear-gradient(180deg, #05070f 0%, #0a1020 100%);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, rgba(6, 10, 20, 0.98), rgba(9, 14, 28, 0.98));
+      border-right: 1px solid var(--border);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 8px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 18px;
+    }
+
+    .brand img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.35));
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "Orbitron", sans-serif;
+      font-size: 18px;
+      letter-spacing: 1px;
+      color: #c4b5fd;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--text-soft);
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      transition: 0.18s ease;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(139, 92, 246, 0.18);
+    }
+
+    .nav a.active {
+      color: #fff;
+      background: linear-gradient(90deg, rgba(139,92,246,0.22), rgba(56,189,248,0.14));
+      border-color: rgba(139, 92, 246, 0.3);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .main {
+      flex: 1;
+      padding: 24px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .topbar-left h2 {
+      margin: 0;
+      font-family: "Orbitron", sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.4px;
+    }
+
+    .topbar-left p {
+      margin: 6px 0 0;
+      color: var(--text-soft);
+      font-size: 14px;
+    }
+
+    .topbar-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-soft);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      box-shadow: 0 10px 22px rgba(56, 189, 248, 0.14);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(9, 14, 28, 0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .metric-card {
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -30% auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%);
+      pointer-events: none;
+    }
+
+    .metric-label {
+      color: var(--text-soft);
+      font-size: 13px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .metric-value {
+      font-family: "Orbitron", sans-serif;
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric-sub {
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .left-col,
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .panel-head h3 {
+      margin: 0;
+      font-size: 20px;
+      font-family: "Orbitron", sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    .panel-body {
+      padding: 20px;
+    }
+
+    .sector-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .sector-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .sector-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .sector-name {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .sector-badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge-ok {
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      border-color: rgba(34, 197, 94, 0.22);
+    }
+
+    .badge-warn {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.22);
+    }
+
+    .badge-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.22);
+    }
+
+    .sector-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .mini-box {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(255,255,255,0.025);
+    }
+
+    .mini-label {
+      font-size: 11px;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      letter-spacing: 0.6px;
+    }
+
+    .mini-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .progress-wrap {
+      margin-top: 8px;
+    }
+
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+
+    .orders-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    th, td {
+      padding: 14px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 14px;
+    }
+
+    th {
+      color: #cbd5e1;
+      background: rgba(255,255,255,0.03);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    td {
+      color: #f8fafc;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .order-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .alert-item {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-left: 4px solid var(--danger);
+      border-radius: 16px;
+      padding: 14px 14px 14px 16px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .alert-item.warn {
+      border-left-color: var(--warn);
+    }
+
+    .alert-item.ok {
+      border-left-color: var(--ok);
+    }
+
+    .alert-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .alert-desc {
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .legend .pill {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1260px) {
+      .hero-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        display: block;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding-bottom: 12px;
+      }
+
+      .main {
+        padding: 16px;
+      }
+
+      .sector-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
 </head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="img/hexaflow-loco-pro.png" alt="HEXAFLOW">
+        <h1>HEXAFLOW</h1>
+      </div>
 
-<body class="pagina-produccion">
-  <h1>Producción Admin</h1>
+      <nav class="nav">
+        <a href="admin.html">Dashboard</a>
+        <a href="ordenes_admin.html">Órdenes</a>
+        <a href="produccion_admin.html" class="active">Producción</a>
+        <a href="usuarios_admin.html">Usuarios</a>
+        <a href="patrones_admin.html">Patrones</a>
+        <a href="fichas_detalle_admin.html">Fichas Técnicas</a>
+        <a href="programacion_admin.html">Programación</a>
+        <a href="stock_admin.html">Stock</a>
+        <a href="#" onclick="logout()">Cerrar sesión</a>
+      </nav>
+    </aside>
 
-  <div class="container-produccion">
-    <label>Número de tarea</label>
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2>Producción en vivo</h2>
+          <p>Panel de control y análisis de planta con datos simulados para definir el frontend.</p>
+        </div>
 
-    <input id="tarea">
-    <button onclick="buscarOrdenes()">Buscar</button>
+        <div class="topbar-right">
+          <div class="pill" id="ultimaActualizacion">Última actualización: --:--</div>
+          <button class="btn" onclick="refrescarMock()">Actualizar mock</button>
+        </div>
+      </div>
 
-    <div id="info"></div>
-    <div id="tabla"></div>
-    <div id="acciones"></div>
+      <section class="hero-grid" id="metricasResumen"></section>
+
+      <section class="layout">
+        <div class="left-col">
+          <div class="card">
+            <div class="panel-body">
+              <div class="panel-head">
+                <h3>Sectores</h3>
+                <div class="legend">
+                  <span class="pill">🟢 Activo</span>
+                  <span class="pill">🟡 Lento</span>
+                  <span class="pill">🔴 Frenado</span>
+                </div>
+              </div>
+              <div class="sector-grid" id="sectorGrid"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-body">
+              <div class="panel-head">
+                <h3>Órdenes en curso</h3>
+                <div class="pill">Mock visual</div>
+              </div>
+
+              <div class="orders-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Orden</th>
+                      <th>Modelo</th>
+                      <th>Último sector</th>
+                      <th>Sector actual</th>
+                      <th>Pares</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-col">
+          <div class="card">
+            <div class="panel-body">
+              <div class="panel-head">
+                <h3>Alertas</h3>
+                <div class="pill">Prioridad planta</div>
+              </div>
+              <div class="alerts-list" id="alertsList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <h2>📊 Estado de Producción</h2>
-  <div id="produccionContainer"></div>
+  <script>
+    const mockProduccion = {
+      resumen: {
+        totalHoy: 1248,
+        ordenesProceso: 11,
+        sectoresActivos: 8,
+        sectoresFrenados: 2
+      },
+      sectores: [
+        { nombre: "Corte", producido: 182, objetivo: 220, ritmo: 31, estado: "activo" },
+        { nombre: "Preparación", producido: 160, objetivo: 200, ritmo: 26, estado: "activo" },
+        { nombre: "Aparado", producido: 118, objetivo: 200, ritmo: 18, estado: "lento" },
+        { nombre: "Control", producido: 96, objetivo: 180, ritmo: 14, estado: "frenado" },
+        { nombre: "Linea Producción", producido: 142, objetivo: 190, ritmo: 21, estado: "activo" },
+        { nombre: "Base / Goma", producido: 134, objetivo: 170, ritmo: 19, estado: "activo" },
+        { nombre: "Empaque", producido: 88, objetivo: 150, ritmo: 12, estado: "lento" },
+        { nombre: "Embalado", producido: 74, objetivo: 130, ritmo: 10, estado: "activo" }
+      ],
+      ordenes: [
+        { numero: "5359-1", modelo: "Grecia White Black Dama", ultimo: "Corte", actual: "Preparación", pares: 60, estado: "En proceso" },
+        { numero: "5359-2", modelo: "Grecia White Black Dama", ultimo: "Preparación", actual: "Aparado", pares: 60, estado: "En proceso" },
+        { numero: "9128-1", modelo: "Andreu Black Hombre", ultimo: "Aparado", actual: "Control", pares: 120, estado: "Observada" },
+        { numero: "1975-1", modelo: "Rusty Black", ultimo: "Linea Producción", actual: "Base / Goma", pares: 120, estado: "Avanzando" }
+      ],
+      alertas: [
+        { tipo: "danger", titulo: "Control frenado", descripcion: "Sin producción en los últimos 25 minutos. Revisar cuello de botella." },
+        { tipo: "warn", titulo: "Aparado por debajo del objetivo", descripcion: "El ritmo actual está 18% abajo del plan de la jornada." },
+        { tipo: "ok", titulo: "Corte estable", descripcion: "Mantiene ritmo correcto y sostiene la línea sin demoras." }
+      ]
+    }
 
-  <script src="js/produccion_admin.js"></script>
+    function porcentaje(producido, objetivo) {
+      if (!objetivo || objetivo <= 0) return 0
+      return Math.min(100, Math.round((producido / objetivo) * 100))
+    }
+
+    function claseBadge(estado) {
+      if (estado === "activo") return "badge-ok"
+      if (estado === "lento") return "badge-warn"
+      return "badge-danger"
+    }
+
+    function textoEstado(estado) {
+      if (estado === "activo") return "Activo"
+      if (estado === "lento") return "Lento"
+      return "Frenado"
+    }
+
+    function renderMetricas() {
+      const root = document.getElementById("metricasResumen")
+      const r = mockProduccion.resumen
+
+      root.innerHTML = `
+        <div class="card metric-card">
+          <div class="metric-label">Total producido hoy</div>
+          <div class="metric-value">${r.totalHoy}</div>
+          <div class="metric-sub">pares registrados en planta</div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-label">Órdenes en proceso</div>
+          <div class="metric-value">${r.ordenesProceso}</div>
+          <div class="metric-sub">órdenes activas en línea</div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-label">Sectores activos</div>
+          <div class="metric-value">${r.sectoresActivos}</div>
+          <div class="metric-sub">con producción moviéndose</div>
+        </div>
+
+        <div class="card metric-card">
+          <div class="metric-label">Sectores frenados</div>
+          <div class="metric-value">${r.sectoresFrenados}</div>
+          <div class="metric-sub">requieren atención</div>
+        </div>
+      `
+    }
+
+    function renderSectores() {
+      const root = document.getElementById("sectorGrid")
+
+      root.innerHTML = mockProduccion.sectores.map(sector => `
+        <div class="sector-card">
+          <div class="sector-top">
+            <div class="sector-name">${sector.nombre}</div>
+            <div class="sector-badge ${claseBadge(sector.estado)}">${textoEstado(sector.estado)}</div>
+          </div>
+
+          <div class="sector-meta">
+            <div class="mini-box">
+              <div class="mini-label">Producido</div>
+              <div class="mini-value">${sector.producido}</div>
+            </div>
+
+            <div class="mini-box">
+              <div class="mini-label">Objetivo</div>
+              <div class="mini-value">${sector.objetivo}</div>
+            </div>
+
+            <div class="mini-box">
+              <div class="mini-label">Ritmo / hora</div>
+              <div class="mini-value">${sector.ritmo}</div>
+            </div>
+
+            <div class="mini-box">
+              <div class="mini-label">Cumplimiento</div>
+              <div class="mini-value">${porcentaje(sector.producido, sector.objetivo)}%</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-top">
+              <span>Avance</span>
+              <span>${sector.producido} / ${sector.objetivo}</span>
+            </div>
+            <div class="progress">
+              <span style="width:${porcentaje(sector.producido, sector.objetivo)}%"></span>
+            </div>
+          </div>
+        </div>
+      `).join("")
+    }
+
+    function renderOrdenes() {
+      const root = document.getElementById("ordersTableBody")
+
+      root.innerHTML = mockProduccion.ordenes.map(orden => `
+        <tr>
+          <td>${orden.numero}</td>
+          <td>${orden.modelo}</td>
+          <td>${orden.ultimo}</td>
+          <td>${orden.actual}</td>
+          <td>${orden.pares}</td>
+          <td><span class="order-status">${orden.estado}</span></td>
+        </tr>
+      `).join("")
+    }
+
+    function renderAlertas() {
+      const root = document.getElementById("alertsList")
+
+      root.innerHTML = mockProduccion.alertas.map(alerta => `
+        <div class="alert-item ${alerta.tipo}">
+          <div class="alert-title">${alerta.titulo}</div>
+          <div class="alert-desc">${alerta.descripcion}</div>
+        </div>
+      `).join("")
+    }
+
+    function actualizarHora() {
+      const ahora = new Date()
+      const hh = String(ahora.getHours()).padStart(2, "0")
+      const mm = String(ahora.getMinutes()).padStart(2, "0")
+      document.getElementById("ultimaActualizacion").textContent = `Última actualización: ${hh}:${mm}`
+    }
+
+    function renderTodo() {
+      renderMetricas()
+      renderSectores()
+      renderOrdenes()
+      renderAlertas()
+      actualizarHora()
+    }
+
+    function refrescarMock() {
+      renderTodo()
+    }
+
+    function logout() {
+      localStorage.removeItem("hexagono_user")
+      localStorage.removeItem("token")
+      localStorage.removeItem("usuario")
+      localStorage.removeItem("puesto_id")
+      localStorage.removeItem("rol")
+      window.location.href = "login.html"
+    }
+
+    renderTodo()
+  </script>
 </body>
 </html>

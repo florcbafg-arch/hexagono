@@ -3444,3 +3444,18 @@ body.admin-page.tv-mode .dashboard-tv .panel table {
   font-weight: 700;
   text-align: center;
 }
+.logo-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-header-img {
+  height: 34px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.22));
+}
+.logo-header-img {
+  height: 40px;
+}
