@@ -1,27 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-  <meta charset="UTF-8">
-  <title>Dashboard Admin</title>
-
-  <!-- 🔐 AUTH -->
-  <script src="js/authGuard.js"></script>
-  
-  <!-- 🧠 USER -->
-  <script src="js/auth.js"></script>
-
-  <!-- 💣 API -->
-  <script src="js/api.js"></script>
-
-  <script>
-    checkAuth("admin")
-  </script>
-
-
-</head>
-
-<body>
 
 
 
@@ -314,8 +290,9 @@ style="width:70px">
 </tr>
 
 </tbody>
-
 </table>
+
+</div> 
 
 <!-- PANEL FALTANTES -->
 
@@ -414,9 +391,6 @@ function initDashboard() {
   })
 }
 
-window.addEventListener("DOMContentLoaded", initDashboard)
+setTimeout(initDashboard, 0)
 </script>
-
-</body>
-</html>
 
