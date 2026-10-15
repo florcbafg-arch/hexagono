@@ -284,8 +284,8 @@ router.patch("/fichas-v2/:ficha_id", async (req, res) => {
   }
 });
 
-// Reemplaza la estructura completa de un BORRADOR.
-// Es intencionalmente destructivo solo dentro del borrador actual; versiones publicadas son inmutables.
+// Reemplaza la estructura completa de un BORRADOR en una sola transacción PostgreSQL.
+// Si cualquier validación/insert falla, PostgreSQL revierte TODO el cambio.
 router.put("/fichas-v2/:ficha_id/estructura", async (req, res) => {
   const empresaId = empresa(req, res); if (!empresaId) return;
   const { secciones = [], imagenes = [] } = req.body || {};
@@ -303,163 +303,23 @@ router.put("/fichas-v2/:ficha_id/estructura", async (req, res) => {
       return res.status(409).json({ ok: false, error: "La estructura solo puede editarse mientras la ficha está en borrador" });
     }
 
-    // Validaciones antes de borrar nada.
-    for (const [si, s] of secciones.entries()) {
-      if (!s || !String(s.nombre || "").trim()) {
-        return res.status(400).json({ ok: false, error: `Sección ${si + 1}: nombre obligatorio` });
-      }
-      if (s.piezas != null && !Array.isArray(s.piezas)) {
-        return res.status(400).json({ ok: false, error: `Sección ${si + 1}: piezas debe ser un array` });
-      }
-      for (const [pi, p] of (s.piezas || []).entries()) {
-        if (!p || !String(p.nombre || "").trim()) {
-          return res.status(400).json({ ok: false, error: `Sección ${si + 1}, pieza ${pi + 1}: nombre obligatorio` });
-        }
-        if (p.materiales != null && !Array.isArray(p.materiales)) {
-          return res.status(400).json({ ok: false, error: `Pieza ${p.nombre}: materiales debe ser un array` });
-        }
-        if (p.operaciones != null && !Array.isArray(p.operaciones)) {
-          return res.status(400).json({ ok: false, error: `Pieza ${p.nombre}: operaciones debe ser un array` });
-        }
-        if (p.sacabocado_id) {
-          const { data: sac, error: se } = await supabase.from("sacabocados")
-            .select("id").eq("id", p.sacabocado_id).eq("empresa_id", empresaId).maybeSingle();
-          if (se) throw se;
-          if (!sac) return res.status(400).json({ ok: false, error: `Pieza ${p.nombre}: sacabocado inválido para esta empresa` });
-        }
-      }
-    }
-
-    // IDs actuales para limpiar exclusivamente este borrador/tenant.
-    const { data: actuales, error: ae } = await supabase.from("fichas_secciones")
-      .select("id").eq("ficha_id", ficha.id).eq("empresa_id", empresaId);
-    if (ae) throw ae;
-    const seccionIds = (actuales || []).map(x => x.id);
-
-    let piezaIds = [];
-    if (seccionIds.length) {
-      const { data: ps, error: pe } = await supabase.from("fichas_piezas")
-        .select("id").in("seccion_id", seccionIds).eq("empresa_id", empresaId);
-      if (pe) throw pe;
-      piezaIds = (ps || []).map(x => x.id);
-    }
-
-    if (piezaIds.length) {
-      const { error: me } = await supabase.from("fichas_materiales").delete()
-        .in("pieza_id", piezaIds).eq("empresa_id", empresaId);
-      if (me) throw me;
-      const { error: oe } = await supabase.from("fichas_operaciones").delete()
-        .in("pieza_id", piezaIds).eq("empresa_id", empresaId);
-      if (oe) throw oe;
-    }
-
-    const { error: ie } = await supabase.from("fichas_imagenes").delete()
-      .eq("ficha_id", ficha.id).eq("empresa_id", empresaId);
-    if (ie) throw ie;
-
-    if (seccionIds.length) {
-      const { error: pe } = await supabase.from("fichas_piezas").delete()
-        .in("seccion_id", seccionIds).eq("empresa_id", empresaId);
-      if (pe) throw pe;
-      const { error: se } = await supabase.from("fichas_secciones").delete()
-        .eq("ficha_id", ficha.id).eq("empresa_id", empresaId);
-      if (se) throw se;
-    }
-
-    const seccionMap = new Map();
-
-    for (const [si, s] of secciones.entries()) {
-      const { data: ns, error: se } = await supabase.from("fichas_secciones").insert([{
-        ficha_id: ficha.id,
-        nombre: String(s.nombre).trim(),
-        orden: Number(s.orden || si + 1),
-        sector: s.sector || "",
-        tipo_seccion: s.tipo_seccion || "proceso",
-        titulo_impresion: s.titulo_impresion || s.nombre || "",
-        observaciones: s.observaciones || "",
-        empresa_id: empresaId
-      }]).select().single();
-      if (se) throw se;
-
-      // client_key permite asociar imágenes a una sección recién creada sin conocer su ID DB.
-      if (s.client_key) seccionMap.set(String(s.client_key), ns.id);
-
-      for (const [pi, p] of (s.piezas || []).entries()) {
-        const { data: np, error: pe } = await supabase.from("fichas_piezas").insert([{
-          seccion_id: ns.id,
-          nombre: String(p.nombre).trim(),
-          tipo_pieza: p.tipo_pieza || "estructural",
-          orden: Number(p.orden || pi + 1),
-          observacion: p.observacion || "",
-          sacabocado_id: p.sacabocado_id || null,
-          empresa_id: empresaId
-        }]).select().single();
-        if (pe) throw pe;
-
-        if (p.materiales?.length) {
-          const rows = p.materiales.map((m, mi) => ({
-            pieza_id: np.id,
-            material: m.material || "",
-            especificacion: m.especificacion || "",
-            color: m.color || "",
-            categoria: m.categoria || "materia_prima",
-            unidad_medida: m.unidad_medida || "",
-            consumo: m.consumo === "" || m.consumo == null ? null : Number(m.consumo),
-            orden: Number(m.orden || mi + 1),
-            observacion: m.observacion || "",
-            empresa_id: empresaId
-          }));
-          if (rows.some(x => x.consumo !== null && !Number.isFinite(x.consumo))) {
-            return res.status(400).json({ ok: false, error: `Pieza ${p.nombre}: consumo inválido` });
-          }
-          const { error: me } = await supabase.from("fichas_materiales").insert(rows);
-          if (me) throw me;
-        }
-
-        if (p.operaciones?.length) {
-          const rows = p.operaciones.map((o, oi) => ({
-            pieza_id: np.id,
-            tipo: o.tipo || "",
-            detalle: o.detalle || "",
-            valor_tecnico: o.valor_tecnico || "",
-            orden: Number(o.orden || oi + 1),
-            observacion: o.observacion || "",
-            empresa_id: empresaId
-          }));
-          const { error: oe } = await supabase.from("fichas_operaciones").insert(rows);
-          if (oe) throw oe;
-        }
-      }
-    }
-
-    if (imagenes.length) {
-      const rows = imagenes.map((img, ii) => ({
-        ficha_id: ficha.id,
-        seccion_id: img.seccion_client_key ? seccionMap.get(String(img.seccion_client_key)) || null : null,
-        url: img.url || "",
-        tipo: img.tipo || "referencia",
-        descripcion: img.descripcion || "",
-        orden: Number(img.orden || ii + 1),
-        empresa_id: empresaId
-      }));
-      const { error: ie2 } = await supabase.from("fichas_imagenes").insert(rows);
-      if (ie2) throw ie2;
-    }
-
-    const ahora = new Date().toISOString();
-    const { error: ue } = await supabase.from("fichas_tecnicas")
-      .update({ updated_at: ahora }).eq("id", ficha.id).eq("empresa_id", empresaId);
-    if (ue) throw ue;
+    const { error: rpcError } = await supabase.rpc("guardar_estructura_ficha_v2", {
+      p_ficha_id: ficha.id,
+      p_empresa_id: empresaId,
+      p_secciones: secciones,
+      p_imagenes: imagenes
+    });
+    if (rpcError) throw rpcError;
 
     const actualizada = await obtenerFicha(ficha.id, empresaId);
-    res.json({
+    return res.json({
       ok: true,
-      message: "Estructura del borrador guardada",
+      message: "Estructura del borrador guardada atómicamente",
       ficha: await obtenerEstructura(actualizada, empresaId)
     });
   } catch (e) {
     console.error("Error guardando estructura ficha V2:", e);
-    res.status(500).json({ ok: false, error: e.message });
+    return res.status(500).json({ ok: false, error: e.message });
   }
 });
 
