@@ -52,7 +52,7 @@ async function abrirNuevaFichaV2(){
   try{
     if(!articulosV2.length) await cargarArticulosV2()
     const select=document.getElementById("articuloNuevaFichaV2")
-    const usados=new Set(fichasV2.map(f=>String(f.articulo_id)))
+    const usados=new Set(fichasV2.filter(f=>f.estado !== "archivada").map(f=>String(f.articulo_id)))
     const disponibles=articulosV2.filter(a=>a.activo!==false&&!usados.has(String(a.id)))
     select.innerHTML=disponibles.length
       ? disponibles.map(a=>`<option value="${a.id}">${esc(a.codigo)} · ${esc(a.marca||a.modelos?.marca||"")} · ${esc(a.modelo_nombre||a.modelos?.nombre||"")} · ${esc(a.color||"")}</option>`).join("")
