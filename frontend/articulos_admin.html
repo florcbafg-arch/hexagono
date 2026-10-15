@@ -1,0 +1,74 @@
+<section class="maestro-articulos">
+  <div class="maestro-head">
+    <div>
+      <p class="eyebrow">Maestros técnicos</p>
+      <h1>Modelos y Artículos</h1>
+      <p class="maestro-sub">Definí el modelo base y sus variantes concretas por código y color.</p>
+    </div>
+    <button class="btn-primary" id="btnNuevoModelo">+ Nuevo modelo</button>
+  </div>
+
+  <div id="maestroMensaje" class="maestro-mensaje" hidden></div>
+
+  <div class="maestro-grid">
+    <aside class="maestro-panel">
+      <div class="panel-title">
+        <h2>Modelos</h2>
+        <input id="buscarModelo" type="search" placeholder="Buscar marca o modelo…">
+      </div>
+      <div id="listaModelos" class="lista-modelos"></div>
+    </aside>
+
+    <main class="maestro-panel detalle-panel">
+      <div id="sinModelo" class="empty-state">
+        <strong>Seleccioná un modelo</strong>
+        <span>Vas a ver y administrar sus artículos acá.</span>
+      </div>
+
+      <div id="detalleModelo" hidden>
+        <div class="detalle-head">
+          <div>
+            <span id="detalleMarca" class="marca-chip"></span>
+            <h2 id="detalleNombre"></h2>
+          </div>
+          <div class="detalle-actions">
+            <button class="btn-secondary" id="btnEditarModelo">Editar modelo</button>
+            <button class="btn-primary" id="btnNuevoArticulo">+ Nuevo artículo</button>
+          </div>
+        </div>
+
+        <div class="tabla-wrap">
+          <table class="tabla-maestro">
+            <thead><tr><th>Código</th><th>Color</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="tablaArticulos"></tbody>
+          </table>
+        </div>
+        <div id="sinArticulos" class="empty-state compact" hidden>Este modelo todavía no tiene artículos.</div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="modalModelo" class="maestro-modal">
+    <form id="formModeloMaestro">
+      <h3 id="tituloModalModelo">Nuevo modelo</h3>
+      <input type="hidden" id="modeloId">
+      <label>Marca<input id="modeloMarca" required maxlength="120" autocomplete="off"></label>
+      <label>Nombre del modelo<input id="modeloNombre" required maxlength="160" autocomplete="off"></label>
+      <div class="modal-actions"><button type="button" class="btn-secondary" data-close="modalModelo">Cancelar</button><button class="btn-primary">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="modalArticulo" class="maestro-modal">
+    <form id="formArticuloMaestro">
+      <h3 id="tituloModalArticulo">Nuevo artículo</h3>
+      <input type="hidden" id="articuloId">
+      <label>Código<input id="articuloCodigo" required maxlength="120" autocomplete="off"></label>
+      <label>Color<input id="articuloColor" required maxlength="120" autocomplete="off"></label>
+      <div class="modal-actions"><button type="button" class="btn-secondary" data-close="modalArticulo">Cancelar</button><button class="btn-primary">Guardar</button></div>
+    </form>
+  </dialog>
+</section>
+
+<style>
+.maestro-articulos{max-width:1200px;margin:auto}.maestro-head,.detalle-head,.panel-title,.detalle-actions,.modal-actions{display:flex;align-items:center;justify-content:space-between;gap:14px}.eyebrow{margin:0 0 5px;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:#6b7280}.maestro-head h1{margin:0;font-size:30px}.maestro-sub{margin:7px 0 0;color:#6b7280}.maestro-grid{display:grid;grid-template-columns:minmax(260px,34%) 1fr;gap:18px;margin-top:24px}.maestro-panel{border:1px solid #e5e7eb;border-radius:16px;padding:18px;background:var(--card-bg,#fff);min-width:0}.panel-title{align-items:flex-start;flex-direction:column}.panel-title h2{margin:0}.panel-title input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px}.lista-modelos{display:grid;gap:8px;margin-top:14px;max-height:600px;overflow:auto}.modelo-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px;text-align:left;background:transparent;cursor:pointer}.modelo-item.active{border-color:#2563eb;background:rgba(37,99,235,.08)}.modelo-item strong,.modelo-item span{display:block}.modelo-item span{font-size:13px;color:#6b7280;margin-bottom:3px}.detalle-head h2{margin:7px 0 0}.marca-chip,.estado-chip{display:inline-block;border-radius:999px;padding:4px 9px;font-size:12px;background:#eef2ff}.estado-chip.archivado{background:#f3f4f6;color:#6b7280}.btn-primary,.btn-secondary,.btn-link{border:0;border-radius:10px;padding:10px 14px;cursor:pointer}.btn-primary{background:#2563eb;color:#fff}.btn-secondary{background:#eef2f7;color:inherit}.btn-link{background:transparent;padding:6px 8px;color:#2563eb}.tabla-wrap{overflow:auto;margin-top:18px}.tabla-maestro{width:100%;border-collapse:collapse}.tabla-maestro th,.tabla-maestro td{text-align:left;padding:12px;border-bottom:1px solid #e5e7eb}.empty-state{text-align:center;padding:70px 20px;color:#6b7280}.empty-state strong,.empty-state span{display:block}.empty-state strong{color:inherit;font-size:18px;margin-bottom:6px}.empty-state.compact{padding:30px}.maestro-modal{border:0;border-radius:16px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(430px,calc(100% - 32px))}.maestro-modal::backdrop{background:rgba(0,0,0,.45)}.maestro-modal form{padding:24px}.maestro-modal h3{margin-top:0}.maestro-modal label{display:grid;gap:6px;margin:14px 0}.maestro-modal input{padding:11px;border:1px solid #d1d5db;border-radius:10px}.modal-actions{justify-content:flex-end;margin-top:20px}.maestro-mensaje{margin-top:16px;padding:11px 14px;border-radius:10px;background:#ecfdf5}.maestro-mensaje.error{background:#fef2f2;color:#991b1b}@media(max-width:800px){.maestro-grid{grid-template-columns:1fr}.maestro-head,.detalle-head{align-items:flex-start;flex-direction:column}.detalle-actions{width:100%;flex-wrap:wrap}}
+</style>
