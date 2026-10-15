@@ -97,5 +97,11 @@ async function guardar(){
 }
 async function init(){try{await cargar()}catch(e){mensaje(e.message,true)}}
 window.irSeccionV2=ir;window.updSec=updSec;window.updP=updP;window.updMat=updMat;window.updOp=updOp;window.addMat=addMat;window.delMat=delMat;window.addOp=addOp;window.delOp=delOp;window.agregarPiezaV2=agregarPieza;window.guardarFichaV2=guardar;window.volverFichasV2=()=>location.href="admin.html?modulo=fichas";
-window.addEventListener("DOMContentLoaded",()=>{\n  const volver=document.getElementById("btnVolverFichaV2"); if(volver) volver.addEventListener("click",()=>location.href="admin.html?modulo=fichas");\n  const guardar=document.getElementById("btnGuardarFichaV2"); if(guardar) guardar.addEventListener("click",guardar);\n  init();\n})
+window.addEventListener("DOMContentLoaded",()=>{
+  const volver=document.getElementById("btnVolverFichaV2")
+  if(volver) volver.addEventListener("click",()=>location.href="admin.html?modulo=fichas")
+  const guardarBtn=document.getElementById("btnGuardarFichaV2")
+  if(guardarBtn) guardarBtn.addEventListener("click",guardar)
+  init()
+})
 })()
