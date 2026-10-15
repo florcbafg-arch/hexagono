@@ -1,120 +1,52 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Crear Ficha Técnica</title>
-
-  <link rel="stylesheet" href="styles.css">
-
-  <script src="js/authGuard.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/api.js"></script>
-
-  <script>
-    checkAuth("admin")
-  </script>
-</head>
-
-<body>
-<div class="container">
-
-
-  <div class="main">
-    <div class="header">Panel Administrador</div>
-
-    <div id="contenido">
-      <h1>Crear / Importar Ficha Técnica</h1>
-
-     <div class="form-row">
-  <label>Modelo</label>
-  <input id="modelo" placeholder="Nombre del modelo">
-
-  <label>Código</label>
-  <input id="codigo" placeholder="Código de ficha o modelo">
-
-  <label>Nombre</label>
-  <input id="nombre" placeholder="Nombre de la ficha">
-</div>
-
-<div class="form-row">
-  <label>Marca</label>
-  <input id="marca" placeholder="Marca">
-
-  <label>Horma</label>
-  <input id="horma" placeholder="Horma">
-
-  <label>Temporada</label>
-  <input id="temporada" placeholder="Temporada">
-</div>
-
-<div class="form-row">
-  <label>Tipo de calzado</label>
-  <select id="tipo_calzado">
-    <option value="vulcanizada">Vulcanizada</option>
-    <option value="pegada">Pegada</option>
-  </select>
-
-  <label>Imagen del modelo</label>
-  <input id="imagen_modelo" type="file" accept="image/*">
-  <img id="preview_modelo" style="max-width: 180px; display: none; margin-top: 8px;" />
-
-  <label>Imagen secundaria</label>
-  <input id="imagen_secundaria" type="file" accept="image/*">
-  <img id="preview_secundaria" style="max-width: 180px; display: none; margin-top: 8px;" />
-
-  <label>Logo marca</label>
-  <input id="logo_marca" type="file" accept="image/*">
-  <img id="preview_logo" style="max-width: 140px; display: none; margin-top: 8px;" />
-</div>
-
-<div class="form-row">
-  <label>Detalle general</label>
-  <textarea id="detalle_general" rows="4" placeholder="Detalle general de la ficha"></textarea>
-</div>
-
-<hr>
-
-<h2>Estructura técnica</h2>
-<p>Completá la ficha técnica con las 6 secciones fijas del modelo.</p> 
-      <div class="layout-ficha">
-
-  <!-- IZQUIERDA -->
- <div class="panel-secciones">
-  <h3>Secciones</h3>
-  <div id="listaSecciones"></div>
-</div>
-
-  <!-- CENTRO -->
-  <div class="panel-contenido">
-    <h3>Contenido técnico</h3>
-    <div id="secciones"></div>
-  </div>
-
-  <!-- DERECHA -->
-  <div class="panel-preview">
-    <h3>Vista previa</h3>
-    <div id="previewFicha"></div>
+<div class="ficha-editor-v2">
+  <div class="ficha-editor-head">
+    <div>
+      <div class="ficha-eyebrow">MAESTROS TÉCNICOS</div>
+      <h1 id="tituloFichaV2">Ficha Técnica</h1>
+      <p id="subtituloFichaV2">Cargando artículo y versión…</p>
     </div>
+    <div id="estadoFichaV2" class="ficha-badge">Borrador</div>
   </div>
 
-</div>
+  <div id="mensajeFichaV2"></div>
 
-      <br>
-
-      <button type="button" id="btnGuardarFicha" onclick="guardarFichaCompleta()">💾 Guardar Ficha</button>
-      <button type="button" onclick="volver()">⬅ Volver</button>
+  <section class="ficha-card ficha-identidad">
+    <div><span>Código</span><strong id="fCodigo">-</strong></div>
+    <div><span>Modelo</span><strong id="fModelo">-</strong></div>
+    <div><span>Marca</span><strong id="fMarca">-</strong></div>
+    <div><span>Color</span><strong id="fColor">-</strong></div>
+    <div><span>Versión</span><strong id="fVersion">-</strong></div>
+    <div>
+      <label for="fSistema">Sistema constructivo</label>
+      <select id="fSistema"><option value="vulcanizado">Vulcanizado</option><option value="pegado">Pegado</option></select>
     </div>
+  </section>
+
+  <div class="ficha-layout-v2">
+    <aside class="ficha-card ficha-nav">
+      <h3>Secciones</h3>
+      <div id="listaSeccionesV2"></div>
+    </aside>
+
+    <main class="ficha-card ficha-contenido">
+      <div id="editorSeccionV2"></div>
+    </main>
+
+    <aside class="ficha-card ficha-preview-v2">
+      <h3>Resumen</h3>
+      <div id="previewFichaV2"></div>
+    </aside>
   </div>
 
-</div>
+  <section class="ficha-card ficha-generales">
+    <label>Detalle general</label>
+    <textarea id="fDetalle" rows="3" placeholder="Detalle general de fabricación"></textarea>
+    <label>Observaciones generales</label>
+    <textarea id="fObservaciones" rows="3" placeholder="Observaciones generales"></textarea>
+  </section>
 
-<script src="js/fichas_crear_admin.js?v=8"></script>
-<script>
-  function logout() {
-    localStorage.removeItem("token")
-    localStorage.removeItem("usuario")
-    window.location.href = "login.html"
-  }
-</script>
-</body>
-</html>
+  <div class="ficha-actions">
+    <button onclick="volverFichasV2()">⬅ Volver</button>
+    <button id="btnGuardarFichaV2" onclick="guardarFichaV2()">💾 Guardar borrador</button>
+  </div>
+</div>
