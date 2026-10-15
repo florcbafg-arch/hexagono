@@ -17,12 +17,23 @@
   <div class="subtitulo">Control de producción</div>
 </div>
 
+      <div id="recoveryBox" hidden>
+        <h2 style="text-align:center">Nueva contraseña</h2>
+        <p style="text-align:center">Elegí una nueva contraseña para tu cuenta.</p>
+        <form id="recoveryForm">
+          <input type="password" id="newPassword" placeholder="Nueva contraseña" autocomplete="new-password" minlength="8" required>
+          <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" autocomplete="new-password" minlength="8" required>
+          <button type="submit">Guardar contraseña</button>
+        </form>
+      </div>
+
+      <div id="loginBox">
       <!-- ✅ FORM CORRECTO -->
       <form id="loginForm">
 
         <input type="text" id="usuario" placeholder="Email" required>
 
-        <input type="password" id="password" placeholder="Contraseña" required>
+        <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" required>
 
         <button type="submit">Ingresar</button>
 
@@ -31,6 +42,7 @@
       <!-- ✅ LINK FUERA DEL FORM -->
       <div class="link">
         ¿No tienes cuenta? <a href="registro.html">Crear cuenta</a>
+      </div>
       </div>
 
     </div>
@@ -47,6 +59,47 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 })
 
+
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const recoveryToken = hashParams.get("access_token")
+    const recoveryType = hashParams.get("type")
+
+    if (recoveryToken && recoveryType === "recovery") {
+      document.getElementById("loginBox").hidden = true
+      document.getElementById("recoveryBox").hidden = false
+    }
+
+    document.getElementById("recoveryForm").addEventListener("submit", async (e) => {
+      e.preventDefault()
+      const password = document.getElementById("newPassword").value
+      const confirm = document.getElementById("confirmPassword").value
+
+      if (password !== confirm) {
+        alert("Las contraseñas no coinciden")
+        return
+      }
+
+      try {
+        const res = await fetch("/api/auth/recovery-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ access_token: recoveryToken, password })
+        })
+        const data = await res.json()
+        if (!res.ok || !data.ok) {
+          alert(data.error || "No se pudo actualizar la contraseña")
+          return
+        }
+
+        alert("Contraseña actualizada. Ya podés ingresar.")
+        window.history.replaceState({}, document.title, "/")
+        window.location.reload()
+      } catch (error) {
+        console.error("ERROR RECOVERY:", error)
+        alert("Error conectando con el servidor")
+      }
+    })
+
     document
       .getElementById("loginForm")
       .addEventListener("submit", async (e) => {
@@ -58,7 +111,6 @@ window.addEventListener("DOMContentLoaded", () => {
         const usuario = document.getElementById("usuario").value
         const password = document.getElementById("password").value
 
-        console.log("DATOS:", usuario, password)
 
         try {
 
@@ -100,7 +152,8 @@ localStorage.setItem("hexagono_user", JSON.stringify({
   login_time: Date.now()
 }))
 
-localStorage.setItem("token", data.token)\nlocalStorage.removeItem("empresa_id")
+localStorage.setItem("token", data.token)
+localStorage.removeItem("empresa_id")
 
   window.location.href = "/fichas_operario.html"
 }
