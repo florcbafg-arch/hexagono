@@ -1,3 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ficha Técnica - HEXAFLOW</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/api.js"></script>
+  <script src="js/authGuard.js"></script>
+  <style>
+    body.ficha-page{margin:0;font-family:Arial,sans-serif;background:#f4f6f9;color:#172033}
+    .ficha-page-shell{padding:28px}
+    body.ficha-page.dark-mode{background:#080b11;color:#e5eefc}
+  </style>
+</head>
+<body class="ficha-page">
+<div class="ficha-page-shell">
 <div class="ficha-editor-v2">
   <div class="ficha-editor-head">
     <div>
@@ -7,46 +24,35 @@
     </div>
     <div id="estadoFichaV2" class="ficha-badge">Borrador</div>
   </div>
-
   <div id="mensajeFichaV2"></div>
-
   <section class="ficha-card ficha-identidad">
     <div><span>Código</span><strong id="fCodigo">-</strong></div>
     <div><span>Modelo</span><strong id="fModelo">-</strong></div>
     <div><span>Marca</span><strong id="fMarca">-</strong></div>
     <div><span>Color</span><strong id="fColor">-</strong></div>
     <div><span>Versión</span><strong id="fVersion">-</strong></div>
-    <div>
-      <label for="fSistema">Sistema constructivo</label>
-      <select id="fSistema"><option value="vulcanizado">Vulcanizado</option><option value="pegado">Pegado</option></select>
-    </div>
+    <div><label for="fSistema">Sistema constructivo</label><select id="fSistema"><option value="vulcanizado">Vulcanizado</option><option value="pegado">Pegado</option></select></div>
   </section>
-
   <div class="ficha-layout-v2">
-    <aside class="ficha-card ficha-nav">
-      <h3>Secciones</h3>
-      <div id="listaSeccionesV2"></div>
-    </aside>
-
-    <main class="ficha-card ficha-contenido">
-      <div id="editorSeccionV2"></div>
-    </main>
-
-    <aside class="ficha-card ficha-preview-v2">
-      <h3>Resumen</h3>
-      <div id="previewFichaV2"></div>
-    </aside>
+    <aside class="ficha-card ficha-nav"><h3>Secciones</h3><div id="listaSeccionesV2"></div></aside>
+    <main class="ficha-card ficha-contenido"><div id="editorSeccionV2"></div></main>
+    <aside class="ficha-card ficha-preview-v2"><h3>Resumen</h3><div id="previewFichaV2"></div></aside>
   </div>
-
   <section class="ficha-card ficha-generales">
-    <label>Detalle general</label>
-    <textarea id="fDetalle" rows="3" placeholder="Detalle general de fabricación"></textarea>
-    <label>Observaciones generales</label>
-    <textarea id="fObservaciones" rows="3" placeholder="Observaciones generales"></textarea>
+    <label>Detalle general</label><textarea id="fDetalle" rows="3" placeholder="Detalle general de fabricación"></textarea>
+    <label>Observaciones generales</label><textarea id="fObservaciones" rows="3" placeholder="Observaciones generales"></textarea>
   </section>
-
   <div class="ficha-actions">
-    <button onclick="volverFichasV2()">⬅ Volver</button>
-    <button id="btnGuardarFichaV2" onclick="guardarFichaV2()">💾 Guardar borrador</button>
+    <button type="button" id="btnVolverFichaV2">⬅ Volver</button>
+    <button type="button" id="btnGuardarFichaV2">💾 Guardar borrador</button>
   </div>
 </div>
+</div>
+<script>
+  const tema = localStorage.getItem("hexaflow_theme");
+  document.body.classList.toggle("dark-mode", tema === "dark");
+  checkAuth("admin");
+</script>
+<script src="js/fichas_crear_admin.js?v=2"></script>
+</body>
+</html>
