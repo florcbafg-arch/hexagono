@@ -41,6 +41,79 @@ app.use("/api/objetivos", authMiddleware);
 app.use("/api/modelos", authMiddleware);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
+// ==========================
+// 🔐 TOKEN OPERARIO FIRMADO
+// ==========================
+const OPERARIO_TOKEN_SECRET = process.env.OPERARIO_TOKEN_SECRET || process.env.SUPABASE_SECRET_KEY
+
+function crearTokenOperario(operario) {
+  const payload = Buffer.from(JSON.stringify({
+    sub: operario.id,
+    empresa_id: operario.empresa_id,
+    puesto_id: operario.puesto_id,
+    tipo: "operario",
+    exp: Date.now() + (8 * 60 * 60 * 1000)
+  })).toString("base64url")
+
+  const firma = require("crypto")
+    .createHmac("sha256", OPERARIO_TOKEN_SECRET)
+    .update(payload)
+    .digest("base64url")
+
+  return payload + "." + firma
+}
+
+async function operarioMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Operario no autenticado" })
+    }
+
+    const token = authHeader.slice(7)
+    const partes = token.split(".")
+    if (partes.length !== 2) {
+      return res.status(401).json({ error: "Token de operario inválido" })
+    }
+
+    const [payload, firma] = partes
+    const firmaEsperada = require("crypto")
+      .createHmac("sha256", OPERARIO_TOKEN_SECRET)
+      .update(payload)
+      .digest("base64url")
+
+    const firmaBuf = Buffer.from(firma)
+    const esperadaBuf = Buffer.from(firmaEsperada)
+    if (firmaBuf.length !== esperadaBuf.length ||
+        !require("crypto").timingSafeEqual(firmaBuf, esperadaBuf)) {
+      return res.status(401).json({ error: "Token de operario inválido" })
+    }
+
+    const sesion = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
+    if (sesion.tipo !== "operario" || !sesion.sub || !sesion.empresa_id || Date.now() > sesion.exp) {
+      return res.status(401).json({ error: "Sesión de operario inválida o vencida" })
+    }
+
+    const { data: operario, error } = await supabase
+      .from("usuarios")
+      .select("id, nombre, rol, empresa_id, puesto_id, activo, tipo_login")
+      .eq("id", sesion.sub)
+      .eq("empresa_id", sesion.empresa_id)
+      .eq("activo", true)
+      .maybeSingle()
+
+    if (error || !operario || (operario.rol !== "operario" && operario.tipo_login !== "operario")) {
+      return res.status(401).json({ error: "Operario no autorizado" })
+    }
+
+    req.operario = operario
+    next()
+  } catch (err) {
+    console.error("Error validando sesión operario:", err)
+    return res.status(401).json({ error: "Sesión de operario inválida" })
+  }
+}
+
 
 // ==========================
 // LOGIN OPERARIO SIMPLE PARA CONSULTA
@@ -93,9 +166,9 @@ app.post("/api/operario/login-ficha", async (req, res) => {
 // ==========================
 // FICHAS SOLO LECTURA OPERARIO
 // ==========================
-app.get("/api/fichas-operario", async (req, res) => {
+app.get("/api/fichas-operario", operarioMiddleware, async (req, res) => {
   try {
-    const empresaId = req.query.empresa_id
+    const empresaId = req.operario.empresa_id
 
     if (!empresaId) {
       return res.status(400).json({ error: "empresa_id requerido" })
@@ -135,10 +208,10 @@ app.get("/api/fichas-operario", async (req, res) => {
   }
 })
 
-app.get("/api/fichas-operario/:id", async (req, res) => {
+app.get("/api/fichas-operario/:id", operarioMiddleware, async (req, res) => {
   try {
     const fichaId = req.params.id
-    const empresaId = req.query.empresa_id
+    const empresaId = req.operario.empresa_id
 
     if (!empresaId) {
       return res.status(400).json({ error: "empresa_id requerido" })
@@ -252,9 +325,9 @@ app.get("/api/fichas-operario/:id", async (req, res) => {
   }
 })
 
-app.get("/api/operario/puestos", async (req, res) => {
+app.get("/api/operario/puestos", operarioMiddleware, async (req, res) => {
   try {
-    const empresaId = req.query.empresa_id
+    const empresaId = req.operario.empresa_id
 
     if (!empresaId) {
       return res.status(400).json({ error: "empresa_id requerido" })
@@ -275,10 +348,10 @@ app.get("/api/operario/puestos", async (req, res) => {
   }
 })
 
-app.get("/api/operario/tarea/:numero", async (req, res) => {
+app.get("/api/operario/tarea/:numero", operarioMiddleware, async (req, res) => {
   try {
     const numero = req.params.numero
-    const empresaId = req.query.empresa_id
+    const empresaId = req.operario.empresa_id
 
     if (!empresaId) {
       return res.status(400).json({ error: "empresa_id requerido" })
@@ -333,11 +406,11 @@ app.get("/api/operario/tarea/:numero", async (req, res) => {
   }
 })
 
-app.get("/api/operario/produccion/check/:numero", async (req, res) => {
+app.get("/api/operario/produccion/check/:numero", operarioMiddleware, async (req, res) => {
   try {
     const numero = req.params.numero
-    const puestoId = Number(req.query.puesto)
-    const empresaId = req.query.empresa_id
+    const puestoId = Number(req.operario.puesto_id)
+    const empresaId = req.operario.empresa_id
 
     if (!empresaId) {
       return res.status(400).json({ error: "empresa_id requerido" })
@@ -444,7 +517,7 @@ console.log("PUESTO ACTUAL:", puesto)
   }
 })
 
-app.post("/api/operario/produccion", async (req, res) => {
+app.post("/api/operario/produccion", operarioMiddleware, async (req, res) => {
   try {
     const { orden_id, puesto_id, cantidad, empresa_id, usuario_nombre } = req.body
 
