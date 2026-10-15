@@ -249,6 +249,29 @@ router.get("/me", async (req, res) => {
   }
 })
 
+// 🔐 RECUPERACIÓN DE CONTRASEÑA
+router.post("/recovery-password", async (req, res) => {
+  try {
+    const { access_token, password } = req.body
+    if (!access_token || !password || password.length < 8) {
+      return res.status(400).json({ ok: false, error: "Token y contraseña de al menos 8 caracteres requeridos" })
+    }
+
+    const { data: userData, error: userError } = await supabase.auth.getUser(access_token)
+    if (userError || !userData?.user) {
+      return res.status(401).json({ ok: false, error: "El enlace de recuperación es inválido o venció" })
+    }
+
+    const { error } = await supabase.auth.admin.updateUserById(userData.user.id, { password })
+    if (error) throw error
+
+    return res.json({ ok: true })
+  } catch (err) {
+    console.error("Error recuperando contraseña:", err)
+    return res.status(500).json({ ok: false, error: "No se pudo actualizar la contraseña" })
+  }
+})
+
 // 🔐 LOGIN OPERARIO
 router.post("/login-operario", async (req, res) => {
   try {
