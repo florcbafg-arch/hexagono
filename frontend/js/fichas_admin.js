@@ -1,422 +1,113 @@
 (() => {
-let fichas = []
+let fichasV2 = []
+let articulosV2 = []
 
-const ESTRUCTURA_BASE_IMPORT = {
-  seccion1: {
-    nombre: "SECCION N° 1",
-    titulo_impresion: "SACABOCADO",
-    items: [
-      "CAÑA",
-      "CAPELLADA",
-      "CORDONERA",
-      "FORRO",
-      "FRANJA TALON",
-      "LENGUA SUPERIOR",
-      "LENGUA INFERIOR",
-      "PUNTERA",
-      "RELLENO DE CUELLO",
-      "RELLENO DE LENGUA",
-      "TALON/CORDONERA",
-      "TALON"
-    ]
-  },
-  seccion2: {
-    nombre: "SECCION N° 2",
-    titulo_impresion: "",
-    items: [
-      "COSTURA FIGURADA",
-      "COSTURAS",
-      "ETIQ. DE LENGUA",
-      "GRIFA DE CAÑA EXT",
-      "INSTRUCTIVO LENGUA",
-      "PERFORACIONES",
-      "SERIGRAFIA ETIQ LENGUA",
-      "SERIGRAFIA GRIFA"
-    ]
-  },
-  seccion3: {
-    nombre: "SECCION N° 3",
-    titulo_impresion: "",
-    items: [
-      "CAJA",
-      "CALCOMANIA",
-      "CORDONES",
-      "EMBALADO",
-      "ETIQ CAJA MADRE",
-      "ETIQ COMPOSICION",
-      "PLANTILLA",
-      "SERIGRAFIA PLANTILLA",
-      "SULFITO"
-    ]
-  },
-  seccion4: {
-    nombre: "SECCION N° 4",
-    titulo_impresion: "",
-    items: [
-      "BANDA",
-      "BUMPER DELANTERO",
-      "HORMA",
-      "SUELIN",
-      "TAPA TRASERA",
-      "BASE",
-      "COSTURA"
-    ]
-  },
-  seccion5: {
-    nombre: "SECCION N° 5",
-    titulo_impresion: "",
-    items: [
-      "NUM. HORMA",
-      "NUM. SACABOCADO",
-      "NUM. GOM",
-      "SACABOCADO",
-      "TRANSFER DE CAPELL."
-    ]
-  },
-  seccion6: {
-    nombre: "SECCION N° 6",
-    titulo_impresion: "SACABOCADO",
-    items: [
-      "PLANTILLA DE STROBEL",
-      "REFUERZO CAÑA",
-      "REFUERZO CAPELLADA",
-      "REFUERZO CORDONERA",
-      "REFUERZO PUNTERA",
-      "REFUERZO TALON",
-      "RELLENO CAÑA"
-    ]
-  }
+const esc = (v="") => String(v ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+
+function mostrarMensaje(texto, error=false) {
+  const el=document.getElementById("fichaV2Mensaje"); if(!el) return
+  el.innerHTML = texto ? `<div style="padding:10px 12px;border-radius:8px;background:${error?'#4a1717':'#153c27'}">${esc(texto)}</div>` : ""
 }
 
-function normalizarTextoImport(valor = "") {
-  return String(valor || "")
-    .trim()
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
+async function cargarFichasV2() {
+  const res=await apiFetch("/api/fichas-v2")
+  const data=await res.json()
+  if(!res.ok||!data.ok) throw new Error(data.error||"No se pudieron cargar las fichas")
+  fichasV2=Array.isArray(data.fichas)?data.fichas:[]
+  renderFichasV2()
 }
 
-function construirSeccionesImportacion() {
-  const defs = Object.values(ESTRUCTURA_BASE_IMPORT)
-
-  return defs.map((seccionDef, sIndex) => ({
-    nombre: seccionDef.nombre,
-    sector: "",
-    tipo_seccion: "proceso",
-    titulo_impresion: seccionDef.titulo_impresion || "",
-    observaciones: "",
-    orden: sIndex + 1,
-    piezas: seccionDef.items.map((item, iIndex) => ({
-      nombre: item,
-      tipo_pieza: "estructural",
-      observacion: "",
-      orden: iIndex + 1,
-      sacabocado_id: null,
-      materiales: [
-        {
-          material: "",
-          especificacion: "",
-          color: "",
-          categoria: "materia_prima",
-          unidad_medida: "",
-          consumo: null,
-          observacion: "",
-          orden: 1
-        }
-      ],
-      operaciones: []
-    }))
-  }))
-}
-
-function aplicarDetalleImportado(secciones, filasDetalle) {
-  let coincidencias = 0
-
-  filasDetalle.forEach((fila) => {
-    const seccionNombre = normalizarTextoImport(fila.seccion)
-    const itemNombre = normalizarTextoImport(fila.item)
-    const valor = String(fila.valor || "").trim()
-
-    if (!seccionNombre || !itemNombre || !valor) return
-
-    const seccion = secciones.find(
-      s => normalizarTextoImport(s.nombre) === seccionNombre
-    )
-    if (!seccion) return
-
-    const pieza = seccion.piezas.find(
-      p => normalizarTextoImport(p.nombre) === itemNombre
-    )
-    if (!pieza) return
-
-    if (pieza.materiales?.[0]) {
-      pieza.materiales[0].material = valor
-      coincidencias++
-    }
+function renderFichasV2() {
+  const tbody=document.getElementById("tablaFichasV2"); if(!tbody) return
+  const q=(document.getElementById("buscarFichaV2")?.value||"").trim().toLowerCase()
+  const estado=document.getElementById("filtroEstadoFichaV2")?.value||""
+  const rows=fichasV2.filter(f=>{
+    const a=f.articulos||{}, m=a.modelos||{}
+    const hay=[a.codigo,a.color,m.nombre,m.marca].join(" ").toLowerCase().includes(q)
+    return hay && (!estado||f.estado===estado)
   })
-
-  return {
-    secciones,
-    coincidencias
-  }
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="7" style="padding:22px;text-align:center;color:#888;">Todavía no hay fichas V2 para mostrar.</td></tr>';return}
+  tbody.innerHTML=rows.map(f=>{
+    const a=f.articulos||{},m=a.modelos||{}
+    const acciones=f.estado==="borrador"
+      ? `<button onclick="editarFichaV2(${f.id})">✏ Editar</button> <button onclick="publicarFichaV2(${f.id})">✅ Publicar</button>`
+      : (["vigente","historica"].includes(f.estado)?`<button onclick="nuevaVersionFichaV2(${f.id})">🧬 Nueva versión</button>`:"")
+    return `<tr>
+      <td style="padding:10px;"><strong>${esc(a.codigo||"-")}</strong><div style="font-size:12px;color:#888;">${esc(a.color||"-")}</div></td>
+      <td>${esc(m.nombre||"-")}</td><td>${esc(m.marca||"-")}</td>
+      <td>V${esc(f.version)}</td><td>${esc(f.estado)}</td><td>${esc(f.sistema_constructivo||"-")}</td>
+      <td style="white-space:nowrap;">${acciones} <button onclick="verFichaV2(${f.id})">👁 Ver</button></td>
+    </tr>`
+  }).join("")
 }
 
-async function importarExcelFicha(event) {
-  const file = event.target.files?.[0]
-  if (!file) return
-
-  const nombreArchivo = (file.name || "").toLowerCase()
-  const esExcel = nombreArchivo.endsWith(".xlsx") || nombreArchivo.endsWith(".xls")
-
-  if (!esExcel) {
-    alert("Error al importar: solo se permiten archivos Excel (.xlsx o .xls)")
-    event.target.value = ""
-    return
-  }
-
-  try {
-    const data = await file.arrayBuffer()
-    const workbook = XLSX.read(data, { type: "array" })
-
-    const hojaFicha = workbook.Sheets["ficha"]
-    const hojaDetalle = workbook.Sheets["detalle"]
-
-    if (!hojaFicha) {
-      throw new Error("Falta la hoja 'ficha'")
-    }
-
-    if (!hojaDetalle) {
-      throw new Error("Falta la hoja 'detalle'")
-    }
-
-    const filasFicha = XLSX.utils.sheet_to_json(hojaFicha, { defval: "" })
-const filasDetalle = XLSX.utils.sheet_to_json(hojaDetalle, { defval: "" })
-
-if (!Array.isArray(filasFicha) || filasFicha.length === 0) {
-  throw new Error("La hoja 'ficha' está vacía o incompleta")
+async function cargarArticulosV2(){
+  const res=await apiFetch("/api/articulos")
+  const data=await res.json()
+  if(!res.ok) throw new Error(data.error||"No se pudieron cargar los artículos")
+  articulosV2=Array.isArray(data)?data:(data.articulos||[])
 }
 
-if (!Array.isArray(filasDetalle) || filasDetalle.length === 0) {
-  throw new Error("La hoja 'detalle' está vacía o incompleta")
+async function abrirNuevaFichaV2(){
+  try{
+    if(!articulosV2.length) await cargarArticulosV2()
+    const select=document.getElementById("articuloNuevaFichaV2")
+    const usados=new Set(fichasV2.map(f=>String(f.articulo_id)))
+    const disponibles=articulosV2.filter(a=>a.activo!==false&&!usados.has(String(a.id)))
+    select.innerHTML=disponibles.length
+      ? disponibles.map(a=>`<option value="${a.id}">${esc(a.codigo)} · ${esc(a.marca||a.modelos?.marca||"")} · ${esc(a.modelo_nombre||a.modelos?.nombre||"")} · ${esc(a.color||"")}</option>`).join("")
+      : '<option value="">No hay artículos activos sin ficha</option>'
+    document.getElementById("modalNuevaFichaV2").style.display="flex"
+  }catch(e){mostrarMensaje(e.message,true)}
+}
+function cerrarNuevaFichaV2(){document.getElementById("modalNuevaFichaV2").style.display="none"}
+
+async function crearFichaV2(){
+  const articulo_id=Number(document.getElementById("articuloNuevaFichaV2").value)
+  const sistema_constructivo=document.getElementById("sistemaNuevaFichaV2").value
+  if(!articulo_id) return mostrarMensaje("No hay un artículo disponible para crear la ficha.",true)
+  try{
+    const res=await apiFetch("/api/fichas-v2",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({articulo_id,sistema_constructivo})})
+    const data=await res.json(); if(!res.ok||!data.ok) throw new Error(data.error||"No se pudo crear la ficha")
+    cerrarNuevaFichaV2()
+    window.location.href=`fichas_crear_admin.html?ficha_id=${data.ficha.id}`
+  }catch(e){mostrarMensaje(e.message,true)}
 }
 
-    const cabecera = filasFicha[0]
+function editarFichaV2(id){window.location.href=`fichas_crear_admin.html?ficha_id=${id}`}
+function verFichaV2(id){window.location.href=`fichas_crear_admin.html?ficha_id=${id}&solo_lectura=1`}
 
-    const primeraFilaDetalle = filasDetalle[0] || {}
-
-if (!("seccion" in primeraFilaDetalle) || !("item" in primeraFilaDetalle) || !("valor" in primeraFilaDetalle)) {
-  throw new Error("La hoja 'detalle' debe incluir las columnas: seccion, item, valor")
+async function publicarFichaV2(id){
+  if(!confirm("¿Publicar esta versión? Una vez vigente quedará congelada.")) return
+  try{
+    const res=await apiFetch(`/api/fichas-v2/${id}/publicar`,{method:"POST"})
+    const data=await res.json(); if(!res.ok||!data.ok) throw new Error(data.error||"No se pudo publicar")
+    mostrarMensaje(data.message||"Ficha publicada"); await cargarFichasV2()
+  }catch(e){mostrarMensaje(e.message,true)}
 }
 
-    const resultadoImportacion = aplicarDetalleImportado(
-  construirSeccionesImportacion(),
-  filasDetalle
-)
-
-if (!resultadoImportacion.coincidencias) {
-  throw new Error("El Excel no coincide con la estructura esperada. Revisá sección, item y valor.")
+async function nuevaVersionFichaV2(id){
+  if(!confirm("¿Crear una nueva versión en borrador copiando esta ficha?")) return
+  try{
+    const res=await apiFetch(`/api/fichas-v2/${id}/nueva-version`,{method:"POST"})
+    const data=await res.json(); if(!res.ok||!data.ok) throw new Error(data.error||"No se pudo crear la versión")
+    window.location.href=`fichas_crear_admin.html?ficha_id=${data.ficha.id}`
+  }catch(e){mostrarMensaje(e.message,true)}
 }
 
-const payload = {
-  modelo: String(cabecera.modelo || "").trim(),
-  codigo: String(cabecera.codigo || "").trim(),
-  nombre: String(cabecera.nombre || "").trim(),
-  marca: String(cabecera.marca || "").trim(),
-  horma: String(cabecera.horma || "").trim(),
-  temporada: String(cabecera.temporada || "").trim(),
-  detalle_general: "",
-  tipo_calzado: String(cabecera.tipo_calzado || "vulcanizada").trim().toLowerCase(),
-  imagen_modelo_url: "",
-  imagen_secundaria_url: "",
-  logo_marca_url: "",
-  pdf_url: "",
-  fuente: "EXCEL",
-  secciones: resultadoImportacion.secciones
-}
-  
-
-    if (!payload.modelo) {
-      throw new Error("La hoja 'ficha' debe incluir 'modelo'")
-    }
-
-    if (!payload.codigo) {
-      throw new Error("La hoja 'ficha' debe incluir 'codigo'")
-    }
-
-    if (!payload.nombre) {
-      throw new Error("La hoja 'ficha' debe incluir 'nombre'")
-    }
-
-    const res = await apiFetch("/api/fichas", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    })
-
-    const resultado = await res.json()
-
-    if (!res.ok || !resultado.ok) {
-      throw new Error(resultado.error || "Error importando ficha desde Excel")
-    }
-
-    alert(`Ficha importada correctamente desde Excel. Se cargaron ${resultadoImportacion.coincidencias} ítems.`)
-    await cargarFichas()
-
-  } catch (error) {
-    console.error("Error importando Excel de ficha:", error)
-    alert(error.message || "Error al importar Excel. Revisá el formato del archivo.")
-  } finally {
-    event.target.value = ""
-  }
+async function cargarLegacy(){
+  try{
+    const res=await apiFetch("/api/fichas"); const data=await res.json()
+    const arr=Array.isArray(data)?data:[]
+    const el=document.getElementById("legacyFichasResumen")
+    if(el) el.textContent=`${arr.length} ficha(s) legacy preservada(s). No se modifican desde este módulo V2.`
+  }catch(_){const el=document.getElementById("legacyFichasResumen");if(el)el.textContent="No se pudo consultar el resumen legacy."}
 }
 
-async function cargarFichas() {
-  try {
-    const res = await apiFetch("/api/fichas")
-    const data = await res.json()
-
-    fichas = Array.isArray(data) ? data : []
-
-fichas.sort((a, b) => {
-  const modeloA = (a.modelo_nombre || "").toLowerCase()
-  const modeloB = (b.modelo_nombre || "").toLowerCase()
-
-  if (modeloA < modeloB) return -1
-  if (modeloA > modeloB) return 1
-
-  const marcaA = (a.marca || "").toLowerCase()
-  const marcaB = (b.marca || "").toLowerCase()
-
-  if (marcaA < marcaB) return -1
-  if (marcaA > marcaB) return 1
-
-  return 0
-})
-
-renderFichas()
-    
-  } catch (error) {
-    console.error("Error cargando fichas:", error)
-    alert("Error cargando fichas")
-  }
+async function initFichas(){
+  try{await Promise.all([cargarFichasV2(),cargarLegacy()])}catch(e){mostrarMensaje(e.message,true)}
 }
-
-function renderFichas() {
-  const tbody = document.getElementById("tablaFichas")
-  const buscador = document.getElementById("buscador")
-  const filtro = (buscador?.value || "").toLowerCase().trim()
-
-  tbody.innerHTML = ""
-
-const filtradas = fichas.filter(f =>
-  (f.nombre || "").toLowerCase().includes(filtro) ||
-  (f.codigo || "").toLowerCase().includes(filtro) ||
-  (f.modelo_nombre || "").toLowerCase().includes(filtro) ||
-  (f.marca || "").toLowerCase().includes(filtro)
-)
-
-const visibles = filtradas.slice(0, 10)
-
-  if (filtradas.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align:center;">No hay fichas técnicas cargadas</td>
-      </tr>
-    `
-    return
-  }
-
-  visibles.forEach(f => {
-    const fuente = f.fuente || "-"
-    
-
-    tbody.innerHTML += `
-      <tr>
-        <td>${f.modelo_nombre || "-"}</td>
-        <td>${f.codigo || "-"}</td>
-        <td>${f.nombre || "-"}</td>
-        <td>${fuente}</td>
-    <td>
-  <button onclick="verFicha(${f.modelo_id})">👁 Ver</button>
-  <button onclick="editarFicha(${f.modelo_id})">✏ Editar</button>
-  <button onclick="eliminarFicha(${f.modelo_id})">🗑 Eliminar</button>
-</td>
-      </tr>
-    `
-  })
-
-}
-
-function crearFicha() {
-  window.location.href = "fichas_crear_admin.html"
-}
-
-function verFicha(modelo_id) {
-  window.location.href = `fichas_detalle_admin.html?modelo_id=${modelo_id}`
-}
-
-function editarFicha(modelo_id) {
-  window.location.href = `fichas_crear_admin.html?modelo_id=${modelo_id}`
-}
-
-async function eliminarFicha(modelo_id) {
-  const ok = confirm("¿Eliminar esta ficha técnica?")
-  if (!ok) return
-
-  try {
-    const res = await apiFetch(`/api/fichas/${modelo_id}`, {
-      method: "DELETE"
-    })
-
-    const data = await res.json()
-
-    if (!res.ok || !data.ok) {
-      throw new Error(data.error || "Error eliminando ficha")
-    }
-
-    alert("Ficha eliminada correctamente")
-
-    await cargarFichas()
-
-  } catch (error) {
-    console.error("Error eliminando ficha:", error)
-    alert(error.message || "Error eliminando ficha")
-  }
-}
-
-function verPDF(pdf_url) {
-  if (!pdf_url) return
-
-  let ruta = pdf_url.trim()
-
-  if (!ruta.startsWith("http") && !ruta.startsWith("/")) {
-    ruta = "/" + ruta
-  }
-
-  const url = ruta.startsWith("http")
-    ? ruta
-    : window.location.origin + ruta
-
-  window.location.href = url
-}
-
-function filtrarFichas() {
-  renderFichas()
-}
- 
-function initFichas() {
-  cargarFichas()
-}
-
-window.initFichas = initFichas
-window.crearFicha = crearFicha
-window.verFicha = verFicha
-window.editarFicha = editarFicha
-window.eliminarFicha = eliminarFicha
-window.verPDF = verPDF
-window.filtrarFichas = filtrarFichas
-window.importarExcelFicha = importarExcelFicha
+window.initFichas=initFichas; window.renderFichasV2=renderFichasV2; window.abrirNuevaFichaV2=abrirNuevaFichaV2;
+window.cerrarNuevaFichaV2=cerrarNuevaFichaV2; window.crearFichaV2=crearFichaV2; window.editarFichaV2=editarFichaV2;
+window.verFichaV2=verFichaV2; window.publicarFichaV2=publicarFichaV2; window.nuevaVersionFichaV2=nuevaVersionFichaV2;
 })()
