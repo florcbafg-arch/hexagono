@@ -62,8 +62,7 @@ function obtenerValorDePieza(pieza) {
   ).filter(Boolean)
   const extras = []
   if (pieza.observacion) extras.push(pieza.observacion)
-  return [...materiales, ...operaciones, ...extras].join("
-") || "-"
+  return [...materiales, ...operaciones, ...extras].join(" · ") || "-"
 }
 
 function renderBloqueSeccion(seccion, index) {
