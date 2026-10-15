@@ -3,6 +3,7 @@ const router = express.Router();
 const { supabase } = require("../../config/supabase");
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs")
+const { crearTokenOperario } = require("../security/operarioToken")
 
 // 🔐 REGISTRO
 router.post("/registro", async (req, res) => {
@@ -152,77 +153,32 @@ router.post("/login", async (req, res) => {
     userData = userByEmail
   }
 
-  // si por alguna razón no existe usuario sincronizado, crearlo bien
+  // El login nunca crea ni reasigna empresas. El usuario debe estar provisionado.
   if (!userData) {
-    const nuevaEmpresaId = crypto.randomUUID()
+    return res.status(403).json({ ok: false, error: "Usuario no provisionado en Hexaflow" })
+  }
 
-const { data: empresaNueva, error: errorEmpresa } = await supabase
-  .from("empresas")
-  .insert([
-    {
-      id: nuevaEmpresaId,
-      nombre: `${emailLimpio} - empresa`
-    }
-  ])
-  .select()
-  .single()
+  if (userData.activo === false) {
+    return res.status(403).json({ ok: false, error: "Usuario inactivo" })
+  }
 
-   if (errorEmpresa || !empresaNueva) {
-  console.log("❌ ERROR CREANDO EMPRESA LOGIN:", errorEmpresa)
-  return res.status(500).json({
-    error: "No se pudo crear empresa para el usuario",
-    detalle: errorEmpresa?.message || "Sin detalle"
-  })
-}
+  if (!userData.empresa_id) {
+    return res.status(403).json({ ok: false, error: "Usuario sin empresa asignada" })
+  }
 
-    const { error: errorInsertUsuario } = await supabase
+  if (!userData.auth_id) {
+    const { error: syncError } = await supabase
       .from("usuarios")
-      .insert([
-        {
-          auth_id: authUser.id,
-          email: emailLimpio,
-          nombre: "Usuario",
-          empresa_id: empresaNueva.id,
-          rol: "admin"
-        }
-      ])
+      .update({ auth_id: authUser.id })
+      .eq("id", userData.id)
+      .is("auth_id", null)
 
-    if (errorInsertUsuario) {
-      return res.status(500).json({ error: errorInsertUsuario.message })
+    if (syncError) {
+      return res.status(500).json({ ok: false, error: "No se pudo sincronizar el usuario" })
     }
-  } else {
-  let empresaIdFinal = userData.empresa_id
-
-  if (!empresaIdFinal) {
-    const { data: empresaNueva, error: errorEmpresa } = await supabase
-      .from("empresas")
-      .insert([
-        {
-          nombre: `${emailLimpio} - empresa`
-        }
-      ])
-      .select()
-      .single()
-
-    if (errorEmpresa || !empresaNueva) {
-      return res.status(500).json({ error: "No se pudo crear empresa para usuario existente" })
-    }
-
-    empresaIdFinal = empresaNueva.id
+  } else if (userData.auth_id !== authUser.id) {
+    return res.status(403).json({ ok: false, error: "Usuario no provisionado para esta identidad" })
   }
-
-  const { error: errorUpdateUsuario } = await supabase
-    .from("usuarios")
-    .update({
-      auth_id: authUser.id,
-      empresa_id: empresaIdFinal
-    })
-    .eq("email", emailLimpio)
-
-  if (errorUpdateUsuario) {
-    return res.status(500).json({ error: errorUpdateUsuario.message })
-  }
-}
 
   const { data: finalUser, error: errorFinalUser } = await supabase
     .from("usuarios")
@@ -331,7 +287,11 @@ router.post("/login-operario", async (req, res) => {
       })
     }
 
-    const tokenOperario = `operario-${operario.id}-${Date.now()}`
+    if (!operario.empresa_id || !operario.puesto_id) {
+      return res.status(403).json({ ok: false, error: "Operario sin empresa o puesto asignado" })
+    }
+
+    const tokenOperario = crearTokenOperario(operario)
 
     return res.json({
       ok: true,
