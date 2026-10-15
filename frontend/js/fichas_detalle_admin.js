@@ -1,5 +1,6 @@
 const params = new URLSearchParams(window.location.search)
-const ficha_id = params.get("ficha_id")\nconst modelo_id = params.get("modelo_id")
+const ficha_id = params.get("ficha_id")
+const modelo_id = params.get("modelo_id")
 
 async function cargarDetalleFicha() {
   if (!ficha_id && !modelo_id) {
@@ -16,7 +17,19 @@ async function cargarDetalleFicha() {
       throw new Error(data.error || "No se pudo cargar la ficha")
     }
 
-    const ficha = data.ficha\n    if (esV2 && ficha.articulo_id) {\n      const ar = await apiFetch(`/api/fichas-v2/articulo/${ficha.articulo_id}`)\n      const ad = await ar.json()\n      if (ar.ok && ad.ok && ad.articulo) {\n        const a = ad.articulo, m = a.modelos || {}\n        ficha.codigo = a.codigo || ficha.codigo\n        ficha.nombre = m.nombre || ficha.nombre\n        ficha.marca = m.marca || ficha.marca\n        ficha.color_articulo = a.color || ""\n      }\n    }\n    renderHojaFicha(ficha)
+    const ficha = data.ficha
+    if (esV2 && ficha.articulo_id) {
+      const ar = await apiFetch(`/api/fichas-v2/articulo/${ficha.articulo_id}`)
+      const ad = await ar.json()
+      if (ar.ok && ad.ok && ad.articulo) {
+        const a = ad.articulo, m = a.modelos || {}
+        ficha.codigo = a.codigo || ficha.codigo
+        ficha.nombre = m.nombre || ficha.nombre
+        ficha.marca = m.marca || ficha.marca
+        ficha.color_articulo = a.color || ""
+      }
+    }
+    renderHojaFicha(ficha)
   } catch (error) {
     console.error("Error cargando detalle ficha:", error)
     document.getElementById("contenido").innerHTML += `
@@ -49,7 +62,8 @@ function obtenerValorDePieza(pieza) {
   ).filter(Boolean)
   const extras = []
   if (pieza.observacion) extras.push(pieza.observacion)
-  return [...materiales, ...operaciones, ...extras].join("\n") || "-"
+  return [...materiales, ...operaciones, ...extras].join("
+") || "-"
 }
 
 function renderBloqueSeccion(seccion, index) {
@@ -235,7 +249,9 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
   </div>
 
   <div style="margin-bottom:18px; font-size:14px;">
-    <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>\n    ${ficha.color_articulo ? `<div><strong>Color:</strong> ${escapeHtml(ficha.color_articulo)}</div>` : ""}\n    ${ficha.version ? `<div><strong>Versión:</strong> V${escapeHtml(ficha.version)} · ${escapeHtml(ficha.estado || "")}</div>` : ""}
+    <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>
+    ${ficha.color_articulo ? `<div><strong>Color:</strong> ${escapeHtml(ficha.color_articulo)}</div>` : ""}
+    ${ficha.version ? `<div><strong>Versión:</strong> V${escapeHtml(ficha.version)} · ${escapeHtml(ficha.estado || "")}</div>` : ""}
     <div><strong>Horma:</strong> ${escapeHtml(ficha.horma || "-")}</div>
     <div><strong>Temporada:</strong> ${escapeHtml(ficha.temporada || "-")}</div>
     <div><strong>Tipo de calzado:</strong> ${escapeHtml(tipoCalzado)}</div>
