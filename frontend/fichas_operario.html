@@ -793,7 +793,7 @@ if (!empresaId) return null
     const fichaId = base.ficha_id || base.id
     if (!fichaId) return null
 
-    const res = await fetch(`/api/fichas-operario/${fichaId}?empresa_id=${empresaId}`)
+    const res = await fetch(`/api/fichas-operario/${fichaId}`, { headers: { "Authorization": `Bearer ${tokenOperario}` } })
 
     // 🔥 IMPORTANTE: validar antes de parsear
     if (!res.ok) {
@@ -819,7 +819,7 @@ async function cargarFichasReales() {
     const empresaId = obtenerEmpresaId()
 
     if (!empresaId) {
-      console.warn("usuario sin empresa_id, usando mock")
+      console.warn("operario sin token, usando mock")
       fichasCache = []
       modelosCache = [...modelosMock]
       return
