@@ -9,6 +9,7 @@ const { supabase } = require("../config/supabase")
 const multer = require("multer")
 const bcrypt = require("bcryptjs")
 const { authMiddleware } = require("../backend/middlewares/authMiddleware") // ✅ SOLO UNA VEZ
+const { crearTokenOperario, validarTokenOperario } = require("../backend/security/operarioToken")
 
 const fichasRoutes = require("../backend/routes/fichas");
 const programacionRoutes = require("../backend/routes/programacion");
@@ -44,25 +45,6 @@ app.use("/api/programacion", authMiddleware, programacionRoutes);
 // ==========================
 // 🔐 TOKEN OPERARIO FIRMADO
 // ==========================
-const OPERARIO_TOKEN_SECRET = process.env.OPERARIO_TOKEN_SECRET || process.env.SUPABASE_SECRET_KEY
-
-function crearTokenOperario(operario) {
-  const payload = Buffer.from(JSON.stringify({
-    sub: operario.id,
-    empresa_id: operario.empresa_id,
-    puesto_id: operario.puesto_id,
-    tipo: "operario",
-    exp: Date.now() + (8 * 60 * 60 * 1000)
-  })).toString("base64url")
-
-  const firma = require("crypto")
-    .createHmac("sha256", OPERARIO_TOKEN_SECRET)
-    .update(payload)
-    .digest("base64url")
-
-  return payload + "." + firma
-}
-
 async function operarioMiddleware(req, res, next) {
   try {
     const authHeader = req.headers.authorization
@@ -71,26 +53,10 @@ async function operarioMiddleware(req, res, next) {
     }
 
     const token = authHeader.slice(7)
-    const partes = token.split(".")
-    if (partes.length !== 2) {
-      return res.status(401).json({ error: "Token de operario inválido" })
-    }
-
-    const [payload, firma] = partes
-    const firmaEsperada = require("crypto")
-      .createHmac("sha256", OPERARIO_TOKEN_SECRET)
-      .update(payload)
-      .digest("base64url")
-
-    const firmaBuf = Buffer.from(firma)
-    const esperadaBuf = Buffer.from(firmaEsperada)
-    if (firmaBuf.length !== esperadaBuf.length ||
-        !require("crypto").timingSafeEqual(firmaBuf, esperadaBuf)) {
-      return res.status(401).json({ error: "Token de operario inválido" })
-    }
-
-    const sesion = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"))
-    if (sesion.tipo !== "operario" || !sesion.sub || !sesion.empresa_id || Date.now() > sesion.exp) {
+    let sesion
+    try {
+      sesion = validarTokenOperario(token)
+    } catch {
       return res.status(401).json({ error: "Sesión de operario inválida o vencida" })
     }
 
@@ -147,16 +113,21 @@ app.post("/api/operario/login-ficha", async (req, res) => {
       return res.status(401).json({ error: "PIN incorrecto" })
     }
 
+    if (!operario.empresa_id || !operario.puesto_id) {
+      return res.status(403).json({ error: "Operario sin empresa o puesto asignado" })
+    }
+
     res.json({
-  ok: true,
-  operario: {
-    id: operario.id,
-    nombre: operario.nombre,
-    rol: operario.rol,
-    empresa_id: operario.empresa_id,
-    puesto_id: operario.puesto_id
-  }
-})
+      ok: true,
+      token: crearTokenOperario(operario),
+      operario: {
+        id: operario.id,
+        nombre: operario.nombre,
+        rol: operario.rol,
+        empresa_id: operario.empresa_id,
+        puesto_id: operario.puesto_id
+      }
+    })
   } catch (err) {
     console.error("Error login operario ficha:", err)
     res.status(500).json({ error: "Error login operario" })
