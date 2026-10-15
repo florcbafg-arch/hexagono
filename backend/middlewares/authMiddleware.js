@@ -33,6 +33,14 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: "Usuario no sincronizado" })
     }
 
+    if (usuarioDb.activo === false) {
+      return res.status(403).json({ error: "Usuario inactivo" })
+    }
+
+    if (!usuarioDb.empresa_id) {
+      return res.status(403).json({ error: "Usuario sin empresa asignada" })
+    }
+
     req.user = {
       id: usuarioDb.id,
       auth_id: authUser.id,
