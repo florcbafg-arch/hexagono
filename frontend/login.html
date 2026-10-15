@@ -100,7 +100,7 @@ localStorage.setItem("hexagono_user", JSON.stringify({
   login_time: Date.now()
 }))
 
-localStorage.setItem("empresa_id", operario.empresa_id)
+localStorage.setItem("token", data.token)\nlocalStorage.removeItem("empresa_id")
 
   window.location.href = "/fichas_operario.html"
 }
