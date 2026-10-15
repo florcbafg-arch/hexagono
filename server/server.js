@@ -12,6 +12,7 @@ const { authMiddleware } = require("../backend/middlewares/authMiddleware") // â
 const { crearTokenOperario, validarTokenOperario } = require("../backend/security/operarioToken")
 
 const fichasRoutes = require("../backend/routes/fichas");
+const fichasV2Routes = require("../backend/routes/fichasV2");
 const programacionRoutes = require("../backend/routes/programacion");
 const authRoutes = require("../backend/routes/auth");
 const sacabocadosRoutes = require("../backend/routes/sacabocados");
@@ -44,6 +45,7 @@ app.use("/api/objetivos", authMiddleware);
 app.use("/api/modelos", authMiddleware);
 app.use("/api/articulos", authMiddleware, articulosRoutes);
 app.use("/api/maestro/modelos", authMiddleware, modelosMaestroRoutes);
+app.use("/api", authMiddleware, fichasV2Routes);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 // ==========================
