@@ -75,7 +75,7 @@ async function crearFichaV2(){
 }
 
 function editarFichaV2(id){window.location.href=`fichas_crear_admin.html?ficha_id=${id}`}
-function verFichaV2(id){window.location.href=`fichas_crear_admin.html?ficha_id=${id}&solo_lectura=1`}
+function verFichaV2(id){window.location.href=`fichas_detalle_admin.html?ficha_id=${id}`}
 
 async function publicarFichaV2(id){
   if(!confirm("¿Publicar esta versión? Una vez vigente quedará congelada.")) return
