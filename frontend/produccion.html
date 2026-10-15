@@ -58,24 +58,24 @@ Cerrar sesión
 
 const usuarioActivo = JSON.parse(localStorage.getItem("hexagono_user") || "null")
 const puestoActivo = usuarioActivo?.puesto_id || localStorage.getItem("puesto_id")
-const empresaId = usuarioActivo?.empresa_id || localStorage.getItem("empresa_id")
+const tokenOperario = localStorage.getItem("token")
 
 // 🛡️ BLINDAJE SESION
-if (!usuarioActivo || !puestoActivo || !empresaId) {
+if (!usuarioActivo || !puestoActivo || !tokenOperario) {
   alert("Sesión inválida")
   window.location.href = "login.html"
 }
 
 console.log("Usuario:", usuarioActivo?.nombre || usuarioActivo)
 console.log("Puesto:", puestoActivo)
-console.log("Empresa:", empresaId)
+
 
 
 let sectorNombre = ""
 let tareaActual = null
 
 async function obtenerSector() {
-  const res = await fetch(`/api/operario/puestos?empresa_id=${empresaId}`)
+  const res = await fetch(`/api/operario/puestos`, { headers: { "Authorization": `Bearer ${tokenOperario}` } })
   const puestos = await res.json()
   const puesto = puestos.find(p => p.id == puestoActivo)
 
@@ -93,7 +93,7 @@ if (!numero) {
   return
 }
 
-const res = await fetch(`/api/operario/tarea/${numero}?empresa_id=${empresaId}`)
+const res = await fetch(`/api/operario/tarea/${numero}`, { headers: { "Authorization": `Bearer ${tokenOperario}` } })
 
 if (res.status !== 200) {
   document.getElementById("info").innerHTML = `
@@ -292,7 +292,7 @@ const datos = {
 const res = await fetch("/api/operario/produccion", {
   method: "POST",
   headers: {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",\n    "Authorization": `Bearer ${tokenOperario}`
   },
   body: JSON.stringify(datos)
 })
