@@ -1,21 +1,22 @@
 const params = new URLSearchParams(window.location.search)
-const modelo_id = params.get("modelo_id")
+const ficha_id = params.get("ficha_id")\nconst modelo_id = params.get("modelo_id")
 
 async function cargarDetalleFicha() {
-  if (!modelo_id) {
-    alert("Falta modelo_id en la URL")
+  if (!ficha_id && !modelo_id) {
+    alert("Falta ficha_id en la URL")
     return
   }
 
   try {
-    const res = await apiFetch(`/api/fichas/${modelo_id}`)
+    const esV2 = Boolean(ficha_id)
+    const res = await apiFetch(esV2 ? `/api/fichas-v2/id/${ficha_id}` : `/api/fichas/${modelo_id}`)
     const data = await res.json()
 
     if (!res.ok || !data.ok) {
       throw new Error(data.error || "No se pudo cargar la ficha")
     }
 
-    renderHojaFicha(data.ficha)
+    const ficha = data.ficha\n    if (esV2 && ficha.articulo_id) {\n      const ar = await apiFetch(`/api/fichas-v2/articulo/${ficha.articulo_id}`)\n      const ad = await ar.json()\n      if (ar.ok && ad.ok && ad.articulo) {\n        const a = ad.articulo, m = a.modelos || {}\n        ficha.codigo = a.codigo || ficha.codigo\n        ficha.nombre = m.nombre || ficha.nombre\n        ficha.marca = m.marca || ficha.marca\n        ficha.color_articulo = a.color || ""\n      }\n    }\n    renderHojaFicha(ficha)
   } catch (error) {
     console.error("Error cargando detalle ficha:", error)
     document.getElementById("contenido").innerHTML += `
@@ -40,14 +41,15 @@ function normalizarUrl(url) {
 
 function obtenerValorDePieza(pieza) {
   if (!pieza) return "-"
-
-  const materialPrincipal = pieza.materiales?.[0]?.material?.trim()
-  if (materialPrincipal) return materialPrincipal
-
-  const detalleOperacion = pieza.operaciones?.[0]?.detalle?.trim()
-  if (detalleOperacion) return detalleOperacion
-
-  return "-"
+  const materiales = (pieza.materiales || []).map(m =>
+    [m.material, m.especificacion, m.color].filter(Boolean).join(" · ")
+  ).filter(Boolean)
+  const operaciones = (pieza.operaciones || []).map(o =>
+    [o.tipo, o.detalle, o.valor_tecnico].filter(Boolean).join(" · ")
+  ).filter(Boolean)
+  const extras = []
+  if (pieza.observacion) extras.push(pieza.observacion)
+  return [...materiales, ...operaciones, ...extras].join("\n") || "-"
 }
 
 function renderBloqueSeccion(seccion, index) {
@@ -233,7 +235,7 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
   </div>
 
   <div style="margin-bottom:18px; font-size:14px;">
-    <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>
+    <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>\n    ${ficha.color_articulo ? `<div><strong>Color:</strong> ${escapeHtml(ficha.color_articulo)}</div>` : ""}\n    ${ficha.version ? `<div><strong>Versión:</strong> V${escapeHtml(ficha.version)} · ${escapeHtml(ficha.estado || "")}</div>` : ""}
     <div><strong>Horma:</strong> ${escapeHtml(ficha.horma || "-")}</div>
     <div><strong>Temporada:</strong> ${escapeHtml(ficha.temporada || "-")}</div>
     <div><strong>Tipo de calzado:</strong> ${escapeHtml(tipoCalzado)}</div>
@@ -329,3 +331,7 @@ function volver() {
 }
 
 cargarDetalleFicha()
+function editarFicha() {
+  if (ficha_id) window.location.href = `fichas_crear_admin.html?ficha_id=${ficha_id}`
+  else if (modelo_id) window.location.href = `fichas_crear_admin.html?modelo_id=${modelo_id}`
+}
