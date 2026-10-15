@@ -16,6 +16,7 @@ const programacionRoutes = require("../backend/routes/programacion");
 const authRoutes = require("../backend/routes/auth");
 const sacabocadosRoutes = require("../backend/routes/sacabocados");
 const articulosRoutes = require("../backend/routes/articulos");
+const modelosMaestroRoutes = require("../backend/routes/modelosMaestro");
 console.log("✅ sacabocadosRoutes importado en server.js")
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/sector", authMiddleware);
 app.use("/api/objetivos", authMiddleware);
 app.use("/api/modelos", authMiddleware);
 app.use("/api/articulos", authMiddleware, articulosRoutes);
+app.use("/api/maestro/modelos", authMiddleware, modelosMaestroRoutes);
 
 app.use("/api/programacion", authMiddleware, programacionRoutes);
 // ==========================
