@@ -13,8 +13,9 @@
     body.ficha-page.dark-mode{background:#080b11;color:#e5eefc}
     .ficha-imagenes-editor{margin-top:16px;padding:18px}
     .ficha-imagenes-head h3{margin:0 0 4px}.ficha-imagenes-head p{margin:0 0 16px;color:#667085;font-size:13px}
-    .imagen-principal-editor,.imagenes-tecnicas-editor{margin-top:14px}.imagen-principal-editor label,.imagenes-tecnicas-editor label{display:block;font-weight:700;margin-bottom:7px}
-    .preview-imagen-principal{margin-top:10px;min-height:90px;border:1px dashed #cbd2df;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:10px}
+    .logo-marca-editor,.imagen-principal-editor,.imagenes-tecnicas-editor{margin-top:14px}.logo-marca-editor label,.imagen-principal-editor label,.imagenes-tecnicas-editor label{display:block;font-weight:700;margin-bottom:7px}
+    .preview-logo-marca,.preview-imagen-principal{margin-top:10px;min-height:90px;border:1px dashed #cbd2df;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px}
+    .preview-logo-marca img{max-width:180px;max-height:90px;object-fit:contain}
     .preview-imagen-principal img{max-width:100%;max-height:220px;object-fit:contain}
     .lista-imagenes-tecnicas{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
     .imagen-tecnica-item{border:1px solid #d7dce5;border-radius:9px;padding:9px;background:#fff}
@@ -51,6 +52,12 @@
   <section class="ficha-card ficha-imagenes-editor">
     <div class="ficha-imagenes-head">
       <div><h3>Imágenes de la ficha</h3><p>La imagen principal se muestra grande. Las imágenes técnicas se acomodan automáticamente por ángulo en la ficha impresa.</p></div>
+    </div>
+    <div class="logo-marca-editor">
+      <label>Logo de la marca</label>
+      <input id="inputLogoMarca" type="file" accept="image/jpeg,image/png,image/webp">
+      <small>Se mostrará en la esquina superior derecha de la ficha impresa.</small>
+      <div id="previewLogoMarca" class="preview-logo-marca"></div>
     </div>
     <div class="imagen-principal-editor">
       <label>Imagen principal del artículo</label>
