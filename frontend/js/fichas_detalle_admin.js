@@ -72,10 +72,14 @@ function renderBloqueSeccion(seccion, index) {
     return `
       <div style="
         display:grid;
-        grid-template-columns: 145px 1fr;
-        gap:12px;
-        margin-bottom:8px;
+        grid-template-columns: 34mm minmax(0, 1fr);
+        column-gap:3mm;
+        margin-bottom:1.2mm;
+        font-family:Arial,sans-serif;
+        font-size:8pt;
+        line-height:1.12;
         align-items:start;
+        break-inside:avoid;
       ">
         <div style="font-weight:bold;">${escapeHtml(pieza.nombre || "-")}</div>
         <div style="white-space:normal; overflow-wrap:anywhere; word-break:normal; min-width:0;">${escapeHtml(obtenerValorDePieza(pieza))}</div>
@@ -84,11 +88,13 @@ function renderBloqueSeccion(seccion, index) {
   }).join("")
 
   return `
-    <div style="margin-bottom:24px;">
+    <div style="margin-bottom:4mm; break-inside:avoid;">
       <div style="
         background:#000;
         color:#fff;
-        padding:6px 10px;
+        padding:1.2mm 1.5mm;
+        font-size:8.5pt;
+        line-height:1;
         font-weight:bold;
         display:flex;
         justify-content:space-between;
@@ -102,7 +108,7 @@ function renderBloqueSeccion(seccion, index) {
         border-left:1px solid #000;
         border-right:1px solid #000;
         border-bottom:1px solid #000;
-        padding:12px;
+        padding:1.5mm;
         background:#fff;
       ">
         ${filas || "<p>Sin datos en esta sección.</p>"}
@@ -115,13 +121,15 @@ function renderHojaBase(contenido, conSalto = false) {
   return `
     <div style="
       width:190mm;
-      max-width:100%;
+      height:277mm;
+      max-width:190mm;
       box-sizing:border-box;
       margin:0 auto;
       background:#fff;
       color:#000;
-      padding:6mm;
-      border:1px solid #999;
+      padding:3mm;
+      border:0;
+      overflow:hidden;
       page-break-after:${conSalto ? "always" : "avoid"};
       break-after:${conSalto ? "page" : "avoid"};
     ">
@@ -138,13 +146,13 @@ function renderImagenTecnica(img) {
       border:1px solid #000;
       padding:10px;
       background:#fff;
-      min-height:220px;
+      height:48mm;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
     ">
       <div style="
-        height:180px;
+        height:36mm;
         display:flex;
         align-items:center;
         justify-content:center;
@@ -162,7 +170,7 @@ function renderImagenTecnica(img) {
         }
       </div>
 
-      <div style="font-size:12px;">
+      <div style="font-size:7pt;">
         <div><strong>Tipo:</strong> ${escapeHtml(img?.tipo || "-")}</div>
         <div><strong>Descripción:</strong> ${escapeHtml(img?.descripcion || "-")}</div>
       </div>
@@ -206,8 +214,8 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
   <div style="
     position:relative;
     border:2px solid #000;
-    min-height:280px;
-    margin-bottom:24px;
+    height:86mm;
+    margin-bottom:4mm;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -219,7 +227,7 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
         ? `<img
              src="${imagenModelo}"
              alt="Modelo"
-             style="max-width:92%; max-height:240px; object-fit:contain;"
+             style="max-width:92%; max-height:80mm; object-fit:contain;"
            >`
         : `<div style="color:#666;">Sin imagen del modelo</div>`
     }
@@ -244,7 +252,7 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
                alt="Logo marca"
                style="max-width:90%; max-height:90%; object-fit:contain;"
              >`
-          : `<span style="font-size:12px; color:#666;">Sin logo</span>`
+          : `<span style="font-size:7pt; color:#666;">Sin logo</span>`
       }
     </div>
   </div>
@@ -260,14 +268,14 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
 `, true)
 
 const hoja2 = renderHojaBase(`
-  <div style="margin-bottom:18px;">
+  <div style="margin-bottom:3mm;">
     <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
       Imagen secundaria
     </div>
 
     <div style="
       border:2px solid #000;
-      min-height:260px;
+      height:70mm;
       background:#fff;
       display:flex;
       align-items:center;
@@ -280,7 +288,7 @@ const hoja2 = renderHojaBase(`
           ? `<img
                src="${imagenSecundaria}"
                alt="Imagen secundaria"
-               style="max-width:100%; max-height:240px; object-fit:contain;"
+               style="max-width:100%; max-height:80mm; object-fit:contain;"
              >`
           : `<div style="color:#666;">Sin imagen secundaria</div>`
       }
@@ -302,7 +310,7 @@ const hoja3 = renderHojaBase(`
       display:grid;
       grid-template-columns:repeat(2, 1fr);
       gap:12px;
-      margin-bottom:24px;
+      margin-bottom:4mm;
     ">
       ${
         imagenesTecnicas.length > 0
