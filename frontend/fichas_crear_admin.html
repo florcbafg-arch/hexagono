@@ -13,10 +13,10 @@
     body.ficha-page.dark-mode{background:#080b11;color:#e5eefc}
     .ficha-imagenes-editor{margin-top:16px;padding:18px}
     .ficha-imagenes-head h3{margin:0 0 4px}.ficha-imagenes-head p{margin:0 0 16px;color:#667085;font-size:13px}
-    .logo-marca-editor,.imagen-principal-editor,.imagenes-tecnicas-editor{margin-top:14px}.logo-marca-editor label,.imagen-principal-editor label,.imagenes-tecnicas-editor label{display:block;font-weight:700;margin-bottom:7px}
-    .preview-logo-marca,.preview-imagen-principal{margin-top:10px;min-height:90px;border:1px dashed #cbd2df;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px}
+    .logo-marca-editor,.imagen-principal-editor,.imagen-secundaria-editor,.imagenes-tecnicas-editor{margin-top:14px}.logo-marca-editor label,.imagen-principal-editor label,.imagen-secundaria-editor label,.imagenes-tecnicas-editor label{display:block;font-weight:700;margin-bottom:7px}
+    .preview-logo-marca,.preview-imagen-principal,.preview-imagen-secundaria{margin-top:10px;min-height:90px;border:1px dashed #cbd2df;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px}
     .preview-logo-marca img{max-width:180px;max-height:90px;object-fit:contain}
-    .preview-imagen-principal img{max-width:100%;max-height:220px;object-fit:contain}
+    .preview-imagen-principal img,.preview-imagen-secundaria img{max-width:100%;max-height:220px;object-fit:contain}
     .lista-imagenes-tecnicas{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
     .imagen-tecnica-item{border:1px solid #d7dce5;border-radius:9px;padding:9px;background:#fff}
     .imagen-tecnica-item img{width:100%;height:115px;object-fit:contain;background:#f7f8fa}
@@ -63,6 +63,12 @@
       <label>Imagen principal del artículo</label>
       <input id="inputImagenPrincipal" type="file" accept="image/jpeg,image/png,image/webp">
       <div id="previewImagenPrincipal" class="preview-imagen-principal"></div>
+    </div>
+    <div class="imagen-secundaria-editor">
+      <label>Imagen secundaria del artículo</label>
+      <input id="inputImagenSecundaria" type="file" accept="image/jpeg,image/png,image/webp">
+      <small>Se mostrará grande al inicio de la segunda hoja, como en las fichas reales de fábrica.</small>
+      <div id="previewImagenSecundaria" class="preview-imagen-secundaria"></div>
     </div>
     <div class="imagenes-tecnicas-editor">
       <label>Imágenes técnicas / distintos ángulos</label>
