@@ -72,7 +72,7 @@ function renderBloqueSeccion(seccion, index) {
     return `
       <div style="
         display:grid;
-        grid-template-columns: 220px 1fr;
+        grid-template-columns: 145px 1fr;
         gap:12px;
         margin-bottom:8px;
         align-items:start;
@@ -114,11 +114,11 @@ function renderBloqueSeccion(seccion, index) {
 function renderHojaBase(contenido, conSalto = false) {
   return `
     <div style="
-      max-width:1000px;
+      max-width:820px;
       margin:0 auto;
       background:#fff;
       color:#000;
-      padding:16px;
+      padding:10px;
       border:1px solid #999;
       page-break-after:${conSalto ? "always" : "avoid"};
       break-after:${conSalto ? "page" : "avoid"};
@@ -174,7 +174,7 @@ function renderHojaFicha(ficha) {
   const imagenModelo = normalizarUrl(ficha.imagen_modelo_url)
 const imagenSecundaria = normalizarUrl(ficha.imagen_secundaria_url)
 const logoMarca = normalizarUrl(ficha.logo_marca_url)
-const tipoCalzado = ficha.tipo_calzado || "-"
+const tipoCalzado = ficha.sistema_constructivo || ficha.tipo_calzado || "-"
 
   const seccionesOrdenadas = (ficha.secciones || [])
   .slice()
@@ -247,13 +247,11 @@ const imagenesTecnicas = (ficha.imagenes || []).filter((img) => {
     </div>
   </div>
 
-  <div style="margin-bottom:18px; font-size:14px;">
+  <div style="margin-bottom:12px; font-size:11px; display:flex; gap:16px; flex-wrap:wrap;">
     <div><strong>Marca:</strong> ${escapeHtml(ficha.marca || "-")}</div>
     ${ficha.color_articulo ? `<div><strong>Color:</strong> ${escapeHtml(ficha.color_articulo)}</div>` : ""}
     ${ficha.version ? `<div><strong>Versión:</strong> V${escapeHtml(ficha.version)} · ${escapeHtml(ficha.estado || "")}</div>` : ""}
-    <div><strong>Horma:</strong> ${escapeHtml(ficha.horma || "-")}</div>
-    <div><strong>Temporada:</strong> ${escapeHtml(ficha.temporada || "-")}</div>
-    <div><strong>Tipo de calzado:</strong> ${escapeHtml(tipoCalzado)}</div>
+    <div><strong>Sistema:</strong> ${escapeHtml(tipoCalzado)}</div>
   </div>
 
   ${seccion1 ? renderBloqueSeccion(seccion1, 0) : ""}
