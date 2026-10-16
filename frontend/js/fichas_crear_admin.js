@@ -92,7 +92,7 @@ async function guardar(){
   let d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"No se pudo guardar cabecera")
   const payload={secciones:secciones.map((s,si)=>({...s,orden:si+1,client_key:`s${si+1}`,piezas:s.piezas.map((p,pi)=>({...p,orden:pi+1,materiales:p.materiales.map((m,mi)=>({...m,orden:mi+1})),operaciones:p.operaciones.map((o,oi)=>({...o,orden:oi+1}))}))})),imagenes:[]}
   r=await apiFetch(`/api/fichas-v2/${ficha.id}/estructura`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"No se pudo guardar estructura")
-  mensaje("Borrador guardado correctamente.");ficha=d.ficha;secciones=normalizarCargadas(ficha.secciones||[]);render()
+  mensaje("Borrador guardado correctamente.");ficha=d.ficha;secciones=normalizarCargadas(ficha.secciones||[]);render();setTimeout(()=>{location.href="admin.html?modulo=fichas"},450)
  }catch(e){mensaje(e.message,true)}finally{btn.disabled=false;btn.textContent="💾 Guardar borrador"}
 }
 async function init(){try{await cargar()}catch(e){mensaje(e.message,true)}}
