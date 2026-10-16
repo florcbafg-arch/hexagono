@@ -49,14 +49,23 @@
 }
 
   #hojaFicha > div {
-    page-break-inside: avoid;
-    break-inside: avoid;
+    width: 190mm !important;
+    max-width: 190mm !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
   }
 
-  #hojaFicha,
-#hojaFicha * {
-  overflow: visible !important;
-}
+  #hojaFicha * {
+    box-sizing: border-box !important;
+  }
+
+  #hojaFicha img {
+    max-width: 100% !important;
+  }
+
+  #hojaFicha {
+    overflow: visible !important;
+  }
 
   #hojaFicha * {
     -webkit-print-color-adjust: exact !important;
@@ -64,7 +73,7 @@
   }
 
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 10mm;
   }
 }
