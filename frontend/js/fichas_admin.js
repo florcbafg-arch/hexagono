@@ -21,11 +21,18 @@ function renderFichasV2() {
   const tbody=document.getElementById("tablaFichasV2"); if(!tbody) return
   const q=(document.getElementById("buscarFichaV2")?.value||"").trim().toLowerCase()
   const estado=document.getElementById("filtroEstadoFichaV2")?.value||""
-  const rows=fichasV2.filter(f=>{
+  const candidatas=fichasV2.filter(f=>{
     const a=f.articulos||{}, m=a.modelos||{}
     const hay=[a.codigo,a.color,m.nombre,m.marca].join(" ").toLowerCase().includes(q)
     return hay && (!estado||f.estado===estado)
   })
+  const porArticulo=new Map()
+  candidatas.forEach(f=>{
+    const actual=porArticulo.get(String(f.articulo_id))
+    const prioridad=x=>x.estado==="borrador"?3:x.estado==="vigente"?2:x.estado==="historica"?1:0
+    if(!actual || prioridad(f)>prioridad(actual) || (prioridad(f)===prioridad(actual)&&Number(f.version)>Number(actual.version))) porArticulo.set(String(f.articulo_id),f)
+  })
+  const rows=[...porArticulo.values()]
   if(!rows.length){tbody.innerHTML='<tr><td colspan="7" style="padding:22px;text-align:center;color:#888;">Todavía no hay fichas V2 para mostrar.</td></tr>';return}
   tbody.innerHTML=rows.map(f=>{
     const a=f.articulos||{},m=a.modelos||{}
