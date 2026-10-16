@@ -2,78 +2,64 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>HEXAFLOW — Patrones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HEXAFLOW — Patrón Técnico</title>
   <link rel="stylesheet" href="styles.css">
-
   <script src="js/authGuard.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
-
   <script>
     checkAuth("admin")
-
-    const usuario = localStorage.getItem("hexagono_user")
-    if (!usuario) {
-      window.location.href = "login.html"
-    }
+    if (!localStorage.getItem("hexagono_user")) window.location.href = "login.html"
   </script>
+  <style>
+    .patron-v2-wrap{max-width:1400px;margin:0 auto;padding:28px}
+    .patron-v2-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;flex-wrap:wrap;margin-bottom:22px}
+    .patron-v2-top h2{margin:0 0 6px}.patron-v2-sub{opacity:.72;margin:0}
+    .patron-selector{min-width:360px;max-width:620px;flex:1}
+    .patron-selector label{display:block;font-weight:700;margin-bottom:7px}
+    .patron-selector select{width:100%;padding:11px 12px;border-radius:8px}
+    .patron-meta{display:none;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:18px 0}
+    .patron-meta.visible{display:grid}
+    .patron-meta-card{border:1px solid rgba(128,128,128,.28);border-radius:10px;padding:12px}
+    .patron-meta-card small{display:block;opacity:.65;margin-bottom:4px}.patron-meta-card strong{display:block}
+    .patron-aviso{padding:16px;border:1px solid rgba(128,128,128,.28);border-radius:10px;margin:18px 0}
+    .patron-bloque{margin:22px 0;border:1px solid rgba(128,128,128,.25);border-radius:12px;overflow:hidden}
+    .patron-bloque-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;background:rgba(128,128,128,.10)}
+    .patron-bloque-head h3{margin:0;font-size:16px}
+    .patron-tabla-v2{width:100%;border-collapse:collapse}.patron-tabla-v2 th,.patron-tabla-v2 td{padding:10px;border-top:1px solid rgba(128,128,128,.18);text-align:left;vertical-align:middle}
+    .patron-tabla-v2 th{font-size:12px;opacity:.72}.patron-tabla-v2 input,.patron-tabla-v2 select{width:100%;box-sizing:border-box;padding:8px}
+    .patron-bloque-input{min-width:180px;padding:8px}
+    .patron-actions{display:none;justify-content:flex-end;gap:10px;margin-top:22px}.patron-actions.visible{display:flex}
+    .patron-actions button{padding:11px 18px;border-radius:8px;cursor:pointer}
+    .patron-muted{opacity:.65;font-size:12px}.patron-status{font-size:12px;font-weight:700}
+    @media(max-width:760px){.patron-v2-wrap{padding:16px}.patron-selector{min-width:100%}.patron-tabla-v2{display:block;overflow-x:auto;white-space:nowrap}}
+  </style>
 </head>
 <body onload="initPatrones()">
-  <div id="contenido">
-    <h2>Patrones</h2>
-
-   <div style="margin-bottom: 20px;">
-  <label for="modeloSelect">Modelo:</label>
-  <select id="modeloSelect">
-    <option value="">Seleccionar modelo</option>
-  </select>
-
-<button id="btnVerPatron" onclick="abrirModalPatron()">👁 Ver patrón</button>
-</div>
-
-    <table border="1" width="100%" id="tablaPatrones">
-      <thead>
-        <tr>
-          <th>Pieza</th>
-          <th>Material</th>
-          <th>Color</th>
-          <th>U.M</th>
-          <th>T. Tarea</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <div style="margin-top: 30px;">
-  <h3>Simular producción</h3>
-
-  <div style="display:flex; gap:10px; align-items:center;">
-    <input type="number" id="cantidad" placeholder="Cantidad de pares">
-    <button onclick="calcular()">🧮 Calcular consumo</button>
-  </div>
-</div>
-
-        <div id="modalPatron" class="modal-patron oculto">
-      <div class="modal-patron-backdrop" onclick="cerrarModalPatron()"></div>
-
-      <div class="modal-patron-contenido">
-        <div class="modal-patron-header">
-          <h3>Patrón del artículo</h3>
-          <button class="modal-patron-cerrar" onclick="cerrarModalPatron()">✕</button>
-        </div>
-
-        <div id="modalPatronBody" class="modal-patron-body">
-          <div class="patron-vacio">Seleccioná un modelo para ver el patrón.</div>
-        </div>
-        <div class="modal-patron-footer">
-  <button onclick="guardarPatron()">💾 Guardar patrón</button>
-  <button onclick="cerrarModalPatron()" class="modal-secundario">Cerrar</button>
-</div>
+  <main class="patron-v2-wrap">
+    <div class="patron-v2-top">
+      <div>
+        <h2>Patrón técnico del artículo</h2>
+        <p class="patron-v2-sub">Estructura reutilizable de piezas y materiales tomada de la Ficha Técnica vigente.</p>
+      </div>
+      <div class="patron-selector">
+        <label for="articuloSelect">Artículo</label>
+        <select id="articuloSelect">
+          <option value="">Seleccionar artículo</option>
+        </select>
       </div>
     </div>
 
-  </div>
+    <section id="patronMeta" class="patron-meta"></section>
+    <div id="patronMensaje" class="patron-aviso">Seleccioná un artículo para cargar su patrón técnico.</div>
+    <section id="patronBloques"></section>
 
+    <div id="patronActions" class="patron-actions">
+      <button type="button" onclick="recargarPatron()">↻ Restablecer desde ficha</button>
+      <button type="button" onclick="guardarPatron()">💾 Guardar patrón técnico</button>
+    </div>
+  </main>
   <script src="js/patrones_admin.js"></script>
 </body>
 </html>
