@@ -30,6 +30,7 @@ async function cargarDetalleFicha() {
       }
     }
     renderHojaFicha(ficha)
+    if (esV2 && ficha.articulo_id) cargarHistorialVersiones(ficha.articulo_id, ficha.id)
   } catch (error) {
     console.error("Error cargando detalle ficha:", error)
     document.getElementById("contenido").innerHTML += `
@@ -357,4 +358,56 @@ cargarDetalleFicha()
 function editarFicha() {
   if (ficha_id) window.location.href = `fichas_crear_admin.html?ficha_id=${ficha_id}`
   else if (modelo_id) window.location.href = `fichas_crear_admin.html?modelo_id=${modelo_id}`
+}
+
+
+async function cargarHistorialVersiones(articuloId, fichaActualId) {
+  const panel = document.getElementById("historialVersiones")
+  if (!panel) return
+  try {
+    const res = await apiFetch(`/api/fichas-v2/articulo/${articuloId}`)
+    const data = await res.json()
+    if (!res.ok || !data.ok) throw new Error(data.error || "No se pudo cargar el historial")
+    const versiones = Array.isArray(data.versiones) ? data.versiones : []
+    panel.innerHTML = `
+      <div class="historial-cabecera">
+        <div>
+          <strong>Historial de versiones</strong>
+          <span>${versiones.length} versión${versiones.length === 1 ? "" : "es"}</span>
+        </div>
+        <button type="button" class="historial-toggle" onclick="toggleHistorialVersiones()">Ver historial</button>
+      </div>
+      <div id="historialVersionesLista" class="historial-lista" hidden>
+        ${versiones.map(v => {
+          const actual = Number(v.id) === Number(fichaActualId)
+          const fecha = v.vigente_desde || v.created_at
+          const fechaTxt = fecha ? new Date(fecha).toLocaleDateString("es-AR") : "-"
+          return `
+            <div class="historial-fila ${actual ? "actual" : ""}">
+              <div class="historial-version"><strong>V${escapeHtml(v.version)}</strong> ${actual ? '<span class="historial-actual">Visualizando</span>' : ""}</div>
+              <div><span class="historial-estado estado-${escapeHtml(v.estado)}">${escapeHtml(v.estado)}</span></div>
+              <div class="historial-fecha">${escapeHtml(fechaTxt)}</div>
+              <div class="historial-acciones">
+                ${actual ? "" : `<button type="button" onclick="verVersionFicha(${v.id})">Ver</button>`}
+              </div>
+            </div>
+          `
+        }).join("") || '<div class="historial-vacio">No hay versiones registradas.</div>'}
+      </div>
+    `
+  } catch (e) {
+    panel.innerHTML = `<div class="historial-error">No se pudo cargar el historial: ${escapeHtml(e.message)}</div>`
+  }
+}
+
+function toggleHistorialVersiones() {
+  const lista = document.getElementById("historialVersionesLista")
+  const boton = document.querySelector(".historial-toggle")
+  if (!lista) return
+  lista.hidden = !lista.hidden
+  if (boton) boton.textContent = lista.hidden ? "Ver historial" : "Ocultar historial"
+}
+
+function verVersionFicha(id) {
+  window.location.href = `fichas_detalle_admin.html?ficha_id=${id}`
 }
