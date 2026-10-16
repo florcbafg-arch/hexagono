@@ -142,7 +142,7 @@ function renderHojaBase(contenido, conSalto = false) {
 function renderImagenTecnica(img) {
   const url = normalizarUrl(img?.url)
   return `
-    <div style="height:46mm; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+    <div style="height:39mm; display:flex; align-items:center; justify-content:center; overflow:hidden;">
       ${url ? `<img src="${url}" alt="${escapeHtml(img?.descripcion || "Imagen técnica")}" style="width:100%; height:100%; object-fit:contain;">` : ""}
     </div>
   `
@@ -151,7 +151,7 @@ function renderImagenTecnica(img) {
 function renderGaleriaTecnica(imagenes) {
   if (!imagenes.length) return `<div style="height:118mm;display:flex;align-items:center;justify-content:center;color:#777;">Sin imágenes técnicas cargadas</div>`
   const max = imagenes.slice(0, 6)
-  return `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:7mm;row-gap:2mm;align-items:center;margin-bottom:3mm;">${max.map(renderImagenTecnica).join("")}</div>`
+  return `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:9mm;row-gap:1.5mm;align-items:center;">${max.map(renderImagenTecnica).join("")}</div>`
 }
 
 function renderHojaFicha(ficha) {
@@ -277,8 +277,8 @@ const hoja2 = renderHojaBase(`
 `, true)
 
 const hoja3 = renderHojaBase(`
-  <div style="margin-bottom:18px;">
-    <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
+  <div style="margin-bottom:3mm;">
+    <div style="background:#000; color:#fff; padding:6px 10px; font-weight:bold; margin-bottom:3mm; -webkit-print-color-adjust:exact; print-color-adjust:exact;">
       Imágenes técnicas
     </div>
 
@@ -294,8 +294,10 @@ const hoja3 = renderHojaBase(`
     </div>
   </div>
 
-  ${seccion5 ? renderBloqueSeccion(seccion5, 4) : ""}
-  ${seccion6 ? renderBloqueSeccion(seccion6, 5) : ""}
+  <div style="break-inside:avoid; page-break-inside:avoid;">
+    ${seccion5 ? renderBloqueSeccion(seccion5, 4) : ""}
+    ${seccion6 ? renderBloqueSeccion(seccion6, 5) : ""}
+  </div>
 `, false)
 
 cont.innerHTML = hoja1 + hoja2 + hoja3
