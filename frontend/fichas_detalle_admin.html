@@ -12,6 +12,41 @@
     checkAuth("admin")
   </script>
   <style>
+ .historial-versiones {
+    max-width: 190mm;
+    margin: 0 auto 16px;
+    background: #fff;
+    border: 1px solid #d7dce5;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .historial-cabecera {
+    display:flex; justify-content:space-between; align-items:center;
+    gap:12px; padding:12px 14px;
+  }
+  .historial-cabecera strong { display:block; }
+  .historial-cabecera span { font-size:12px; color:#737b8c; }
+  .historial-toggle, .historial-acciones button {
+    border:0; border-radius:7px; padding:6px 10px; cursor:pointer;
+    background:#673df4; color:#fff;
+  }
+  .historial-lista { border-top:1px solid #e5e7eb; }
+  .historial-fila {
+    display:grid; grid-template-columns:1fr 1fr 1fr auto;
+    gap:10px; align-items:center; padding:10px 14px;
+    border-bottom:1px solid #eef0f4; font-size:13px;
+  }
+  .historial-fila:last-child { border-bottom:0; }
+  .historial-fila.actual { background:#f5f2ff; }
+  .historial-actual {
+    display:inline-block; margin-left:6px; padding:2px 6px;
+    border-radius:999px; background:#e8e1ff; color:#5b32d6 !important;
+    font-size:10px !important;
+  }
+  .historial-estado { text-transform:capitalize; }
+  .historial-fecha { color:#737b8c; }
+  .historial-error,.historial-vacio { padding:12px 14px; color:#777; }
+
 @media print {
   body {
     margin: 0;
@@ -23,7 +58,8 @@
 
   .header,
   h1,
-  button {
+  button,
+  .historial-versiones {
     display: none !important;
   }
 
@@ -109,6 +145,8 @@
   <button onclick="editarFicha()">✏ Editar</button>
   <button onclick="volver()">⬅ Volver</button>
 </div>
+
+  <div id="historialVersiones" class="historial-versiones"></div>
 
   <div id="hojaFicha"></div>
 </div>
