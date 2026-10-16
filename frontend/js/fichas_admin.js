@@ -102,17 +102,8 @@ async function nuevaVersionFichaV2(id){
   }catch(e){mostrarMensaje(e.message,true)}
 }
 
-async function cargarLegacy(){
-  try{
-    const res=await apiFetch("/api/fichas"); const data=await res.json()
-    const arr=Array.isArray(data)?data:[]
-    const el=document.getElementById("legacyFichasResumen")
-    if(el) el.textContent=`${arr.length} ficha(s) legacy preservada(s). No se modifican desde este módulo V2.`
-  }catch(_){const el=document.getElementById("legacyFichasResumen");if(el)el.textContent="No se pudo consultar el resumen legacy."}
-}
-
 async function initFichas(){
-  try{await Promise.all([cargarFichasV2(),cargarLegacy()])}catch(e){mostrarMensaje(e.message,true)}
+  try{await cargarFichasV2()}catch(e){mostrarMensaje(e.message,true)}
 }
 window.initFichas=initFichas; window.renderFichasV2=renderFichasV2; window.abrirNuevaFichaV2=abrirNuevaFichaV2;
 window.cerrarNuevaFichaV2=cerrarNuevaFichaV2; window.crearFichaV2=crearFichaV2; window.editarFichaV2=editarFichaV2;
