@@ -1,13 +1,19 @@
 function apiFetch(url, options = {}) {
   const token = localStorage.getItem("token")
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: `Bearer ${token}`
+  }
+
+  // FormData necesita que el navegador genere el Content-Type con su boundary.
+  // Para JSON conservamos el comportamiento habitual.
+  if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json"
+  }
 
   return fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`
-    }
+    headers
   })
   .then(res => {
     if (res.status === 401) {
