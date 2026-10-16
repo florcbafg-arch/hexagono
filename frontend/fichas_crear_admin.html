@@ -11,6 +11,16 @@
     body.ficha-page{margin:0;font-family:Arial,sans-serif;background:#f4f6f9;color:#172033}
     .ficha-page-shell{padding:28px}
     body.ficha-page.dark-mode{background:#080b11;color:#e5eefc}
+    .ficha-imagenes-editor{margin-top:16px;padding:18px}
+    .ficha-imagenes-head h3{margin:0 0 4px}.ficha-imagenes-head p{margin:0 0 16px;color:#667085;font-size:13px}
+    .imagen-principal-editor,.imagenes-tecnicas-editor{margin-top:14px}.imagen-principal-editor label,.imagenes-tecnicas-editor label{display:block;font-weight:700;margin-bottom:7px}
+    .preview-imagen-principal{margin-top:10px;min-height:90px;border:1px dashed #cbd2df;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:10px}
+    .preview-imagen-principal img{max-width:100%;max-height:220px;object-fit:contain}
+    .lista-imagenes-tecnicas{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
+    .imagen-tecnica-item{border:1px solid #d7dce5;border-radius:9px;padding:9px;background:#fff}
+    .imagen-tecnica-item img{width:100%;height:115px;object-fit:contain;background:#f7f8fa}
+    .imagen-tecnica-item input{width:100%;box-sizing:border-box;margin-top:7px}
+    .imagen-tecnica-item button{margin-top:7px}
   </style>
 </head>
 <body class="ficha-page">
@@ -38,6 +48,23 @@
     <main class="ficha-card ficha-contenido"><div id="editorSeccionV2"></div></main>
     <aside class="ficha-card ficha-preview-v2"><h3>Resumen</h3><div id="previewFichaV2"></div></aside>
   </div>
+  <section class="ficha-card ficha-imagenes-editor">
+    <div class="ficha-imagenes-head">
+      <div><h3>Imágenes de la ficha</h3><p>La imagen principal se muestra grande. Las imágenes técnicas se acomodan automáticamente por ángulo en la ficha impresa.</p></div>
+    </div>
+    <div class="imagen-principal-editor">
+      <label>Imagen principal del artículo</label>
+      <input id="inputImagenPrincipal" type="file" accept="image/jpeg,image/png,image/webp">
+      <div id="previewImagenPrincipal" class="preview-imagen-principal"></div>
+    </div>
+    <div class="imagenes-tecnicas-editor">
+      <label>Imágenes técnicas / distintos ángulos</label>
+      <input id="inputImagenesTecnicas" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+      <small>Podés seleccionar varias fotos juntas. Luego podés indicar qué muestra cada una.</small>
+      <div id="listaImagenesTecnicas" class="lista-imagenes-tecnicas"></div>
+    </div>
+  </section>
+
   <section class="ficha-card ficha-generales">
     <label>Detalle general</label><textarea id="fDetalle" rows="3" placeholder="Detalle general de fabricación"></textarea>
     <label>Observaciones generales</label><textarea id="fObservaciones" rows="3" placeholder="Observaciones generales"></textarea>
