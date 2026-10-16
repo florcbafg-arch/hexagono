@@ -4,6 +4,7 @@ const fichaId=Number(params.get("ficha_id"))
 const soloLectura=params.get("solo_lectura")==="1"
 let ficha=null, articulo=null, secciones=[], sacabocados=[], activa=0
 let imagenPrincipal=""
+let imagenSecundaria=""
 let logoMarca=""
 let imagenesTecnicas=[]
 
@@ -41,6 +42,7 @@ async function cargar(){
  articulo=ad.articulo
  secciones=ficha.secciones?.length?normalizarCargadas(ficha.secciones):[]
  imagenPrincipal=ficha.imagen_modelo_url||""
+ imagenSecundaria=ficha.imagen_secundaria_url||""
  logoMarca=ficha.logo_marca_url||""
  imagenesTecnicas=(ficha.imagenes||[]).filter(i=>["tecnica","detalle","referencia"].includes(String(i.tipo||"").toLowerCase())).map(i=>({url:i.url,tipo:"tecnica",descripcion:i.descripcion||"",orden:i.orden||0}))
  if(!secciones.length) construirBase(ficha.sistema_constructivo||"vulcanizado")
@@ -64,6 +66,8 @@ function renderImagenes(){
  if(logo) logo.innerHTML=logoMarca ? '<img src="'+esc(logoMarca)+'" alt="Logo de la marca"><button type="button" onclick="quitarLogoMarca()">Quitar logo</button>' : "<span>Sin logo cargado</span>"
  const p=document.getElementById("previewImagenPrincipal")
  if(p) p.innerHTML=imagenPrincipal?`<img src="${esc(imagenPrincipal)}" alt="Imagen principal"><button type="button" onclick="quitarImagenPrincipal()">Quitar imagen</button>`:"<span>Sin imagen principal cargada</span>"
+ const s=document.getElementById("previewImagenSecundaria")
+ if(s) s.innerHTML=imagenSecundaria?`<img src="${esc(imagenSecundaria)}" alt="Imagen secundaria"><button type="button" onclick="quitarImagenSecundaria()">Quitar imagen</button>`:"<span>Sin imagen secundaria cargada</span>"
  const l=document.getElementById("listaImagenesTecnicas")
  if(l) l.innerHTML=imagenesTecnicas.map((img,i)=>`<div class="imagen-tecnica-item"><img src="${esc(img.url)}" alt="Imagen técnica"><input value="${val(img.descripcion)}" placeholder="Ej. Lateral, talón, planta…" oninput="updDescripcionImagen(${i},this.value)"><button type="button" onclick="quitarImagenTecnica(${i})">Quitar</button></div>`).join("")||"<small>Sin imágenes técnicas cargadas.</small>"
 }
@@ -83,6 +87,11 @@ async function seleccionarPrincipal(e){
  try{mensaje("Subiendo imagen principal…");imagenPrincipal=await subirImagen(file,"modelo");renderImagenes();mensaje("Imagen principal cargada. Guardá el borrador para asociarla a esta versión.")}
  catch(err){mensaje(err.message,true)}finally{e.target.value=""}
 }
+async function seleccionarSecundaria(e){
+ const file=e.target.files?.[0];if(!file)return
+ try{mensaje("Subiendo imagen secundaria…");imagenSecundaria=await subirImagen(file,"secundaria");renderImagenes();mensaje("Imagen secundaria cargada. Guardá el borrador para asociarla a esta versión.")}
+ catch(err){mensaje(err.message,true)}finally{e.target.value=""}
+}
 async function seleccionarTecnicas(e){
  const files=[...(e.target.files||[])];if(!files.length)return
  try{mensaje(`Subiendo ${files.length} imagen${files.length===1?"":"es"} técnica${files.length===1?"":"s"}…`)
@@ -92,6 +101,7 @@ async function seleccionarTecnicas(e){
 }
 function quitarLogoMarca(){logoMarca="";renderImagenes()}
 function quitarImagenPrincipal(){imagenPrincipal="";renderImagenes()}
+function quitarImagenSecundaria(){imagenSecundaria="";renderImagenes()}
 function quitarImagenTecnica(i){imagenesTecnicas.splice(i,1);imagenesTecnicas.forEach((x,n)=>x.orden=n+1);renderImagenes()}
 function updDescripcionImagen(i,v){if(imagenesTecnicas[i])imagenesTecnicas[i].descripcion=v}
 
@@ -130,7 +140,7 @@ function ir(i){if(i<0||i>=secciones.length)return;activa=i;render()}
 async function guardar(){
  const btn=document.getElementById("btnGuardarFichaV2");btn.disabled=true;btn.textContent="Guardando…"
  try{
-  let r=await apiFetch(`/api/fichas-v2/${ficha.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({sistema_constructivo:document.getElementById("fSistema").value,detalle_general:document.getElementById("fDetalle").value,observaciones_generales:document.getElementById("fObservaciones").value,imagen_modelo_url:imagenPrincipal,logo_marca_url:logoMarca})})
+  let r=await apiFetch(`/api/fichas-v2/${ficha.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({sistema_constructivo:document.getElementById("fSistema").value,detalle_general:document.getElementById("fDetalle").value,observaciones_generales:document.getElementById("fObservaciones").value,imagen_modelo_url:imagenPrincipal,imagen_secundaria_url:imagenSecundaria,logo_marca_url:logoMarca})})
   let d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"No se pudo guardar cabecera")
   const payload={secciones:secciones.map((s,si)=>({...s,orden:si+1,client_key:`s${si+1}`,piezas:s.piezas.map((p,pi)=>({...p,orden:pi+1,materiales:p.materiales.map((m,mi)=>({...m,orden:mi+1})),operaciones:p.operaciones.map((o,oi)=>({...o,orden:oi+1}))}))})),imagenes:imagenesTecnicas.map((i,n)=>({...i,orden:n+1,seccion_client_key:null}))}
   r=await apiFetch(`/api/fichas-v2/${ficha.id}/estructura`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"No se pudo guardar estructura")
@@ -139,7 +149,7 @@ async function guardar(){
 }
 async function init(){try{await cargar()}catch(e){mensaje(e.message,true)}}
 window.irSeccionV2=ir;window.updSec=updSec;window.updP=updP;window.updMat=updMat;window.updOp=updOp;window.addMat=addMat;window.delMat=delMat;window.addOp=addOp;window.delOp=delOp;window.agregarPiezaV2=agregarPieza;window.guardarFichaV2=guardar;window.volverFichasV2=()=>location.href="admin.html?modulo=fichas";
-window.quitarLogoMarca=quitarLogoMarca;window.quitarImagenPrincipal=quitarImagenPrincipal;window.quitarImagenTecnica=quitarImagenTecnica;window.updDescripcionImagen=updDescripcionImagen;
+window.quitarLogoMarca=quitarLogoMarca;window.quitarImagenPrincipal=quitarImagenPrincipal;window.quitarImagenSecundaria=quitarImagenSecundaria;window.quitarImagenTecnica=quitarImagenTecnica;window.updDescripcionImagen=updDescripcionImagen;
 window.addEventListener("DOMContentLoaded",()=>{
   const volver=document.getElementById("btnVolverFichaV2")
   if(volver) volver.addEventListener("click",()=>location.href="admin.html?modulo=fichas")
@@ -147,6 +157,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(guardarBtn) guardarBtn.addEventListener("click",guardar)
   const il=document.getElementById("inputLogoMarca");if(il)il.addEventListener("change",seleccionarLogo)
   const ip=document.getElementById("inputImagenPrincipal");if(ip)ip.addEventListener("change",seleccionarPrincipal)
+  const is=document.getElementById("inputImagenSecundaria");if(is)is.addEventListener("change",seleccionarSecundaria)
   const it=document.getElementById("inputImagenesTecnicas");if(it)it.addEventListener("change",seleccionarTecnicas)
   init()
 })
