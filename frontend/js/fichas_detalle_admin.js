@@ -142,17 +142,16 @@ function renderHojaBase(contenido, conSalto = false) {
 function renderImagenTecnica(img) {
   const url = normalizarUrl(img?.url)
   return `
-    <div style="height:42mm; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+    <div style="height:38mm; display:flex; align-items:center; justify-content:center; overflow:hidden;">
       ${url ? `<img src="${url}" alt="${escapeHtml(img?.descripcion || "Imagen técnica")}" style="width:100%; height:100%; object-fit:contain;">` : ""}
     </div>
   `
 }
 
 function renderGaleriaTecnica(imagenes) {
-  if (!imagenes.length) return `<div style="height:92mm;display:flex;align-items:center;justify-content:center;color:#777;">Sin imágenes técnicas cargadas</div>`
+  if (!imagenes.length) return `<div style="height:118mm;display:flex;align-items:center;justify-content:center;color:#777;">Sin imágenes técnicas cargadas</div>`
   const max = imagenes.slice(0, 6)
-  const columnas = max.length <= 2 ? 2 : 3
-  return `<div style="display:grid;grid-template-columns:repeat(${columnas},1fr);gap:3mm;align-items:center;margin-bottom:3mm;">${max.map(renderImagenTecnica).join("")}</div>`
+  return `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10mm;row-gap:3mm;align-items:center;margin-bottom:3mm;">${max.map(renderImagenTecnica).join("")}</div>`
 }
 
 function renderHojaFicha(ficha) {
