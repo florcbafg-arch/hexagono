@@ -78,7 +78,7 @@ function renderBloqueSeccion(seccion, index) {
         align-items:start;
       ">
         <div style="font-weight:bold;">${escapeHtml(pieza.nombre || "-")}</div>
-        <div style="white-space:pre-line;">${escapeHtml(obtenerValorDePieza(pieza))}</div>
+        <div style="white-space:normal; overflow-wrap:anywhere; word-break:normal; min-width:0;">${escapeHtml(obtenerValorDePieza(pieza))}</div>
       </div>
     `
   }).join("")
@@ -114,11 +114,13 @@ function renderBloqueSeccion(seccion, index) {
 function renderHojaBase(contenido, conSalto = false) {
   return `
     <div style="
-      max-width:820px;
+      width:190mm;
+      max-width:100%;
+      box-sizing:border-box;
       margin:0 auto;
       background:#fff;
       color:#000;
-      padding:10px;
+      padding:6mm;
       border:1px solid #999;
       page-break-after:${conSalto ? "always" : "avoid"};
       break-after:${conSalto ? "page" : "avoid"};
