@@ -263,7 +263,7 @@ router.patch("/fichas-v2/:ficha_id", async (req, res) => {
     }
 
     const cambios = {};
-    for (const campo of ["detalle_general", "observaciones_generales", "pdf_url", "fuente"]) {
+    for (const campo of ["detalle_general", "observaciones_generales", "pdf_url", "fuente", "imagen_modelo_url"]) {
       if (Object.prototype.hasOwnProperty.call(req.body || {}, campo)) cambios[campo] = req.body[campo] ?? "";
     }
     if (Object.prototype.hasOwnProperty.call(req.body || {}, "sistema_constructivo")) {
