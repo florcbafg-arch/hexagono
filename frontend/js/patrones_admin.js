@@ -1,386 +1,186 @@
 (() => {
   let patronActual = null
-  let modeloActualId = null
+  let articuloActualId = null
 
-  async function initPatrones() {
-    await cargarModelos()
+  const esc = (v = "") => String(v ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
-    const select = document.getElementById("modeloSelect")
-
-    if (select) {
-      select.addEventListener("change", async () => {
-        const modelo_id = select.value
-        if (modelo_id) {
-          await cargarDesdeFicha(modelo_id)
-        }
-      })
+  async function leerJson(res) {
+    let data = {}
+    try { data = await res.json() } catch (_) {}
+    if (!res.ok) {
+      const err = new Error(data.error || "No se pudo completar la operación")
+      err.status = res.status
+      throw err
     }
+    return data
   }
 
-  async function cargarModelos() {
+  async function initPatrones() {
+    await cargarArticulos()
+    const select = document.getElementById("articuloSelect")
+    select?.addEventListener("change", () => {
+      if (select.value) cargarPatron(select.value)
+      else limpiar()
+    })
+  }
+
+  async function cargarArticulos() {
+    const select = document.getElementById("articuloSelect")
+    if (!select) return
     try {
-      const res = await apiFetch("/api/modelos")
-      const modelos = await res.json()
-
-      const select = document.getElementById("modeloSelect")
-      if (!select) return
-
-      select.innerHTML = `<option value="">Seleccionar modelo</option>`
-
-      modelos.forEach(m => {
+      const data = await leerJson(await apiFetch("/api/articulos"))
+      select.innerHTML = '<option value="">Seleccionar artículo</option>'
+      ;(data || []).filter(a => a.activo !== false).forEach(a => {
         const opt = document.createElement("option")
-        opt.value = m.id
-        opt.textContent = m.nombre
+        opt.value = a.id
+        const marca = a.modelos?.marca || "Sin marca"
+        const modelo = a.modelos?.nombre || "Sin modelo"
+        opt.textContent = `${a.codigo} · ${marca} · ${modelo} · ${a.color}`
         select.appendChild(opt)
       })
     } catch (err) {
-      console.error("Error cargando modelos:", err)
+      console.error(err)
+      mostrarMensaje("No se pudieron cargar los artículos.")
     }
   }
 
-async function cargarDesdeFicha(modelo_id) {
-  const btnVerPatron = document.getElementById("btnVerPatron")
-  if (btnVerPatron) btnVerPatron.disabled = true
-
-  const tbody = document.querySelector("#tablaPatrones tbody")
-  if (!tbody) return
-
-  tbody.innerHTML = ""
-
-  try {
-    const res = await apiFetch(`/api/patrones/generar-desde-ficha/${modelo_id}`)
-    const data = await res.json()
-
-    patronActual = data
-    modeloActualId = String(modelo_id)
-
-    data.bloques.forEach(bloque => {
-      const trTitulo = document.createElement("tr")
-      trTitulo.innerHTML = `
-        <td colspan="6" style="background:#eee;font-weight:bold;">
-          ${bloque.bloque}
-        </td>
-      `
-      tbody.appendChild(trTitulo)
-
-      bloque.items.forEach(item => {
-        const tr = document.createElement("tr")
-
-        tr.innerHTML = `
-          <td>${item.pieza}</td>
-          <td>${item.material}</td>
-          <td>${item.color || ""}</td>
-
-          <td>
-            <select class="um">
-              <option value="">-</option>
-              <option value="m">m</option>
-              <option value="m2">m2</option>
-              <option value="unidad">unidad</option>
-              <option value="plancha">plancha</option>
-            </select>
-          </td>
-
-          <td>
-            <input type="number" class="t_tarea" step="0.01" value="${item.t_tarea || ""}">
-          </td>
-        `
-
-        tr.dataset.ficha_material_id = item.ficha_material_id
-
-        if (item.um) {
-          setTimeout(() => {
-            tr.querySelector(".um").value = item.um
-          }, 0)
-        }
-
-        tbody.appendChild(tr)
-      })
-    })
-
-    renderPatronEnModal(data)
-
-    if (btnVerPatron) btnVerPatron.disabled = false
-  } catch (err) {
-    console.error("Error cargando patrón:", err)
-    alert("Error cargando patrón")
-
-    if (btnVerPatron) btnVerPatron.disabled = false
-  }
-}
-
-    function cerrarModalPatron() {
-    const modal = document.getElementById("modalPatron")
-    if (modal) {
-      modal.classList.add("oculto")
-    }
+  function limpiar() {
+    patronActual = null
+    articuloActualId = null
+    document.getElementById("patronBloques").innerHTML = ""
+    document.getElementById("patronMeta").classList.remove("visible")
+    document.getElementById("patronMeta").innerHTML = ""
+    document.getElementById("patronActions").classList.remove("visible")
+    mostrarMensaje("Seleccioná un artículo para cargar su patrón técnico.")
   }
 
-  function renderPatronEnModal(data) {
-    const body = document.getElementById("modalPatronBody")
-    if (!body) return
-
-    if (!data || !Array.isArray(data.bloques) || !data.bloques.length) {
-      body.innerHTML = `<div class="patron-vacio">No hay patrón disponible para este modelo.</div>`
-      return
-    }
-
-    const cabecera = data.cabecera || {}
-
-        let html = `
-      <div class="patron-cabecera">
-        <div class="patron-cabecera-grid">
-          <div class="patron-campo"><strong>Código:</strong> ${cabecera.codigo || "-"}</div>
-          <div class="patron-campo"><strong>Artículo:</strong> ${cabecera.nombre || "-"}</div>
-          <div class="patron-campo"><strong>Marca:</strong> ${cabecera.marca || "-"}</div>
-          <div class="patron-campo"><strong>Horma:</strong> ${cabecera.horma || "-"}</div>
-          <div class="patron-campo"><strong>Temporada:</strong> ${cabecera.temporada || "-"}</div>
-        </div>
-
-        <div class="patron-detalle-general">
-          <strong>Detalle técnico:</strong>
-          <div>${cabecera.detalle_general || "Sin detalle técnico"}</div>
-        </div>
-      </div>
-
-      <div id="resultadoCalculoModal" class="resultado-calculo-modal"></div>
-    `
-
-    data.bloques.forEach(bloque => {
-      let filas = ""
-
-      ;(bloque.items || []).forEach(item => {
-        filas += `
-          <tr>
-            <td>${item.pieza || "-"}</td>
-            <td>${item.material || "-"}</td>
-            <td>${item.color || "-"}</td>
-            <td>${item.um || "-"}</td>
-            <td>${item.t_tarea ?? "-"}</td>
-          </tr>
-        `
-      })
-
-      if (!filas) {
-        filas = `
-          <tr>
-            <td colspan="5">Sin datos en este bloque</td>
-          </tr>
-        `
-      }
-
-      html += `
-        <div class="patron-seccion">
-          <h4>${bloque.bloque || "BLOQUE"}</h4>
-          <table class="patron-tabla">
-            <thead>
-              <tr>
-                <th>Pieza</th>
-                <th>Material</th>
-                <th>Color</th>
-                <th>U.M</th>
-                <th>T. Tarea</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filas}
-            </tbody>
-          </table>
-        </div>
-      `
-    })
-
-    body.innerHTML = html
+  function mostrarMensaje(texto, ocultar = false) {
+    const el = document.getElementById("patronMensaje")
+    if (!el) return
+    el.textContent = texto
+    el.style.display = ocultar ? "none" : "block"
   }
 
-    function renderResultadoCalculoEnModal(agrupado) {
-    const contenedor = document.getElementById("resultadoCalculoModal")
-    if (!contenedor) return
-
-    contenedor.innerHTML = ""
-
-    const bloques = Object.keys(agrupado || {})
-    if (!bloques.length) return
-
-    bloques.forEach(bloque => {
-      let htmlItems = ""
-
-      agrupado[bloque].forEach(item => {
-        htmlItems += `
-          <div class="resultado-calculo-item">
-            ${item.pieza} - ${item.material}${item.color ? ` (${item.color})` : ""} → ${item.total} ${item.um}
-          </div>
-        `
-      })
-
-      contenedor.innerHTML += `
-        <div class="resultado-calculo-bloque">
-          <h4>${bloque}</h4>
-          ${htmlItems}
-        </div>
-      `
-    })
-  }
-
-    async function abrirModalPatron() {
-    const modal = document.getElementById("modalPatron")
-    const modeloSelect = document.getElementById("modeloSelect")
-
-    if (!modal) return
-
-    const modeloId = modeloSelect?.value
-
-    if (!modeloId) {
-      alert("Seleccioná un modelo")
-      return
-    }
+  async function cargarPatron(articuloId) {
+    articuloActualId = String(articuloId)
+    patronActual = null
+    document.getElementById("patronBloques").innerHTML = ""
+    document.getElementById("patronActions").classList.remove("visible")
+    mostrarMensaje("Cargando Ficha Técnica vigente…")
 
     try {
-      const necesitaRecargar =
-        !patronActual ||
-        String(modeloActualId || "") !== String(modeloId)
-
-      if (necesitaRecargar) {
-        await cargarDesdeFicha(modeloId)
-      }
-
-      if (!patronActual || !Array.isArray(patronActual.bloques)) {
-        alert("No hay patrón disponible para este modelo")
-        return
-      }
-
-      renderPatronEnModal(patronActual)
-      modal.classList.remove("oculto")
+      const data = await leerJson(await apiFetch(`/api/patrones/v2/articulo/${articuloId}`))
+      patronActual = data
+      renderMeta(data)
+      renderBloques(data)
+      mostrarMensaje("", true)
+      document.getElementById("patronActions").classList.add("visible")
     } catch (err) {
-      console.error("Error abriendo modal de patrón:", err)
-      alert("No se pudo abrir el patrón")
+      console.error(err)
+      document.getElementById("patronMeta").classList.remove("visible")
+      const msg = err.status === 409
+        ? err.message
+        : "No se pudo cargar el patrón técnico."
+      mostrarMensaje(msg)
     }
+  }
+
+  function renderMeta(data) {
+    const a = data.articulo || {}
+    const m = a.modelos || {}
+    const f = data.ficha || {}
+    const meta = document.getElementById("patronMeta")
+    meta.innerHTML = `
+      <div class="patron-meta-card"><small>Código</small><strong>${esc(a.codigo || "-")}</strong></div>
+      <div class="patron-meta-card"><small>Artículo</small><strong>${esc(m.nombre || "-")} · ${esc(a.color || "-")}</strong></div>
+      <div class="patron-meta-card"><small>Marca</small><strong>${esc(m.marca || "-")}</strong></div>
+      <div class="patron-meta-card"><small>Ficha origen</small><strong>V${esc(f.version || "-")} · ${esc(f.estado || "-")}</strong></div>
+      <div class="patron-meta-card"><small>Estado del patrón</small><strong class="patron-status">${data.patron_guardado ? "Guardado" : "Propuesta desde ficha"}</strong></div>
+    `
+    meta.classList.add("visible")
+  }
+
+  function opcionesUM(valor) {
+    const valores = ["ML", "M2", "PLANCHA", "UNIDAD", "PAR"]
+    const actual = String(valor || "").toUpperCase()
+    if (actual && !valores.includes(actual)) valores.push(actual)
+    return valores.map(v => `<option value="${esc(v)}" ${v === actual ? "selected" : ""}>${esc(v)}</option>`).join("")
+  }
+
+  function renderBloques(data) {
+    const cont = document.getElementById("patronBloques")
+    const bloques = Array.isArray(data.bloques) ? data.bloques : []
+    if (!bloques.length) {
+      cont.innerHTML = '<div class="patron-aviso">La Ficha vigente no tiene materiales para formar el patrón técnico.</div>'
+      return
+    }
+
+    cont.innerHTML = bloques.map((bloque, bi) => `
+      <div class="patron-bloque" data-bloque-index="${bi}">
+        <div class="patron-bloque-head">
+          <h3>Bloque técnico</h3>
+          <input class="patron-bloque-input" value="${esc(bloque.bloque || "")}" aria-label="Nombre del bloque">
+        </div>
+        <table class="patron-tabla-v2">
+          <thead><tr><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th></tr></thead>
+          <tbody>
+            ${(bloque.items || []).map((item, ii) => `
+              <tr data-material-id="${item.ficha_material_id}" data-orden="${item.orden ?? ii + 1}">
+                <td><strong>${esc(item.pieza || "-")}</strong>${item.sacabocado_id ? `<div class="patron-muted">Sacabocado #${esc(item.sacabocado_id)}</div>` : ""}</td>
+                <td>${esc(item.material || "-")}</td>
+                <td>${esc(item.color || item.especificacion || "-")}</td>
+                <td><select class="patron-um">${opcionesUM(item.um || item.unidad_ficha)}</select></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `).join("")
+  }
+
+  function recolectarItems() {
+    const items = []
+    document.querySelectorAll(".patron-bloque").forEach(bloque => {
+      const nombreBloque = bloque.querySelector(".patron-bloque-input")?.value?.trim() || "CORTE CAPELLADA"
+      bloque.querySelectorAll("tbody tr[data-material-id]").forEach((fila, index) => {
+        items.push({
+          ficha_material_id: Number(fila.dataset.materialId),
+          bloque: nombreBloque,
+          um: fila.querySelector(".patron-um")?.value || "",
+          orden: Number(fila.dataset.orden || index + 1)
+        })
+      })
+    })
+    return items
   }
 
   async function guardarPatron() {
-    const modeloSelect = document.getElementById("modeloSelect")
-    if (!modeloSelect) return
-
-    const modelo_id = modeloSelect.value
-    if (!modelo_id) {
-      alert("Seleccioná modelo")
-      return
-    }
-
-    const filas = document.querySelectorAll("#tablaPatrones tbody tr")
-    const items = []
-
-    filas.forEach(f => {
-      const id = f.dataset.ficha_material_id
-      if (!id) return
-
-      const um = f.querySelector(".um")?.value || ""
-      const t_tarea = f.querySelector(".t_tarea")?.value || ""
-
-      items.push({
-        ficha_material_id: Number(id),
-        um,
-        t_tarea
-      })
-    })
+    if (!articuloActualId) return alert("Seleccioná un artículo")
+    const items = recolectarItems()
+    if (!items.length) return alert("No hay materiales para guardar")
 
     try {
-      await apiFetch("/api/patrones", {
-        method: "POST",
+      const data = await leerJson(await apiFetch(`/api/patrones/v2/articulo/${articuloActualId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelo_id, items })
-      })
-
-      alert("Patrón guardado")
-    } catch (error) {
-      console.error("Error guardando patrón:", error)
-      alert("Error al guardar")
+        body: JSON.stringify({ items })
+      }))
+      alert(`Patrón técnico guardado · ${data.filas_guardadas} filas`)
+      await cargarPatron(articuloActualId)
+    } catch (err) {
+      console.error(err)
+      alert(err.message || "No se pudo guardar el patrón técnico")
     }
   }
 
-   async function calcular() {
-    const modeloSelect = document.getElementById("modeloSelect")
-    const cantidadInput = document.getElementById("cantidad")
-
-    if (!modeloSelect || !cantidadInput) return
-
-    const modelo_id = modeloSelect.value
-    const cantidad = Number(cantidadInput.value)
-
-    if (!modelo_id) {
-      alert("Seleccioná un modelo")
-      return
-    }
-
-    if (!cantidad || cantidad <= 0) {
-      alert("Ingresá una cantidad válida")
-      return
-    }
-
-    const filas = document.querySelectorAll("#tablaPatrones tbody tr")
-    const items = []
-
-    filas.forEach(f => {
-      const id = f.dataset.ficha_material_id
-      if (!id) return
-
-      const pieza = f.children[0]?.textContent?.trim() || ""
-      const material = f.children[1]?.textContent?.trim() || ""
-      const color = f.children[2]?.textContent?.trim() || ""
-      const um = f.querySelector(".um")?.value || ""
-      const t_tarea = Number(f.querySelector(".t_tarea")?.value || 0)
-
-      if (!um || !t_tarea) return
-
-      let bloque = "GENERAL"
-
-      const filaBloque = f.previousElementSibling
-      if (filaBloque && filaBloque.children.length === 1) {
-        bloque = filaBloque.textContent.trim()
-      }
-
-      items.push({
-        ficha_material_id: Number(id),
-        pieza,
-        material,
-        color,
-        um,
-        t_tarea,
-        bloque
-      })
-    })
-
-    if (!items.length) {
-      alert("No hay datos cargados para calcular")
-      return
-    }
-
-    const agrupado = {}
-
-    items.forEach(item => {
-      const total = item.t_tarea * cantidad
-      const claveBloque = item.bloque || "GENERAL"
-
-      if (!agrupado[claveBloque]) {
-        agrupado[claveBloque] = []
-      }
-
-      agrupado[claveBloque].push({
-        pieza: item.pieza,
-        material: item.material,
-        color: item.color,
-        um: item.um,
-        total: Number(total.toFixed(4))
-      })
-    })
-
-    await abrirModalPatron()
-renderResultadoCalculoEnModal(agrupado)
+  async function recargarPatron() {
+    if (!articuloActualId) return
+    await cargarPatron(articuloActualId)
   }
 
-window.initPatrones = initPatrones
-window.guardarPatron = guardarPatron
-window.calcular = calcular
-window.abrirModalPatron = abrirModalPatron
-window.cerrarModalPatron = cerrarModalPatron
+  window.initPatrones = initPatrones
+  window.guardarPatron = guardarPatron
+  window.recargarPatron = recargarPatron
 })()
