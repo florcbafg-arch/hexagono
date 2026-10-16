@@ -50,9 +50,18 @@
 
   #hojaFicha > div {
     width: 190mm !important;
+    height: 277mm !important;
     max-width: 190mm !important;
     box-sizing: border-box !important;
     margin: 0 auto !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  #hojaFicha > div:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   #hojaFicha * {
@@ -65,6 +74,11 @@
 
   #hojaFicha {
     overflow: visible !important;
+  }
+
+  #hojaFicha,
+  #hojaFicha * {
+    font-family: Arial, Helvetica, sans-serif !important;
   }
 
   #hojaFicha * {
