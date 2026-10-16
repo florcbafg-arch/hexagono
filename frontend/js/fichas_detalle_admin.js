@@ -141,42 +141,18 @@ function renderHojaBase(contenido, conSalto = false) {
 
 function renderImagenTecnica(img) {
   const url = normalizarUrl(img?.url)
-
   return `
-    <div style="
-      border:1px solid #000;
-      padding:10px;
-      background:#fff;
-      height:48mm;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    ">
-      <div style="
-        height:36mm;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        overflow:hidden;
-        margin-bottom:8px;
-      ">
-        ${
-          url
-            ? `<img
-                 src="${url}"
-                 alt="${escapeHtml(img?.descripcion || "Imagen técnica")}"
-                 style="max-width:100%; max-height:100%; object-fit:contain;"
-               >`
-            : `<span style="color:#666;">Sin imagen</span>`
-        }
-      </div>
-
-      <div style="font-size:7pt;">
-        <div><strong>Tipo:</strong> ${escapeHtml(img?.tipo || "-")}</div>
-        <div><strong>Descripción:</strong> ${escapeHtml(img?.descripcion || "-")}</div>
-      </div>
+    <div style="height:42mm; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+      ${url ? `<img src="${url}" alt="${escapeHtml(img?.descripcion || "Imagen técnica")}" style="width:100%; height:100%; object-fit:contain;">` : ""}
     </div>
   `
+}
+
+function renderGaleriaTecnica(imagenes) {
+  if (!imagenes.length) return `<div style="height:92mm;display:flex;align-items:center;justify-content:center;color:#777;">Sin imágenes técnicas cargadas</div>`
+  const max = imagenes.slice(0, 6)
+  const columnas = max.length <= 2 ? 2 : 3
+  return `<div style="display:grid;grid-template-columns:repeat(${columnas},1fr);gap:3mm;align-items:center;margin-bottom:3mm;">${max.map(renderImagenTecnica).join("")}</div>`
 }
 
 function renderHojaFicha(ficha) {
@@ -314,22 +290,7 @@ const hoja3 = renderHojaBase(`
       margin-bottom:4mm;
     ">
       ${
-        imagenesTecnicas.length > 0
-          ? imagenesTecnicas.map(renderImagenTecnica).join("")
-          : `
-            <div style="
-              border:1px solid #000;
-              padding:20px;
-              min-height:120px;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              color:#666;
-              grid-column:1 / -1;
-            ">
-              Sin imágenes técnicas cargadas
-            </div>
-          `
+        renderGaleriaTecnica(imagenesTecnicas)
       }
     </div>
   </div>
