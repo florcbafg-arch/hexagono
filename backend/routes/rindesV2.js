@@ -161,6 +161,73 @@ router.get("/articulo/:articuloId", async (req, res) => {
   }
 })
 
+// Simulación técnica de Patrón de Tarea. No persiste curva ni resultado.
+router.post("/articulo/:articuloId/calcular-tarea", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+  try {
+    const articuloId = Number(req.params.articuloId)
+    const curva = Array.isArray(req.body?.curva) ? req.body.curva : []
+    const curvaLimpia = curva.map(x => ({ talle:texto(x.talle), pares:numero(x.pares) }))
+      .filter(x => x.talle && x.pares > 0)
+    if (!articuloId || !curvaLimpia.length) return res.status(400).json({ok:false,error:"Ingresá una curva con al menos un talle y cantidad de pares."})
+
+    const { data: patrones, error: pe } = await supabase.from("patrones")
+      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, metodo_consumo, orden")
+      .eq("empresa_id",empresaId).eq("articulo_id",articuloId).eq("activo",true).order("orden")
+    if (pe) throw pe
+    if (!patrones?.length) return res.status(404).json({ok:false,error:"El artículo no tiene Patrón Técnico V2 guardado."})
+
+    const noClasificados = patrones.filter(p => !p.metodo_consumo)
+    if (noClasificados.length) return res.status(409).json({ok:false,error:`Hay ${noClasificados.length} línea(s) del patrón sin método de consumo. Clasificalas antes de calcular.`})
+
+    const rindeLines = patrones.filter(p => p.metodo_consumo === "rinde")
+    const ids = rindeLines.map(p=>p.id)
+    let rindes=[]
+    if(ids.length){
+      const {data,error}=await supabase.from("rindes").select("id,patron_id,talle,version,estado,consumo_por_par,material_unidad")
+        .eq("empresa_id",empresaId).in("patron_id",ids).eq("vigente",true)
+      if(error) throw error
+      rindes=data||[]
+    }
+    const mids=patrones.map(p=>p.ficha_material_id).filter(Boolean)
+    let mats=[]
+    if(mids.length){
+      const {data,error}=await supabase.from("fichas_materiales").select("id,pieza_id,material,especificacion,color,unidad_medida").eq("empresa_id",empresaId).in("id",mids)
+      if(error) throw error
+      mats=data||[]
+    }
+    const pids=mats.map(m=>m.pieza_id).filter(Boolean)
+    let piezas=[]
+    if(pids.length){
+      const {data,error}=await supabase.from("fichas_piezas").select("id,nombre").eq("empresa_id",empresaId).in("id",pids)
+      if(error) throw error
+      piezas=data||[]
+    }
+    const mm=new Map(mats.map(m=>[m.id,m])), pm=new Map(piezas.map(p=>[p.id,p]))
+    const faltantes=[], lineas=[]
+    for(const p of patrones){
+      const m=mm.get(p.ficha_material_id)||{}, pieza=pm.get(m.pieza_id)||{}
+      if(p.metodo_consumo==="directo"){
+        lineas.push({patron_id:p.id,bloque:p.bloque,pieza:pieza.nombre||null,material:m.material||null,color:m.color||m.especificacion||null,um:p.um||m.unidad_medida||null,metodo_consumo:"directo",t_tarea:null,detalle:[],pendiente_directo:true})
+        continue
+      }
+      let total=0; const detalle=[]
+      for(const c of curvaLimpia){
+        const r=rindes.find(x=>x.patron_id===p.id && String(x.talle)===String(c.talle))
+        if(!r || !(Number(r.consumo_por_par)>0)){
+          faltantes.push({patron_id:p.id,pieza:pieza.nombre||null,material:m.material||null,talle:c.talle})
+          continue
+        }
+        const subtotal=Number(c.pares)*Number(r.consumo_por_par); total+=subtotal
+        detalle.push({talle:c.talle,pares:c.pares,rinde_id:r.id,rinde_version:r.version,estado:r.estado,consumo_por_par:Number(r.consumo_por_par),subtotal})
+      }
+      lineas.push({patron_id:p.id,bloque:p.bloque,pieza:pieza.nombre||null,material:m.material||null,color:m.color||m.especificacion||null,um:p.um||m.unidad_medida||null,metodo_consumo:"rinde",t_tarea:faltantes.some(x=>x.patron_id===p.id)?null:total,detalle})
+    }
+    res.json({ok:true,simulacion:true,persistido:false,articulo_id:articuloId,ficha_id:patrones[0].ficha_id,ficha_version:patrones[0].ficha_version,total_pares:curvaLimpia.reduce((s,x)=>s+x.pares,0),curva:curvaLimpia,completo:faltantes.length===0,faltantes,lineas})
+  } catch(err){console.error("Error calculando patrón de tarea:",err);res.status(500).json({ok:false,error:"Error calculando patrón de tarea"})}
+})
+
 // Catálogo reutilizable: un mismo código de sacabocado puede usarse en muchos artículos/patrones.
 router.get("/sacabocados", async (req, res) => {
   const empresaId = empresa(req, res)
