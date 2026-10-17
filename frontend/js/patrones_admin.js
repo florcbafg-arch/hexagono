@@ -1,6 +1,7 @@
 (() => {
   let patronActual = null
   let articuloActualId = null
+  let materialesMaestro = []
 
   const esc = (v = "") => String(v ?? "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -18,7 +19,7 @@
   }
 
   async function initPatrones() {
-    await cargarArticulos()
+    await Promise.all([cargarArticulos(), cargarMaterialesMaestro()])
     const select = document.getElementById("articuloSelect")
     select?.addEventListener("change", () => {
       if (select.value) cargarPatron(select.value)
@@ -103,6 +104,46 @@
     meta.classList.add("visible")
   }
 
+
+  async function cargarMaterialesMaestro() {
+    const d = await leerJson(await apiFetch("/api/maestro/materiales"))
+    materialesMaestro = d.materiales || []
+  }
+
+  function materialInicial(item) {
+    if (item.material_id) return String(item.material_id)
+    const nombre = String(item.material || "").trim().toUpperCase()
+    return String((materialesMaestro.find(m => String(m.nombre||"").trim().toUpperCase() === nombre) || {}).id || "")
+  }
+
+  function opcionesMaterial(item) {
+    const actual = materialInicial(item)
+    return '<option value="">Seleccionar material…</option>' +
+      materialesMaestro.map(m => `<option value="${m.id}" ${String(m.id)===actual?"selected":""}>${esc(m.nombre)}${m.unidad_sugerida?" · "+esc(m.unidad_sugerida):""}</option>`).join("") +
+      '<option value="__nuevo__">＋ Agregar material…</option>'
+  }
+
+  async function cambioMaterial(select) {
+    if (select.value !== "__nuevo__") {
+      const m=materialesMaestro.find(x=>String(x.id)===String(select.value))
+      const fila=select.closest("tr")
+      const um=fila?.querySelector(".patron-um")
+      if(m?.unidad_sugerida && um) um.value=String(m.unidad_sugerida).toUpperCase()
+      return
+    }
+    const nombre=prompt("Nombre del nuevo material:")
+    if(!nombre){select.value=select.dataset.anterior||"";return}
+    const unidad=(prompt("Unidad sugerida (M2, ML, PLANCHA, UNIDAD, PAR):","")||"").trim().toUpperCase()
+    try{
+      const d=await leerJson(await apiFetch("/api/maestro/materiales",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre,unidad_sugerida:unidad})}))
+      materialesMaestro.push(d.material)
+      const id=String(d.material.id)
+      const opt=document.createElement("option");opt.value=id;opt.textContent=d.material.nombre+(d.material.unidad_sugerida?" · "+d.material.unidad_sugerida:"")
+      select.insertBefore(opt,select.lastElementChild);select.value=id;select.dataset.anterior=id
+      const um=select.closest("tr")?.querySelector(".patron-um");if(unidad&&um)um.value=unidad
+    }catch(err){alert(err.message||"No se pudo crear el material");select.value=select.dataset.anterior||""}
+  }
+
   function opcionesUM(valor) {
     const valores = ["ML", "M2", "PLANCHA", "UNIDAD", "PAR"]
     const actual = String(valor || "").toUpperCase()
@@ -131,7 +172,7 @@
             ${(bloque.items || []).map((item, ii) => `
               <tr data-material-id="${item.ficha_material_id}" data-orden="${item.orden ?? ii + 1}">
                 <td><strong>${esc(item.pieza || "-")}</strong>${item.sacabocado_id ? `<div class="patron-muted">Sacabocado #${esc(item.sacabocado_id)}</div>` : ""}</td>
-                <td>${esc(item.material || "-")}</td>
+                <td><select class="patron-material" data-anterior="${materialInicial(item)}" onchange="cambioMaterial(this)">${opcionesMaterial(item)}</select></td>
                 <td>${esc(item.color || item.especificacion || "-")}</td>
                 <td><select class="patron-um">${opcionesUM(item.um || item.unidad_ficha)}</select></td>
                 <td><select class="patron-metodo"><option value="" ${!item.metodo_consumo ? "selected" : ""}>Clasificar…</option><option value="rinde" ${item.metodo_consumo === "rinde" ? "selected" : ""}>Rinde por talle</option><option value="directo" ${item.metodo_consumo === "directo" ? "selected" : ""}>Consumo directo</option></select></td>
@@ -172,6 +213,7 @@
         if (["CAJA","CORDONES"].includes(pieza)) return
         items.push({
           ficha_material_id: Number(fila.dataset.materialId),
+          material_id: Number(fila.querySelector(".patron-material")?.value) || null,
           bloque: nombreBloque,
           um: fila.querySelector(".patron-um")?.value || "",
           metodo_consumo: fila.querySelector(".patron-metodo")?.value || null,
@@ -278,6 +320,7 @@
   }
 
   window.initPatrones = initPatrones
+  window.cambioMaterial = cambioMaterial
   window.guardarPatron = guardarPatron
   window.recargarPatron = recargarPatron
   window.abrirCalculoTarea = abrirCalculoTarea
