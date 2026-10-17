@@ -21,6 +21,7 @@ const modelosMaestroRoutes = require("../backend/routes/modelosMaestro");
 const patronesTecnicosRoutes = require("../backend/routes/patronesTecnicos");
 const rindesV2Routes = require("../backend/routes/rindesV2");
 const materialesMaestroRoutes = require("../backend/routes/materialesMaestro");
+const patronGruposRoutes = require("../backend/routes/patronGrupos");
 console.log("✅ sacabocadosRoutes importado en server.js")
 const app = express();
 
@@ -46,6 +47,7 @@ app.use("/api/patrones", authMiddleware);
 app.use("/api/patrones/v2", patronesTecnicosRoutes);
 app.use("/api/rindes/v2", authMiddleware, rindesV2Routes);
 app.use("/api/maestro/materiales", authMiddleware, materialesMaestroRoutes);
+app.use("/api/maestro/patron-grupos", authMiddleware, patronGruposRoutes);
 app.use("/api/sector", authMiddleware);
 app.use("/api/objetivos", authMiddleware);
 app.use("/api/modelos", authMiddleware);
