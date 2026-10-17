@@ -233,7 +233,7 @@
     const items = []
     document.querySelectorAll(".patron-bloque").forEach(bloque => {
       bloque.querySelectorAll("tbody tr[data-material-id]").forEach((fila, index) => {
-        const pieza = fila.querySelector("td strong")?.textContent?.trim()?.toUpperCase()
+        const pieza = fila.querySelector("td:nth-child(2) strong")?.textContent?.trim()?.toUpperCase()
         if (["CAJA","CORDONES"].includes(pieza)) return
         items.push({
           ficha_material_id: Number(fila.dataset.materialId),
