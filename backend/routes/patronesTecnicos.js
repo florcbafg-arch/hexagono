@@ -129,7 +129,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
     const estructura = await estructuraFicha(ficha.id, empresaId)
     const { data: guardados, error: ge } = await supabase
       .from("patrones")
-      .select("id, ficha_material_id, bloque, um, metodo_consumo, orden, activo, ficha_id, ficha_version")
+      .select("id, ficha_material_id, pieza_id, material_id, bloque, um, metodo_consumo, orden, activo, ficha_id, ficha_version")
       .eq("empresa_id", empresaId)
       .eq("articulo_id", articuloId)
       .eq("ficha_id", ficha.id)
@@ -152,6 +152,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
       bloques.get(bloque).push({
         patron_id: guardado?.id || null,
         ficha_material_id: material.id,
+        material_id: guardado?.material_id || null,
         pieza_id: pieza.id,
         pieza: pieza.nombre,
         sacabocado_id: pieza.sacabocado_id || null,
@@ -201,6 +202,9 @@ router.put("/articulo/:articuloId", async (req, res) => {
 
     const estructura = await estructuraFicha(ficha.id, empresaId)
     const materialesValidos = new Map(estructura.materiales.map(m => [m.id, m]))
+    const { data: materialesMaestro, error: mme } = await supabase.from("materiales_maestro").select("id").eq("empresa_id", empresaId).eq("activo", true)
+    if (mme) throw mme
+    const materialesMaestroValidos = new Set((materialesMaestro || []).map(m => Number(m.id)))
     const idsRecibidos = new Set()
     const preparados = []
 
@@ -216,8 +220,14 @@ router.put("/articulo/:articuloId", async (req, res) => {
       idsRecibidos.add(materialId)
 
       const material = materialesValidos.get(materialId)
+      const materialMaestroId = Number(item.material_id)
+      if (!materialMaestroId || !materialesMaestroValidos.has(materialMaestroId)) {
+        return res.status(400).json({ ok: false, error: "Seleccioná un material válido del Maestro de Materiales" })
+      }
       preparados.push({
         ficha_material_id: materialId,
+        pieza_id: material.pieza_id,
+        material_id: materialMaestroId,
         bloque: texto(item.bloque) || "CORTE CAPELLADA",
         um: texto(item.um) || material.unidad_medida || "",
         orden: Number.isFinite(Number(item.orden)) ? Number(item.orden) : i + 1,
@@ -244,6 +254,8 @@ router.put("/articulo/:articuloId", async (req, res) => {
         ficha_id: ficha.id,
         ficha_version: ficha.version,
         ficha_material_id: item.ficha_material_id,
+        pieza_id: item.pieza_id,
+        material_id: item.material_id,
         bloque: item.bloque,
         um: item.um,
         orden: item.orden,
