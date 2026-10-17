@@ -1,12 +1,13 @@
 (() => {
-let articuloId=null, datos=null, sacabocados=[]
+let articuloId=null, datos=null, sacabocados=[], materialesMaestro=[]
 const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")
 async function json(res){let d={};try{d=await res.json()}catch(_){}if(!res.ok)throw new Error(d.error||"Error");return d}
 async function initRendimientos(){
   const sel=document.getElementById("rindeArticulo"); if(!sel)return
   try{
-    const [arts,sacs]=await Promise.all([json(await apiFetch("/api/articulos")),json(await apiFetch("/api/rindes/v2/sacabocados"))])
+    const [arts,sacs,mats]=await Promise.all([json(await apiFetch("/api/articulos")),json(await apiFetch("/api/rindes/v2/sacabocados")),json(await apiFetch("/api/maestro/materiales"))])
     sacabocados=sacs.sacabocados||[]
+    materialesMaestro=mats.materiales||[]
     ;(arts||[]).filter(a=>a.activo!==false).forEach(a=>{const o=document.createElement("option");o.value=a.id;o.textContent=`${a.codigo} · ${a.modelos?.marca||"Sin marca"} · ${a.modelos?.nombre||"Sin modelo"} · ${a.color}`;sel.appendChild(o)})
     sel.onchange=()=>sel.value?cargar(sel.value):limpiar()
   }catch(e){mensaje("No se pudieron cargar los datos de Rendimientos.")}
@@ -21,16 +22,39 @@ async function cargar(id){
 function opcionesSac(actual){
   return '<option value="">Seleccionar…</option>'+sacabocados.map(s=>`<option value="${s.id}" ${String(s.id)===String(actual||"")?"selected":""}>${esc(s.codigo||("#"+s.id))} · ${esc(s.pieza||"")}${s.subpieza?" · "+esc(s.subpieza):""}</option>`).join("")
 }
+
+function nombreMaterial(id){return (materialesMaestro.find(m=>String(m.id)===String(id))||{}).nombre||"—"}
+function opcionesMaterial(actual){
+  return '<option value="">Seleccionar material…</option>'+materialesMaestro.map(m=>`<option value="${m.id}" ${String(m.id)===String(actual||"")?"selected":""}>${esc(m.nombre)}${m.unidad_sugerida?" · "+esc(m.unidad_sugerida):""}</option>`).join("")+'<option value="__nuevo__">＋ Agregar material…</option>'
+}
+async function cambioMaterialRinde(select){
+  if(select.value!=="__nuevo__"){
+    const m=materialesMaestro.find(x=>String(x.id)===String(select.value)), f=select.closest(".rinde-form"), um=f?.querySelector(".f-unidad")
+    if(m?.unidad_sugerida&&um)um.value=String(m.unidad_sugerida).toUpperCase()
+    return
+  }
+  const nombre=prompt("Nombre del nuevo material:")
+  if(!nombre){select.value=select.dataset.anterior||"";return}
+  const unidad=(prompt("Unidad sugerida (M2, ML, PLANCHA, UNIDAD, PAR):","")||"").trim().toUpperCase()
+  try{
+    const d=await json(await apiFetch("/api/maestro/materiales",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre,unidad_sugerida:unidad})}))
+    materialesMaestro.push(d.material);const id=String(d.material.id)
+    const o=document.createElement("option");o.value=id;o.textContent=d.material.nombre+(d.material.unidad_sugerida?" · "+d.material.unidad_sugerida:"")
+    select.insertBefore(o,select.lastElementChild);select.value=id;select.dataset.anterior=id
+    const um=select.closest(".rinde-form")?.querySelector(".f-unidad");if(unidad&&um)um.value=unidad
+  }catch(e){alert(e.message||"No se pudo crear el material");select.value=select.dataset.anterior||""}
+}
+
 function filaRinde(r){
- return `<tr><td><strong>${esc(r.talle)}</strong></td><td>V${r.version}</td><td><span class="rinde-badge">${esc(r.estado)}</span></td><td>${esc(r.origen_medicion)}</td><td>${r.sacabocado_id?esc((sacabocados.find(s=>String(s.id)===String(r.sacabocado_id))||{}).codigo||("#"+r.sacabocado_id)):"—"}</td><td>${r.piezas_por_par??"—"}</td><td><strong>${r.consumo_por_par??"—"}</strong></td><td>${esc(r.material_unidad||"")}</td><td><button onclick="abrirRevision(${r.patron_id},${r.id})">Revisar</button></td></tr>`
+ return `<tr><td><strong>${esc(r.talle)}</strong></td><td>V${r.version}</td><td><span class="rinde-badge">${esc(r.estado)}</span></td><td>${esc(r.origen_medicion)}</td><td>${r.sacabocado_id?esc((sacabocados.find(s=>String(s.id)===String(r.sacabocado_id))||{}).codigo||("#"+r.sacabocado_id)):"—"}</td><td>${esc(nombreMaterial(r.material_id))}</td><td>${r.piezas_por_par??"—"}</td><td><strong>${r.consumo_por_par??"—"}</strong></td><td>${esc(r.material_unidad||"")}</td><td><button onclick="abrirRevision(${r.patron_id},${r.id})">Revisar</button></td></tr>`
 }
 function render(){
  const c=document.getElementById("rindesLineas")
  c.innerHTML=(datos.lineas||[]).map(l=>`
  <section class="rinde-linea" data-patron="${l.id}">
-  <div class="rinde-linea-head"><div><h3>${esc(l.pieza||"Pieza")} · ${esc(l.material||"Material")}</h3><div class="rinde-meta">${esc(l.bloque||"")} · U.M. patrón: ${esc(l.um||l.unidad_ficha||"—")}${l.color?" · "+esc(l.color):""}</div></div>
+  <div class="rinde-linea-head"><div><h3>${esc(l.pieza||"Pieza")}</h3><div class="rinde-meta">${esc(l.bloque||"")} · U.M. patrón: ${esc(l.um||l.unidad_ficha||"—")}${l.color?" · "+esc(l.color):""}</div></div>
   <div class="rinde-tools"><button onclick="abrirNuevoRinde(${l.id})">＋ Rinde por talle</button><button onclick="verHistorial(${l.id})">Historial</button></div></div>
-  <div>${l.rindes?.length?`<table class="rinde-tabla"><thead><tr><th>Talle</th><th>Versión</th><th>Estado</th><th>Origen</th><th>Sacabocado</th><th>Piezas/par</th><th>Consumo/par</th><th>U.M.</th><th></th></tr></thead><tbody>${l.rindes.map(filaRinde).join("")}</tbody></table>`:'<div class="rindes-empty">Todavía no hay rindes cargados para esta línea.</div>'}</div>
+  <div>${l.rindes?.length?`<table class="rinde-tabla"><thead><tr><th>Talle</th><th>Versión</th><th>Estado</th><th>Origen</th><th>Sacabocado</th><th>Material</th><th>Piezas/par</th><th>Consumo/par</th><th>U.M.</th><th></th></tr></thead><tbody>${l.rindes.map(filaRinde).join("")}</tbody></table>`:'<div class="rindes-empty">Todavía no hay rindes cargados para esta línea.</div>'}</div>
   <div class="rinde-form" id="form-${l.id}"></div><div class="rinde-history" id="hist-${l.id}"></div>
  </section>`).join("")
 }
@@ -41,6 +65,7 @@ function formHtml(l,r=null){
  <div class="rinde-field"><label>Estado</label><select class="f-estado"><option value="estimado">Estimado</option><option value="verificado">Verificado</option><option value="revisado">Revisado</option></select></div>
  <div class="rinde-field"><label>Origen</label><select class="f-origen"><option value="sacabocado">Sacabocado físico</option><option value="molde_provisorio">Molde provisorio</option><option value="otro">Otro</option></select></div>
  <div class="rinde-field"><label>Sacabocado</label><select class="f-sac">${opcionesSac(r?.sacabocado_id)}</select></div>
+ <div class="rinde-field"><label>Material</label><select class="f-material" data-anterior="${esc(r?.material_id||l.material_id||"")}" onchange="cambioMaterialRinde(this)">${opcionesMaterial(r?.material_id||l.material_id)}</select></div>
  <div class="rinde-field"><label>Piezas por par</label><input class="f-piezas" type="number" step="0.0001" value="${r?.piezas_por_par??""}"></div>
  <div class="rinde-field"><label>U.M. consumo</label><input class="f-unidad" value="${esc(r?.material_unidad||l.um||l.unidad_ficha||"")}"></div>
  <div class="rinde-field"><label>Ancho estándar material</label><input class="f-mancho" type="number" step="0.000001" value="${r?.material_ancho??""}"></div>
@@ -75,7 +100,7 @@ function calcularRinde(pid){
 }
 async function guardarRinde(pid,rid){
  const f=document.getElementById("form-"+pid)
- const payload={talle:val(f,".f-talle"),estado:val(f,".f-estado"),origen_medicion:val(f,".f-origen"),sacabocado_id:val(f,".f-sac")||null,piezas_por_par:val(f,".f-piezas")||null,material_unidad:val(f,".f-unidad"),material_ancho:val(f,".f-mancho")||null,material_largo:val(f,".f-mlargo")||null,pieza_ancho:val(f,".f-pancho")||null,pieza_largo:val(f,".f-plargo")||null,capacidad_ancho:val(f,".f-cancho")||null,capacidad_largo:val(f,".f-clargo")||null,cantidad_piezas_simuladas:val(f,".f-simuladas")||null,pares_obtenidos:val(f,".f-pares")||null,consumo_por_par:val(f,".f-consumo")||null,metodo_calculo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"formula":"manual",formula_codigo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"PIZARRA_M2_V1":null,formula_version:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?1:null,parametros_calculo:{ancho_pieza:val(f,".f-cancho")||null,largo_pieza:val(f,".f-clargo")||null,piezas_por_par:val(f,".f-piezas")||null,formula_documentada:"ancho × largo ÷ piezas_por_par × piezas_por_par",unidad_resultado:val(f,".f-unidad")||null},observaciones:val(f,".f-obs")}
+ const payload={talle:val(f,".f-talle"),estado:val(f,".f-estado"),origen_medicion:val(f,".f-origen"),sacabocado_id:val(f,".f-sac")||null,material_id:val(f,".f-material")||null,piezas_por_par:val(f,".f-piezas")||null,material_unidad:val(f,".f-unidad"),material_ancho:val(f,".f-mancho")||null,material_largo:val(f,".f-mlargo")||null,pieza_ancho:val(f,".f-pancho")||null,pieza_largo:val(f,".f-plargo")||null,capacidad_ancho:val(f,".f-cancho")||null,capacidad_largo:val(f,".f-clargo")||null,cantidad_piezas_simuladas:val(f,".f-simuladas")||null,pares_obtenidos:val(f,".f-pares")||null,consumo_por_par:val(f,".f-consumo")||null,metodo_calculo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"formula":"manual",formula_codigo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"PIZARRA_M2_V1":null,formula_version:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?1:null,parametros_calculo:{ancho_pieza:val(f,".f-cancho")||null,largo_pieza:val(f,".f-clargo")||null,piezas_por_par:val(f,".f-piezas")||null,formula_documentada:"ancho × largo ÷ piezas_por_par × piezas_por_par",unidad_resultado:val(f,".f-unidad")||null},observaciones:val(f,".f-obs")}
  try{
    const url=rid?`/api/rindes/v2/${rid}/revisar`:`/api/rindes/v2/patron/${pid}`
    await json(await apiFetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}))
@@ -109,5 +134,6 @@ function activarEnterSiguiente(){
   })
 }
 activarEnterSiguiente()
+window.cambioMaterialRinde=cambioMaterialRinde
 window.initRendimientos=initRendimientos;window.calcularRinde=calcularRinde;window.abrirNuevoRinde=abrirNuevoRinde;window.abrirRevision=abrirRevision;window.cerrarForm=cerrarForm;window.guardarRinde=guardarRinde;window.verHistorial=verHistorial
 })()
