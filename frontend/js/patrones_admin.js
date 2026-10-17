@@ -124,7 +124,7 @@
           <input class="patron-bloque-input" value="${esc(bloque.bloque || "")}" aria-label="Nombre del bloque">
         </div>
         <table class="patron-tabla-v2">
-          <thead><tr><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th></tr></thead>
+          <thead><tr><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th><th>Método de consumo</th></tr></thead>
           <tbody>
             ${(bloque.items || []).map((item, ii) => `
               <tr data-material-id="${item.ficha_material_id}" data-orden="${item.orden ?? ii + 1}">
@@ -132,6 +132,7 @@
                 <td>${esc(item.material || "-")}</td>
                 <td>${esc(item.color || item.especificacion || "-")}</td>
                 <td><select class="patron-um">${opcionesUM(item.um || item.unidad_ficha)}</select></td>
+                <td><select class="patron-metodo"><option value="" ${!item.metodo_consumo ? "selected" : ""}>Clasificar…</option><option value="rinde" ${item.metodo_consumo === "rinde" ? "selected" : ""}>Rinde por talle</option><option value="directo" ${item.metodo_consumo === "directo" ? "selected" : ""}>Consumo directo</option></select></td>
               </tr>
             `).join("")}
           </tbody>
@@ -149,6 +150,7 @@
           ficha_material_id: Number(fila.dataset.materialId),
           bloque: nombreBloque,
           um: fila.querySelector(".patron-um")?.value || "",
+          metodo_consumo: fila.querySelector(".patron-metodo")?.value || null,
           orden: Number(fila.dataset.orden || index + 1)
         })
       })
