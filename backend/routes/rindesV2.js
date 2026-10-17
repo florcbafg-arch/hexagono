@@ -30,7 +30,7 @@ const METODOS = new Set(["manual", "formula", "simulacion"])
 async function patronV2(patronId, empresaId) {
   const { data, error } = await supabase
     .from("patrones")
-    .select("id, empresa_id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, metodo_consumo, orden, activo")
+    .select("id, empresa_id, articulo_id, ficha_id, ficha_version, ficha_material_id, pieza_id, material_id, bloque, um, metodo_consumo, orden, activo")
     .eq("id", patronId)
     .eq("empresa_id", empresaId)
     .not("articulo_id", "is", null)
