@@ -45,8 +45,8 @@ function formHtml(l,r=null){
  <div class="rinde-field"><label>U.M. consumo</label><input class="f-unidad" value="${esc(r?.material_unidad||l.um||l.unidad_ficha||"")}"></div>
  <div class="rinde-field"><label>Ancho estándar material</label><input class="f-mancho" type="number" step="0.000001" value="${r?.material_ancho??""}"></div>
  <div class="rinde-field"><label>Largo estándar material</label><input class="f-mlargo" type="number" step="0.000001" value="${r?.material_largo??""}"></div>
- <div class="rinde-field"><label>Capacidad en ancho</label><input class="f-cancho" type="number" step="0.000001" value="${r?.capacidad_ancho??""}" placeholder="Ej: 3.5"></div>
- <div class="rinde-field"><label>Capacidad en largo</label><input class="f-clargo" type="number" step="0.000001" value="${r?.capacidad_largo??""}" placeholder="Ej: 5.5"></div>
+ <div class="rinde-field"><label>Ancho de la pieza / sacabocado</label><input class="f-cancho" type="number" step="0.000001" value="${r?.capacidad_ancho??""}" placeholder="Ej: 3.5"></div>
+ <div class="rinde-field"><label>Largo de la pieza / sacabocado</label><input class="f-clargo" type="number" step="0.000001" value="${r?.capacidad_largo??""}" placeholder="Ej: 5.5"></div>
  <div class="rinde-field"><label>Ancho pieza/molde</label><input class="f-pancho" type="number" step="0.000001" value="${r?.pieza_ancho??""}"></div>
  <div class="rinde-field"><label>Largo pieza/molde</label><input class="f-plargo" type="number" step="0.000001" value="${r?.pieza_largo??""}"></div>
  <div class="rinde-field"><label>Piezas simuladas</label><input class="f-simuladas" type="number" step="0.000001" value="${r?.cantidad_piezas_simuladas??""}"></div>
@@ -64,15 +64,18 @@ function val(f,cls){return f.querySelector(cls)?.value??""}
 function calcularRinde(pid){
  const f=document.getElementById("form-"+pid)
  const a=Number(val(f,".f-cancho")), l=Number(val(f,".f-clargo")), p=Number(val(f,".f-piezas"))
- if(!(a>0&&l>0&&p>0)) return alert("Completá capacidad en ancho, capacidad en largo y piezas por par.")
- const pares=(a*l)/p, consumo=1/pares
+ if(!(a>0&&l>0&&p>0)) return alert("Completá ancho, largo y piezas por par.")
+ // Fórmula documentada por fábrica (PIZARRA_M2_V1):
+ // ancho × largo / piezas_por_par × piezas_por_par = pares de referencia.
+ // Se conservan ambos factores en la trazabilidad aunque matemáticamente se cancelen.
+ const pares=(a*l/p)*p, consumo=1/pares
  f.querySelector(".f-parescalc").value=pares.toFixed(6)
  f.querySelector(".f-pares").value=pares.toFixed(6)
  f.querySelector(".f-consumo").value=consumo.toFixed(8)
 }
 async function guardarRinde(pid,rid){
  const f=document.getElementById("form-"+pid)
- const payload={talle:val(f,".f-talle"),estado:val(f,".f-estado"),origen_medicion:val(f,".f-origen"),sacabocado_id:val(f,".f-sac")||null,piezas_por_par:val(f,".f-piezas")||null,material_unidad:val(f,".f-unidad"),material_ancho:val(f,".f-mancho")||null,material_largo:val(f,".f-mlargo")||null,pieza_ancho:val(f,".f-pancho")||null,pieza_largo:val(f,".f-plargo")||null,capacidad_ancho:val(f,".f-cancho")||null,capacidad_largo:val(f,".f-clargo")||null,cantidad_piezas_simuladas:val(f,".f-simuladas")||null,pares_obtenidos:val(f,".f-pares")||null,consumo_por_par:val(f,".f-consumo")||null,metodo_calculo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"formula":"manual",formula_codigo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"PIZARRA_CAPACIDAD_V1":null,formula_version:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?1:null,parametros_calculo:{capacidad_ancho:val(f,".f-cancho")||null,capacidad_largo:val(f,".f-clargo")||null,piezas_por_par:val(f,".f-piezas")||null},observaciones:val(f,".f-obs")}
+ const payload={talle:val(f,".f-talle"),estado:val(f,".f-estado"),origen_medicion:val(f,".f-origen"),sacabocado_id:val(f,".f-sac")||null,piezas_por_par:val(f,".f-piezas")||null,material_unidad:val(f,".f-unidad"),material_ancho:val(f,".f-mancho")||null,material_largo:val(f,".f-mlargo")||null,pieza_ancho:val(f,".f-pancho")||null,pieza_largo:val(f,".f-plargo")||null,capacidad_ancho:val(f,".f-cancho")||null,capacidad_largo:val(f,".f-clargo")||null,cantidad_piezas_simuladas:val(f,".f-simuladas")||null,pares_obtenidos:val(f,".f-pares")||null,consumo_por_par:val(f,".f-consumo")||null,metodo_calculo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"formula":"manual",formula_codigo:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?"PIZARRA_M2_V1":null,formula_version:(val(f,".f-cancho")&&val(f,".f-clargo")&&val(f,".f-piezas"))?1:null,parametros_calculo:{ancho_pieza:val(f,".f-cancho")||null,largo_pieza:val(f,".f-clargo")||null,piezas_por_par:val(f,".f-piezas")||null,formula_documentada:"ancho × largo ÷ piezas_por_par × piezas_por_par",unidad_resultado:val(f,".f-unidad")||null},observaciones:val(f,".f-obs")}
  try{
    const url=rid?`/api/rindes/v2/${rid}/revisar`:`/api/rindes/v2/patron/${pid}`
    await json(await apiFetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}))
