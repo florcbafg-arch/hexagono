@@ -2,6 +2,7 @@
   let patronActual = null
   let articuloActualId = null
   let materialesMaestro = []
+  let gruposPatron = []
 
   const esc = (v = "") => String(v ?? "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -19,7 +20,7 @@
   }
 
   async function initPatrones() {
-    await Promise.all([cargarArticulos(), cargarMaterialesMaestro()])
+    await Promise.all([cargarArticulos(), cargarMaterialesMaestro(), cargarGruposPatron()])
     const select = document.getElementById("articuloSelect")
     select?.addEventListener("change", () => {
       if (select.value) cargarPatron(select.value)
@@ -105,6 +106,32 @@
   }
 
 
+
+  async function cargarGruposPatron(){
+    const d=await leerJson(await apiFetch("/api/maestro/patron-grupos"))
+    gruposPatron=d.grupos||[]
+  }
+  function grupoInicial(item,bloque){
+    if(item.grupo_id)return String(item.grupo_id)
+    const n=String(item.bloque||bloque||"").trim().toUpperCase()
+    return String((gruposPatron.find(g=>String(g.nombre||"").trim().toUpperCase()===n)||{}).id||"")
+  }
+  function opcionesGrupo(item,bloque){
+    const actual=grupoInicial(item,bloque)
+    return '<option value="">Seleccionar grupo…</option>'+gruposPatron.map(g=>`<option value="${g.id}" ${String(g.id)===actual?"selected":""}>${esc(g.nombre)}</option>`).join("")+'<option value="__nuevo__">＋ Agregar grupo/sección…</option>'
+  }
+  async function cambioGrupo(select){
+    if(select.value!=="__nuevo__"){select.dataset.anterior=select.value;return}
+    const nombre=prompt("Nombre del nuevo grupo/sección del patrón:")
+    if(!nombre){select.value=select.dataset.anterior||"";return}
+    try{
+      const d=await leerJson(await apiFetch("/api/maestro/patron-grupos",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre})}))
+      gruposPatron.push(d.grupo)
+      document.querySelectorAll(".patron-grupo").forEach(s=>{const o=document.createElement("option");o.value=d.grupo.id;o.textContent=d.grupo.nombre;s.insertBefore(o,s.lastElementChild)})
+      select.value=String(d.grupo.id);select.dataset.anterior=select.value
+    }catch(e){alert(e.message||"No se pudo crear el grupo/sección");select.value=select.dataset.anterior||""}
+  }
+
   async function cargarMaterialesMaestro() {
     const d = await leerJson(await apiFetch("/api/maestro/materiales"))
     materialesMaestro = d.materiales || []
@@ -162,15 +189,13 @@
 
     cont.innerHTML = bloques.map((bloque, bi) => `
       <div class="patron-bloque" data-bloque-index="${bi}">
-        <div class="patron-bloque-head">
-          <h3>Bloque técnico</h3>
-          <input class="patron-bloque-input" value="${esc(bloque.bloque || "")}" aria-label="Nombre del bloque">
-        </div>
+        <div class="patron-bloque-head"><h3>Grupo / sección</h3><span class="patron-muted">Clasificación explícita por línea</span></div>
         <table class="patron-tabla-v2">
-          <thead><tr><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th><th>Método de consumo</th><th>Resultado rinde</th></tr></thead>
+          <thead><tr><th>Grupo / sección</th><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th><th>Método de consumo</th><th>Resultado rinde</th></tr></thead>
           <tbody>
             ${(bloque.items || []).map((item, ii) => `
               <tr data-material-id="${item.ficha_material_id}" data-orden="${item.orden ?? ii + 1}">
+                <td><select class="patron-grupo" data-anterior="${grupoInicial(item,bloque.bloque)}" onchange="cambioGrupo(this)">${opcionesGrupo(item,bloque.bloque)}</select></td>
                 <td><strong>${esc(item.pieza || "-")}</strong>${item.sacabocado_id ? `<div class="patron-muted">Sacabocado #${esc(item.sacabocado_id)}</div>` : ""}</td>
                 <td><select class="patron-material" data-anterior="${materialInicial(item)}" onchange="cambioMaterial(this)">${opcionesMaterial(item)}</select></td>
                 <td>${esc(item.color || item.especificacion || "-")}</td>
@@ -207,14 +232,14 @@
   function recolectarItems() {
     const items = []
     document.querySelectorAll(".patron-bloque").forEach(bloque => {
-      const nombreBloque = bloque.querySelector(".patron-bloque-input")?.value?.trim() || "CORTE CAPELLADA"
       bloque.querySelectorAll("tbody tr[data-material-id]").forEach((fila, index) => {
         const pieza = fila.querySelector("td strong")?.textContent?.trim()?.toUpperCase()
         if (["CAJA","CORDONES"].includes(pieza)) return
         items.push({
           ficha_material_id: Number(fila.dataset.materialId),
           material_id: Number(fila.querySelector(".patron-material")?.value) || null,
-          bloque: nombreBloque,
+          grupo_id: Number(fila.querySelector(".patron-grupo")?.value) || null,
+          bloque: fila.querySelector(".patron-grupo")?.selectedOptions?.[0]?.textContent || "",
           um: fila.querySelector(".patron-um")?.value || "",
           metodo_consumo: fila.querySelector(".patron-metodo")?.value || null,
           orden: Number(fila.dataset.orden || index + 1)
@@ -321,6 +346,7 @@
 
   window.initPatrones = initPatrones
   window.cambioMaterial = cambioMaterial
+  window.cambioGrupo = cambioGrupo
   window.guardarPatron = guardarPatron
   window.recargarPatron = recargarPatron
   window.abrirCalculoTarea = abrirCalculoTarea
