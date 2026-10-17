@@ -129,7 +129,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
     const estructura = await estructuraFicha(ficha.id, empresaId)
     const { data: guardados, error: ge } = await supabase
       .from("patrones")
-      .select("id, ficha_material_id, bloque, um, orden, activo, ficha_id, ficha_version")
+      .select("id, ficha_material_id, bloque, um, metodo_consumo, orden, activo, ficha_id, ficha_version")
       .eq("empresa_id", empresaId)
       .eq("articulo_id", articuloId)
       .eq("ficha_id", ficha.id)
@@ -160,6 +160,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
         color: material.color,
         unidad_ficha: material.unidad_medida,
         um: guardado?.um || material.unidad_medida || "",
+        metodo_consumo: guardado?.metodo_consumo || null,
         bloque,
         orden: guardado?.orden ?? material.orden ?? pieza.orden ?? 0
       })
@@ -219,7 +220,8 @@ router.put("/articulo/:articuloId", async (req, res) => {
         ficha_material_id: materialId,
         bloque: texto(item.bloque) || "CORTE CAPELLADA",
         um: texto(item.um) || material.unidad_medida || "",
-        orden: Number.isFinite(Number(item.orden)) ? Number(item.orden) : i + 1
+        orden: Number.isFinite(Number(item.orden)) ? Number(item.orden) : i + 1,
+        metodo_consumo: ["rinde","directo"].includes(texto(item.metodo_consumo).toLowerCase()) ? texto(item.metodo_consumo).toLowerCase() : null
       })
     }
 
@@ -245,6 +247,7 @@ router.put("/articulo/:articuloId", async (req, res) => {
         bloque: item.bloque,
         um: item.um,
         orden: item.orden,
+        metodo_consumo: item.metodo_consumo,
         activo: true
       }
 
