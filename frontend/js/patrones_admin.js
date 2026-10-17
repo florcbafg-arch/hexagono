@@ -182,7 +182,48 @@
     await cargarPatron(articuloActualId)
   }
 
+
+  function abrirCalculoTarea() {
+    if (!articuloActualId || !patronActual?.patron_guardado) return alert("Guardá primero el Patrón Técnico.")
+    const panel = document.getElementById("tareaPanel")
+    panel.innerHTML = `
+      <div class="tarea-top"><div><h3 style="margin:0">Calcular patrón de tarea</h3><div class="patron-muted">Simulación técnica: esta curva y este resultado no se guardan.</div></div><button type="button" onclick="cerrarCalculoTarea()">✕ Cerrar</button></div>
+      <table class="tarea-curva"><thead><tr><th>Talle</th><th>Pares</th><th></th></tr></thead><tbody id="tareaCurvaBody"></tbody></table>
+      <div class="tarea-btns"><button type="button" onclick="agregarTalleTarea()">＋ Agregar talle</button><button type="button" onclick="calcularPatronTarea()">🧮 Calcular</button></div>
+      <div id="tareaResultado" class="tarea-resultado"></div>`
+    panel.classList.add("visible")
+    agregarTalleTarea(); agregarTalleTarea()
+    panel.scrollIntoView({behavior:"smooth",block:"start"})
+  }
+
+  function cerrarCalculoTarea(){const p=document.getElementById("tareaPanel");p.classList.remove("visible");p.innerHTML=""}
+  function agregarTalleTarea(talle="",pares=""){
+    const b=document.getElementById("tareaCurvaBody"); if(!b)return
+    const tr=document.createElement("tr")
+    tr.innerHTML=`<td><input class="tarea-talle" value="${esc(talle)}" placeholder="Ej: 35"></td><td><input class="tarea-pares" type="number" min="1" step="1" value="${esc(pares)}" placeholder="0"></td><td><button type="button">Eliminar</button></td>`
+    tr.querySelector("button").onclick=()=>tr.remove(); b.appendChild(tr)
+  }
+  function curvaTarea(){
+    return [...document.querySelectorAll("#tareaCurvaBody tr")].map(tr=>({talle:tr.querySelector(".tarea-talle").value.trim(),pares:Number(tr.querySelector(".tarea-pares").value)})).filter(x=>x.talle&&x.pares>0)
+  }
+  async function calcularPatronTarea(){
+    const curva=curvaTarea(), out=document.getElementById("tareaResultado")
+    if(!curva.length)return alert("Ingresá al menos un talle y su cantidad de pares.")
+    out.innerHTML='<div class="tarea-alerta">Calculando…</div>'
+    try{
+      const d=await leerJson(await apiFetch(`/api/rindes/v2/articulo/${articuloActualId}/calcular-tarea`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({curva})}))
+      let aviso=d.faltantes?.length?`<div class="tarea-alerta"><strong>⚠️ Cálculo incompleto.</strong><br>${d.faltantes.map(x=>`Falta rinde: ${esc(x.pieza||"Pieza")} · ${esc(x.material||"Material")} · talle ${esc(x.talle)}`).join("<br>")}</div>`:'<div class="tarea-alerta"><strong>✓ Rindes completos para la curva ingresada.</strong></div>'
+      const directos=(d.lineas||[]).filter(x=>x.metodo_consumo==="directo").length
+      if(directos) aviso+=`<div class="tarea-alerta">${directos} línea(s) de consumo directo quedan identificadas pero todavía no calculadas en esta etapa.</div>`
+      out.innerHTML=`<h3>Patrón de tarea · ${d.total_pares} pares</h3>${aviso}<table class="patron-tabla-v2"><thead><tr><th>Bloque</th><th>Pieza</th><th>Material</th><th>U.M.</th><th>T.Tarea</th></tr></thead><tbody>${(d.lineas||[]).map(x=>`<tr><td>${esc(x.bloque||"-")}</td><td><strong>${esc(x.pieza||"-")}</strong></td><td>${esc(x.material||"-")}</td><td>${esc(x.um||"-")}</td><td class="tarea-total">${x.t_tarea==null?"—":Number(x.t_tarea).toFixed(6)}</td></tr>`).join("")}</tbody></table>`
+    }catch(err){out.innerHTML=`<div class="tarea-alerta">⚠️ ${esc(err.message)}</div>`}
+  }
+
   window.initPatrones = initPatrones
   window.guardarPatron = guardarPatron
   window.recargarPatron = recargarPatron
+  window.abrirCalculoTarea = abrirCalculoTarea
+  window.cerrarCalculoTarea = cerrarCalculoTarea
+  window.agregarTalleTarea = agregarTalleTarea
+  window.calcularPatronTarea = calcularPatronTarea
 })()
