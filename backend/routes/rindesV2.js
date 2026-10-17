@@ -69,6 +69,7 @@ function payloadBase(body, empresaId, patronId, creador) {
     estado,
     origen_medicion: origen,
     sacabocado_id: numero(body.sacabocado_id),
+    material_id: numero(body.material_id),
     piezas_por_par: numero(body.piezas_por_par),
     material_unidad: texto(body.material_unidad) || null,
     material_ancho: numero(body.material_ancho),
@@ -102,7 +103,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
 
     const { data: patrones, error: pe } = await supabase
       .from("patrones")
-      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, metodo_consumo, orden, activo")
+      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, pieza_id, material_id, bloque, um, metodo_consumo, orden, activo")
       .eq("empresa_id", empresaId)
       .eq("articulo_id", articuloId)
       .eq("activo", true)
@@ -113,14 +114,17 @@ router.get("/articulo/:articuloId", async (req, res) => {
     const patronesRinde = patrones.filter(p => p.metodo_consumo !== "directo")
     const patronIds = patronesRinde.map(p => p.id)
     const materialIds = patronesRinde.map(p => p.ficha_material_id).filter(Boolean)
+    const maestroIds = patronesRinde.map(p => p.material_id).filter(Boolean)
 
-    const [{ data: mats, error: me }, { data: rindes, error: re }] = await Promise.all([
+    const [{ data: mats, error: me }, { data: maestros, error: mae }, { data: rindes, error: re }] = await Promise.all([
       materialIds.length
         ? supabase.from("fichas_materiales").select("id, pieza_id, material, especificacion, color, unidad_medida").in("id", materialIds).eq("empresa_id", empresaId)
         : Promise.resolve({data:[],error:null}),
+      maestroIds.length ? supabase.from("materiales_maestro").select("id,nombre,familia,origen,unidad_sugerida").in("id",maestroIds).eq("empresa_id",empresaId) : Promise.resolve({data:[],error:null}),
       supabase.from("rindes").select("*").in("patron_id", patronIds).eq("empresa_id", empresaId).eq("vigente", true).order("talle", { ascending:true })
     ])
     if (me) throw me
+    if (mae) throw mae
     if (re) throw re
 
     const piezaIds = (mats || []).map(m => m.pieza_id).filter(Boolean)
@@ -132,6 +136,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
     }
 
     const matMap = new Map((mats || []).map(m => [m.id,m]))
+    const maestroMap = new Map((maestros || []).map(m => [Number(m.id),m]))
     const piezaMap = new Map(piezas.map(p => [p.id,p]))
     const rindesMap = new Map()
     for (const r of rindes || []) {
@@ -147,7 +152,9 @@ router.get("/articulo/:articuloId", async (req, res) => {
         pieza_id: pieza.id || null,
         pieza: pieza.nombre || null,
         sacabocado_ficha_id: pieza.sacabocado_id || null,
-        material: m.material || null,
+        material_id: p.material_id || null,
+        material: maestroMap.get(Number(p.material_id))?.nombre || m.material || null,
+        material_familia: maestroMap.get(Number(p.material_id))?.familia || null,
         especificacion: m.especificacion || null,
         color: m.color || null,
         unidad_ficha: m.unidad_medida || null,
@@ -173,7 +180,7 @@ router.post("/articulo/:articuloId/calcular-tarea", async (req, res) => {
     if (!articuloId || !curvaLimpia.length) return res.status(400).json({ok:false,error:"Ingresá una curva con al menos un talle y cantidad de pares."})
 
     const { data: patrones, error: pe } = await supabase.from("patrones")
-      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, metodo_consumo, orden")
+      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, pieza_id, material_id, bloque, um, metodo_consumo, orden")
       .eq("empresa_id",empresaId).eq("articulo_id",articuloId).eq("activo",true).order("orden")
     if (pe) throw pe
     if (!patrones?.length) return res.status(404).json({ok:false,error:"El artículo no tiene Patrón Técnico V2 guardado."})
@@ -204,25 +211,28 @@ router.post("/articulo/:articuloId/calcular-tarea", async (req, res) => {
       if(error) throw error
       piezas=data||[]
     }
-    const mm=new Map(mats.map(m=>[m.id,m])), pm=new Map(piezas.map(p=>[p.id,p]))
+    const maestroIdsTarea=patrones.map(p=>p.material_id).filter(Boolean)
+    let maestrosTarea=[]
+    if(maestroIdsTarea.length){const {data,error}=await supabase.from("materiales_maestro").select("id,nombre").eq("empresa_id",empresaId).in("id",maestroIdsTarea);if(error)throw error;maestrosTarea=data||[]}
+    const mm=new Map(mats.map(m=>[m.id,m])), pm=new Map(piezas.map(p=>[p.id,p])), mam=new Map(maestrosTarea.map(m=>[Number(m.id),m]))
     const faltantes=[], lineas=[]
     for(const p of patrones){
       const m=mm.get(p.ficha_material_id)||{}, pieza=pm.get(m.pieza_id)||{}
       if(p.metodo_consumo==="directo"){
-        lineas.push({patron_id:p.id,bloque:p.bloque,pieza:pieza.nombre||null,material:m.material||null,color:m.color||m.especificacion||null,um:p.um||m.unidad_medida||null,metodo_consumo:"directo",t_tarea:null,detalle:[],pendiente_directo:true})
+        lineas.push({patron_id:p.id,bloque:p.bloque,pieza:pieza.nombre||null,material:mam.get(Number(p.material_id))?.nombre||m.material||null,color:m.color||m.especificacion||null,um:p.um||m.unidad_medida||null,metodo_consumo:"directo",t_tarea:null,detalle:[],pendiente_directo:true})
         continue
       }
       let total=0; const detalle=[]
       for(const c of curvaLimpia){
         const r=rindes.find(x=>x.patron_id===p.id && String(x.talle)===String(c.talle))
         if(!r || !(Number(r.consumo_por_par)>0)){
-          faltantes.push({patron_id:p.id,pieza:pieza.nombre||null,material:m.material||null,talle:c.talle})
+          faltantes.push({patron_id:p.id,pieza:pieza.nombre||null,material:mam.get(Number(p.material_id))?.nombre||m.material||null,talle:c.talle})
           continue
         }
         const subtotal=Number(c.pares)*Number(r.consumo_por_par); total+=subtotal
         detalle.push({talle:c.talle,pares:c.pares,rinde_id:r.id,rinde_version:r.version,estado:r.estado,consumo_por_par:Number(r.consumo_por_par),subtotal})
       }
-      lineas.push({patron_id:p.id,bloque:p.bloque,pieza:pieza.nombre||null,material:m.material||null,color:m.color||m.especificacion||null,um:p.um||m.unidad_medida||null,metodo_consumo:"rinde",t_tarea:faltantes.some(x=>x.patron_id===p.id)?null:total,detalle})
+      lineas.push({patron_id:p.id,bloque:p.bloque,pieza:pieza.nombre||null,material:mam.get(Number(p.material_id))?.nombre||m.material||null,color:m.color||m.especificacion||null,um:p.um||m.unidad_medida||null,metodo_consumo:"rinde",t_tarea:faltantes.some(x=>x.patron_id===p.id)?null:total,detalle})
     }
     res.json({ok:true,simulacion:true,persistido:false,articulo_id:articuloId,ficha_id:patrones[0].ficha_id,ficha_version:patrones[0].ficha_version,total_pares:curvaLimpia.reduce((s,x)=>s+x.pares,0),curva:curvaLimpia,completo:faltantes.length===0,faltantes,lineas})
   } catch(err){console.error("Error calculando patrón de tarea:",err);res.status(500).json({ok:false,error:"Error calculando patrón de tarea"})}
@@ -254,6 +264,10 @@ router.post("/patron/:patronId", async (req, res) => {
     if (!patron) return res.status(404).json({ ok:false, error:"Línea de Patrón Técnico V2 no encontrada" })
 
     const payload = payloadBase(req.body || {}, empresaId, patronId, usuarioId(req))
+    if (!payload.material_id) payload.material_id = patron.material_id
+    const { data: materialValido, error: mve } = await supabase.from("materiales_maestro").select("id").eq("id",payload.material_id).eq("empresa_id",empresaId).eq("activo",true).maybeSingle()
+    if (mve) throw mve
+    if (!materialValido) return res.status(400).json({ok:false,error:"Seleccioná un material activo del Maestro de Materiales"})
     if (payload.origen_medicion === "sacabocado") {
       const s = await sacabocadoValido(payload.sacabocado_id, empresaId)
       if (!s || !s.activo) return res.status(400).json({ ok:false, error:"Seleccioná un sacabocado activo de la empresa" })
@@ -298,6 +312,10 @@ router.post("/:rindeId/revisar", async (req, res) => {
 
     const merged = { ...anterior, ...(req.body || {}), talle: anterior.talle }
     const payload = payloadBase(merged, empresaId, anterior.patron_id, usuarioId(req))
+    if (!payload.material_id) payload.material_id = patron.material_id
+    const { data: materialValido, error: mve } = await supabase.from("materiales_maestro").select("id").eq("id",payload.material_id).eq("empresa_id",empresaId).eq("activo",true).maybeSingle()
+    if (mve) throw mve
+    if (!materialValido) return res.status(400).json({ok:false,error:"Seleccioná un material activo del Maestro de Materiales"})
     if (payload.origen_medicion === "sacabocado") {
       const s = await sacabocadoValido(payload.sacabocado_id, empresaId)
       if (!s || !s.activo) return res.status(400).json({ ok:false, error:"Seleccioná un sacabocado activo de la empresa" })
