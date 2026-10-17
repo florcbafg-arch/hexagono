@@ -1,147 +1,18 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hexaflow | Rendimientos</title>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      background: #f4f6f8;
-      color: #1f1f1f;
-    }
-
-    .placeholder-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 30px;
-    }
-
-    .placeholder-card {
-      width: 100%;
-      max-width: 760px;
-      background: #ffffff;
-      border: 1px solid #dcdcdc;
-      border-radius: 18px;
-      padding: 42px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-    }
-
-    .placeholder-icon {
-      font-size: 52px;
-      margin-bottom: 16px;
-    }
-
-    .placeholder-card h1 {
-      font-size: 32px;
-      margin-bottom: 12px;
-      color: #111;
-    }
-
-    .placeholder-card p {
-      font-size: 16px;
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 26px;
-    }
-
-    .placeholder-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 28px;
-      text-align: left;
-    }
-
-    .placeholder-list .item {
-      background: #f7f7f7;
-      border: 1px solid #ececec;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 15px;
-      color: #333;
-    }
-
-    .placeholder-badge {
-      display: inline-block;
-      background: #111;
-      color: #fff;
-      border-radius: 999px;
-      padding: 9px 18px;
-      font-size: 13px;
-      letter-spacing: 0.3px;
-      margin-bottom: 18px;
-    }
-
-    .placeholder-footer {
-      margin-top: 18px;
-      font-size: 14px;
-      color: #7a7a7a;
-      line-height: 1.6;
-    }
-
-    .highlight {
-      color: #111;
-      font-weight: 600;
-    }
-
-    @media (max-width: 768px) {
-      .placeholder-card {
-        padding: 30px 22px;
-      }
-
-      .placeholder-card h1 {
-        font-size: 26px;
-      }
-
-      .placeholder-card p {
-        font-size: 15px;
-      }
-
-      .placeholder-icon {
-        font-size: 44px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="placeholder-wrap">
-    <div class="placeholder-card">
-
-      <div class="placeholder-icon">📊</div>
-
-      <h1>Módulo de Rendimientos en construcción</h1>
-
-      <p>
-        Estamos desarrollando esta sección para medir con precisión el consumo real de materiales,
-        detectar desvíos y optimizar cada proceso productivo.
-      </p>
-
-      <div class="placeholder-list">
-        <div class="item">✔ Consumo real por material y por orden</div>
-        <div class="item">✔ Comparación entre teórico vs real</div>
-        <div class="item">✔ Detección de desperdicio y optimización de recursos</div>
-      </div>
-
-      <span class="placeholder-badge">Próximamente</span>
-
-      <div class="placeholder-footer">
-        Muy pronto vas a poder saber <span class="highlight">cuánto consumís realmente</span>,
-        <span class="highlight">dónde estás perdiendo</span> y cómo <span class="highlight">optimizar cada producto</span>.
-      </div>
-
-    </div>
+<style>
+.rindes-wrap{max-width:1450px;margin:0 auto}.rindes-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+.rindes-head h2{margin:0 0 6px}.rindes-sub{margin:0;opacity:.72}.rindes-select{min-width:360px;max-width:620px;flex:1}.rindes-select label{display:block;font-weight:700;margin-bottom:6px}.rindes-select select{width:100%;padding:10px;border-radius:8px}
+.rindes-note,.rindes-empty{border:1px solid rgba(128,128,128,.28);border-radius:10px;padding:14px;margin:14px 0}.rinde-linea{border:1px solid rgba(128,128,128,.28);border-radius:12px;margin:16px 0;overflow:hidden}
+.rinde-linea-head{padding:13px 15px;background:rgba(128,128,128,.10);display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.rinde-linea-head h3{margin:0;font-size:16px}.rinde-meta{font-size:12px;opacity:.72}
+.rinde-tools{display:flex;gap:8px;flex-wrap:wrap}.rinde-tools button,.rinde-form button{padding:8px 12px;border-radius:8px;cursor:pointer}.rinde-tabla{width:100%;border-collapse:collapse}.rinde-tabla th,.rinde-tabla td{padding:9px;border-top:1px solid rgba(128,128,128,.18);text-align:left}.rinde-tabla th{font-size:12px;opacity:.7}
+.rinde-form{display:none;padding:14px;border-top:1px solid rgba(128,128,128,.2)}.rinde-form.visible{display:block}.rinde-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}.rinde-field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}.rinde-field input,.rinde-field select,.rinde-field textarea{width:100%;padding:8px;box-sizing:border-box;border-radius:7px}.rinde-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.rinde-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(128,128,128,.14);font-size:11px;font-weight:700}.rinde-history{display:none;padding:12px;border-top:1px solid rgba(128,128,128,.18)}.rinde-history.visible{display:block}
+@media(max-width:760px){.rindes-select{min-width:100%}.rinde-tabla{display:block;overflow-x:auto;white-space:nowrap}}
+</style>
+<div class="rindes-wrap">
+  <div class="rindes-head">
+    <div><h2>Rindes técnicos</h2><p class="rindes-sub">Consumo por par, por talle y por línea del Patrón Técnico.</p></div>
+    <div class="rindes-select"><label for="rindeArticulo">Artículo</label><select id="rindeArticulo"><option value="">Seleccionar artículo</option></select></div>
   </div>
-</body>
-</html>
+  <div class="rindes-note">Los rindes pertenecen a cada <strong>línea del patrón + talle</strong>. Un mismo sacabocado puede reutilizarse en distintos artículos. Hasta confirmar las fórmulas M2 / ML / PLANCHA, el consumo puede registrarse manualmente o como estimado.</div>
+  <div id="rindesMensaje" class="rindes-empty">Seleccioná un artículo con Patrón Técnico guardado.</div>
+  <div id="rindesLineas"></div>
+</div>
