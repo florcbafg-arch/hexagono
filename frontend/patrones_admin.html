@@ -32,6 +32,8 @@
     .patron-bloque-input{min-width:180px;padding:8px}
     .patron-actions{display:none;justify-content:flex-end;gap:10px;margin-top:22px}.patron-actions.visible{display:flex}
     .patron-actions button{padding:11px 18px;border-radius:8px;cursor:pointer}
+    .tarea-panel{display:none;margin-top:22px;border:1px solid rgba(128,128,128,.28);border-radius:12px;padding:16px}.tarea-panel.visible{display:block}
+    .tarea-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.tarea-curva{width:100%;border-collapse:collapse;margin-top:12px}.tarea-curva th,.tarea-curva td{padding:8px;border-top:1px solid rgba(128,128,128,.18);text-align:left}.tarea-curva input{width:100%;padding:8px;box-sizing:border-box}.tarea-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.tarea-btns button{padding:9px 13px;border-radius:8px;cursor:pointer}.tarea-resultado{margin-top:18px}.tarea-alerta{padding:12px;border:1px solid rgba(128,128,128,.3);border-radius:9px;margin:10px 0}.tarea-total{font-weight:800}
     .patron-muted{opacity:.65;font-size:12px}.patron-status{font-size:12px;font-weight:700}
     @media(max-width:760px){.patron-v2-wrap{padding:16px}.patron-selector{min-width:100%}.patron-tabla-v2{display:block;overflow-x:auto;white-space:nowrap}}
   </style>
@@ -56,9 +58,11 @@
     <section id="patronBloques"></section>
 
     <div id="patronActions" class="patron-actions">
+      <button type="button" onclick="abrirCalculoTarea()">🧮 Calcular patrón de tarea</button>
       <button type="button" onclick="recargarPatron()">↻ Restablecer desde ficha</button>
       <button type="button" onclick="guardarPatron()">💾 Guardar patrón técnico</button>
     </div>
+    <section id="tareaPanel" class="tarea-panel"></section>
   </main>
   <script src="js/patrones_admin.js"></script>
 </body>
