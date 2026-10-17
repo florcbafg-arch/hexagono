@@ -75,6 +75,7 @@
       patronActual = data
       renderMeta(data)
       renderBloques(data)
+      await cargarResumenRindes(articuloId)
       mostrarMensaje("", true)
       document.getElementById("patronActions").classList.add("visible")
     } catch (err) {
@@ -125,7 +126,7 @@
           <input class="patron-bloque-input" value="${esc(bloque.bloque || "")}" aria-label="Nombre del bloque">
         </div>
         <table class="patron-tabla-v2">
-          <thead><tr><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th><th>Método de consumo</th></tr></thead>
+          <thead><tr><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th><th>Método de consumo</th><th>Resultado rinde</th></tr></thead>
           <tbody>
             ${(bloque.items || []).map((item, ii) => `
               <tr data-material-id="${item.ficha_material_id}" data-orden="${item.orden ?? ii + 1}">
@@ -134,12 +135,32 @@
                 <td>${esc(item.color || item.especificacion || "-")}</td>
                 <td><select class="patron-um">${opcionesUM(item.um || item.unidad_ficha)}</select></td>
                 <td><select class="patron-metodo"><option value="" ${!item.metodo_consumo ? "selected" : ""}>Clasificar…</option><option value="rinde" ${item.metodo_consumo === "rinde" ? "selected" : ""}>Rinde por talle</option><option value="directo" ${item.metodo_consumo === "directo" ? "selected" : ""}>Consumo directo</option></select></td>
+                <td class="patron-rinde-resumen" data-rinde-material-id="${item.ficha_material_id}"><span class="patron-muted">${item.metodo_consumo === "rinde" ? "Cargando…" : "—"}</span></td>
               </tr>
             `).join("")}
           </tbody>
         </table>
       </div>
     `).join("")
+  }
+
+  async function cargarResumenRindes(articuloId) {
+    const celdas = [...document.querySelectorAll(".patron-rinde-resumen")]
+    if (!celdas.length) return
+    try {
+      const data = await leerJson(await apiFetch(`/api/rindes/v2/articulo/${articuloId}`))
+      const porMaterial = new Map((data.lineas || []).map(l => [String(l.ficha_material_id), l]))
+      celdas.forEach(td => {
+        const linea = porMaterial.get(String(td.dataset.rindeMaterialId))
+        if (!linea) { td.innerHTML = '<span class="patron-muted">—</span>'; return }
+        const vigentes = (linea.rindes || []).filter(r => r.vigente !== false && Number(r.consumo_por_par) > 0)
+        if (!vigentes.length) { td.innerHTML = '<span class="patron-rinde-falta">Sin rindes</span>'; return }
+        td.innerHTML = `<div class="patron-rinde-chips">${vigentes.map(r => `<span class="patron-rinde-chip"><b>${esc(r.talle)}</b>: ${Number(r.consumo_por_par).toFixed(6)}</span>`).join("")}</div>`
+      })
+    } catch (err) {
+      console.warn("No se pudo cargar el resumen de rindes del patrón", err)
+      celdas.forEach(td => td.innerHTML = '<span class="patron-muted">No disponible</span>')
+    }
   }
 
   function recolectarItems() {
