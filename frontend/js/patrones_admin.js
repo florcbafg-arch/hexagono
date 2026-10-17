@@ -187,25 +187,43 @@
     if (!articuloActualId || !patronActual?.patron_guardado) return alert("Guardá primero el Patrón Técnico.")
     const panel = document.getElementById("tareaPanel")
     panel.innerHTML = `
-      <div class="tarea-top"><div><h3 style="margin:0">Calcular patrón de tarea</h3><div class="patron-muted">Simulación técnica: esta curva y este resultado no se guardan.</div></div><button type="button" onclick="cerrarCalculoTarea()">✕ Cerrar</button></div>
-      <table class="tarea-curva"><thead><tr><th>Talle</th><th>Pares</th><th></th></tr></thead><tbody id="tareaCurvaBody"></tbody></table>
-      <div class="tarea-btns"><button type="button" onclick="agregarTalleTarea()">＋ Agregar talle</button><button type="button" onclick="calcularPatronTarea()">🧮 Calcular</button></div>
-      <div id="tareaResultado" class="tarea-resultado"></div>`
+      <div class="tarea-modal" role="dialog" aria-modal="true" aria-labelledby="tareaTitulo">
+        <div class="tarea-top"><div><h3 id="tareaTitulo" style="margin:0">Calcular patrón de tarea</h3><div class="patron-muted">Curva rápida de simulación · no crea Pedido ni guarda el resultado.</div></div><button type="button" onclick="cerrarCalculoTarea()">✕ Cerrar</button></div>
+        <div class="tarea-grid-wrap"><table class="tarea-curva"><thead><tr id="tareaTallesHead"><th>Curva</th></tr></thead><tbody><tr id="tareaParesRow"><td>Pares</td></tr></tbody></table></div>
+        <div class="tarea-btns"><button type="button" onclick="agregarBloqueTalles()">＋ 5 talles</button><button type="button" onclick="agregarTalleTarea()">＋ 1 talle</button><button type="button" onclick="calcularPatronTarea()">🧮 Calcular patrón</button></div>
+        <div id="tareaResultado" class="tarea-resultado"></div>
+      </div>`
     panel.classList.add("visible")
-    agregarTalleTarea(); agregarTalleTarea()
-    panel.scrollIntoView({behavior:"smooth",block:"start"})
+    ;["35","36","37","38","39","40"].forEach(t => agregarTalleTarea(t, ""))
   }
 
   function cerrarCalculoTarea(){const p=document.getElementById("tareaPanel");p.classList.remove("visible");p.innerHTML=""}
+
   function agregarTalleTarea(talle="",pares=""){
-    const b=document.getElementById("tareaCurvaBody"); if(!b)return
-    const tr=document.createElement("tr")
-    tr.innerHTML=`<td><input class="tarea-talle" value="${esc(talle)}" placeholder="Ej: 35"></td><td><input class="tarea-pares" type="number" min="1" step="1" value="${esc(pares)}" placeholder="0"></td><td><button type="button">Eliminar</button></td>`
-    tr.querySelector("button").onclick=()=>tr.remove(); b.appendChild(tr)
+    const head=document.getElementById("tareaTallesHead"), row=document.getElementById("tareaParesRow"); if(!head||!row)return
+    const key="t"+Date.now()+Math.random().toString(16).slice(2)
+    const th=document.createElement("th"); th.dataset.key=key
+    th.innerHTML=`<div class="talle-head"><input class="tarea-talle" value="${esc(talle)}" placeholder="Talle"><button type="button" title="Quitar talle">×</button></div>`
+    const td=document.createElement("td"); td.dataset.key=key
+    td.innerHTML=`<input class="tarea-pares" type="number" min="0" step="1" value="${esc(pares)}" placeholder="0">`
+    th.querySelector("button").onclick=()=>{th.remove();td.remove()}
+    head.appendChild(th); row.appendChild(td)
   }
+
+  function agregarBloqueTalles(){
+    const actuales=[...document.querySelectorAll("#tareaTallesHead .tarea-talle")].map(i=>Number(i.value)).filter(Number.isFinite)
+    let inicio=actuales.length?Math.max(...actuales)+1:35
+    for(let i=0;i<5;i++) agregarTalleTarea(String(inicio+i),"")
+  }
+
   function curvaTarea(){
-    return [...document.querySelectorAll("#tareaCurvaBody tr")].map(tr=>({talle:tr.querySelector(".tarea-talle").value.trim(),pares:Number(tr.querySelector(".tarea-pares").value)})).filter(x=>x.talle&&x.pares>0)
+    const heads=[...document.querySelectorAll("#tareaTallesHead th[data-key]")]
+    return heads.map(th=>{
+      const td=document.querySelector(`#tareaParesRow td[data-key="${th.dataset.key}"]`)
+      return {talle:th.querySelector(".tarea-talle").value.trim(),pares:Number(td?.querySelector(".tarea-pares")?.value)}
+    }).filter(x=>x.talle&&x.pares>0)
   }
+
   async function calcularPatronTarea(){
     const curva=curvaTarea(), out=document.getElementById("tareaResultado")
     if(!curva.length)return alert("Ingresá al menos un talle y su cantidad de pares.")
@@ -225,5 +243,6 @@
   window.abrirCalculoTarea = abrirCalculoTarea
   window.cerrarCalculoTarea = cerrarCalculoTarea
   window.agregarTalleTarea = agregarTalleTarea
+  window.agregarBloqueTalles = agregarBloqueTalles
   window.calcularPatronTarea = calcularPatronTarea
 })()
