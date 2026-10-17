@@ -236,7 +236,7 @@ router.put("/articulo/:articuloId", async (req, res) => {
         pieza_id: material.pieza_id,
         material_id: materialMaestroId,
         grupo_id: grupoId,
-        bloque: grupo.nombre, texto(item.bloque) || "CORTE CAPELLADA",
+        bloque: grupo.nombre,
         um: texto(item.um) || material.unidad_medida || "",
         orden: Number.isFinite(Number(item.orden)) ? Number(item.orden) : i + 1,
         metodo_consumo: ["rinde","directo"].includes(texto(item.metodo_consumo).toLowerCase()) ? texto(item.metodo_consumo).toLowerCase() : null
