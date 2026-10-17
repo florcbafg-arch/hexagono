@@ -111,7 +111,8 @@
 
   function renderBloques(data) {
     const cont = document.getElementById("patronBloques")
-    const bloques = Array.isArray(data.bloques) ? data.bloques : []
+    const excluirPatron = item => ["CAJA","CORDONES"].includes(String(item?.pieza || "").trim().toUpperCase())
+    const bloques = (Array.isArray(data.bloques) ? data.bloques : []).map(b => ({...b, items:(b.items||[]).filter(i=>!excluirPatron(i))})).filter(b => b.items.length)
     if (!bloques.length) {
       cont.innerHTML = '<div class="patron-aviso">La Ficha vigente no tiene materiales para formar el patrón técnico.</div>'
       return
@@ -146,6 +147,8 @@
     document.querySelectorAll(".patron-bloque").forEach(bloque => {
       const nombreBloque = bloque.querySelector(".patron-bloque-input")?.value?.trim() || "CORTE CAPELLADA"
       bloque.querySelectorAll("tbody tr[data-material-id]").forEach((fila, index) => {
+        const pieza = fila.querySelector("td strong")?.textContent?.trim()?.toUpperCase()
+        if (["CAJA","CORDONES"].includes(pieza)) return
         items.push({
           ficha_material_id: Number(fila.dataset.materialId),
           bloque: nombreBloque,
@@ -233,7 +236,23 @@
       let aviso=d.faltantes?.length?`<div class="tarea-alerta"><strong>⚠️ Cálculo incompleto.</strong><br>${d.faltantes.map(x=>`Falta rinde: ${esc(x.pieza||"Pieza")} · ${esc(x.material||"Material")} · talle ${esc(x.talle)}`).join("<br>")}</div>`:'<div class="tarea-alerta"><strong>✓ Rindes completos para la curva ingresada.</strong></div>'
       const directos=(d.lineas||[]).filter(x=>x.metodo_consumo==="directo").length
       if(directos) aviso+=`<div class="tarea-alerta">${directos} línea(s) de consumo directo quedan identificadas pero todavía no calculadas en esta etapa.</div>`
-      out.innerHTML=`<h3>Patrón de tarea · ${d.total_pares} pares</h3>${aviso}<table class="patron-tabla-v2"><thead><tr><th>Bloque</th><th>Pieza</th><th>Material</th><th>U.M.</th><th>T.Tarea</th></tr></thead><tbody>${(d.lineas||[]).map(x=>`<tr><td>${esc(x.bloque||"-")}</td><td><strong>${esc(x.pieza||"-")}</strong></td><td>${esc(x.material||"-")}</td><td>${esc(x.um||"-")}</td><td class="tarea-total">${x.t_tarea==null?"—":Number(x.t_tarea).toFixed(6)}</td></tr>`).join("")}</tbody></table>`
+      const visibles=(d.lineas||[]).filter(x=>!["CAJA","CORDONES"].includes(String(x.pieza||"").trim().toUpperCase()))
+      const grupos={}
+      visibles.forEach(x=>{const k=x.bloque||"SIN BLOQUE";(grupos[k]??=[]).push(x)})
+      const curvaHtml=d.curva.map(x=>`<th>${esc(x.talle)}</th>`).join("")
+      const paresHtml=d.curva.map(x=>`<td>${esc(x.pares)}</td>`).join("")
+      const bloquesHtml=Object.entries(grupos).map(([bloque,lineas])=>`
+        <section class="patron-print-bloque"><div class="patron-print-bloque-title">${esc(bloque)}</div>
+        <table><thead><tr><th>Pieza</th><th>Materiales</th><th>Detalle / color</th><th>U.M.</th><th>T. Tarea</th></tr></thead><tbody>
+        ${lineas.map(x=>`<tr><td><strong>${esc(x.pieza||"-")}</strong></td><td>${esc(x.material||"-")}</td><td>${esc(x.color||"-")}</td><td>${esc(x.um||"-")}</td><td class="tarea-total">${x.t_tarea==null?"—":Number(x.t_tarea).toFixed(4)}</td></tr>`).join("")}
+        </tbody></table></section>`).join("")
+      out.innerHTML=`<div class="patron-print-toolbar"><button type="button" onclick="imprimirPatronTarea()">🖨️ Imprimir patrón de tarea</button></div>
+        <article id="patronTareaPrint" class="patron-print">
+          <h2>PATRON DEL ARTICULO</h2>
+          <div class="patron-print-identidad"><strong>${esc(patronActual?.articulo?.modelos?.nombre||"ARTÍCULO")} ${esc(patronActual?.articulo?.color||"")}</strong><span>Cod. Interno: ${esc(patronActual?.articulo?.codigo||"-")}</span><span>Marca: ${esc(patronActual?.articulo?.modelos?.marca||"-")}</span><span>Ficha: V${esc(d.ficha_version||"-")}</span></div>
+          <table class="patron-print-curva"><thead><tr><th>Total</th>${curvaHtml}</tr></thead><tbody><tr><td><strong>${d.total_pares}</strong></td>${paresHtml}</tr></tbody></table>
+          ${aviso}${bloquesHtml}
+        </article>`
     }catch(err){out.innerHTML=`<div class="tarea-alerta">⚠️ ${esc(err.message)}</div>`}
   }
 
@@ -244,5 +263,8 @@
   window.cerrarCalculoTarea = cerrarCalculoTarea
   window.agregarTalleTarea = agregarTalleTarea
   window.agregarBloqueTalles = agregarBloqueTalles
+  function imprimirPatronTarea(){ window.print() }
+
   window.calcularPatronTarea = calcularPatronTarea
+  window.imprimirPatronTarea = imprimirPatronTarea
 })()
