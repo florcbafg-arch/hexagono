@@ -30,7 +30,7 @@ const METODOS = new Set(["manual", "formula", "simulacion"])
 async function patronV2(patronId, empresaId) {
   const { data, error } = await supabase
     .from("patrones")
-    .select("id, empresa_id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, orden, activo")
+    .select("id, empresa_id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, metodo_consumo, orden, activo")
     .eq("id", patronId)
     .eq("empresa_id", empresaId)
     .not("articulo_id", "is", null)
@@ -77,6 +77,8 @@ function payloadBase(body, empresaId, patronId, creador) {
     pieza_ancho: numero(body.pieza_ancho),
     pieza_largo: numero(body.pieza_largo),
     pieza_area: numero(body.pieza_area),
+    capacidad_ancho: numero(body.capacidad_ancho),
+    capacidad_largo: numero(body.capacidad_largo),
     cantidad_piezas_simuladas: numero(body.cantidad_piezas_simuladas),
     pares_obtenidos: numero(body.pares_obtenidos),
     consumo_por_par: numero(body.consumo_por_par),
@@ -100,7 +102,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
 
     const { data: patrones, error: pe } = await supabase
       .from("patrones")
-      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, orden, activo")
+      .select("id, articulo_id, ficha_id, ficha_version, ficha_material_id, bloque, um, metodo_consumo, orden, activo")
       .eq("empresa_id", empresaId)
       .eq("articulo_id", articuloId)
       .eq("activo", true)
@@ -108,8 +110,9 @@ router.get("/articulo/:articuloId", async (req, res) => {
     if (pe) throw pe
     if (!patrones?.length) return res.status(404).json({ ok:false, error:"El artículo no tiene Patrón Técnico V2 guardado" })
 
-    const patronIds = patrones.map(p => p.id)
-    const materialIds = patrones.map(p => p.ficha_material_id).filter(Boolean)
+    const patronesRinde = patrones.filter(p => p.metodo_consumo !== "directo")
+    const patronIds = patronesRinde.map(p => p.id)
+    const materialIds = patronesRinde.map(p => p.ficha_material_id).filter(Boolean)
 
     const [{ data: mats, error: me }, { data: rindes, error: re }] = await Promise.all([
       materialIds.length
@@ -136,7 +139,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
       rindesMap.get(r.patron_id).push(r)
     }
 
-    const lineas = patrones.map(p => {
+    const lineas = patronesRinde.map(p => {
       const m = matMap.get(p.ficha_material_id) || {}
       const pieza = piezaMap.get(m.pieza_id) || {}
       return {
@@ -151,7 +154,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
         rindes: rindesMap.get(p.id) || []
       }
     })
-    res.json({ ok:true, articulo_id:articuloId, ficha_id:patrones[0].ficha_id, ficha_version:patrones[0].ficha_version, lineas })
+    res.json({ ok:true, articulo_id:articuloId, ficha_id:patrones[0].ficha_id, ficha_version:patrones[0].ficha_version, lineas, directos: patrones.filter(p => p.metodo_consumo === "directo").length })
   } catch (err) {
     console.error("Error cargando Rindes V2:", err)
     res.status(500).json({ ok:false, error:"Error cargando rindes" })
