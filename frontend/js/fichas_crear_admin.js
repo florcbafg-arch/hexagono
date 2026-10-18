@@ -24,9 +24,9 @@ const esc=(v="")=>String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 const val=(v="")=>esc(v)
 function mensaje(t,e=false){const x=document.getElementById("mensajeFichaV2");x.innerHTML=t?`<div class="ficha-msg ${e?'error':''}">${esc(t)}</div>`:""}
 
-function piezaNueva(nombre="",orden=1){return {nombre,tipo_pieza:"estructural",observacion:"",orden,sacabocado_id:null,materiales:[],operaciones:[]}}
+function piezaNueva(nombre="",orden=1,esBase=false){return {nombre,tipo_pieza:"estructural",observacion:"",orden,sacabocado_id:null,materiales:[],operaciones:[],es_estructura_base:esBase}}
 function construirBase(sistema){
- secciones=BASE[sistema||"vulcanizado"].map((s,si)=>({nombre:s[0],titulo_impresion:s[1],tipo_seccion:"proceso",observaciones:"",orden:si+1,client_key:`s${si+1}`,piezas:s[2].map((n,i)=>piezaNueva(n,i+1))}))
+ secciones=BASE[sistema||"vulcanizado"].map((s,si)=>({nombre:s[0],titulo_impresion:s[1],tipo_seccion:"proceso",observaciones:"",orden:si+1,client_key:`s${si+1}`,es_estructura_base:true,piezas:s[2].map((n,i)=>piezaNueva(n,i+1,true))}))
 }
 function normalizarCargadas(xs){return xs.map((s,si)=>({...s,client_key:`s${si+1}`,piezas:(s.piezas||[]).map(p=>({...p,materiales:p.materiales||[],operaciones:p.operaciones||[]}))}))}
 
@@ -117,8 +117,9 @@ function render(){
  renderPreview()
 }
 function renderPieza(p,pi,ro){
+ const nombreBloqueado=ro||p.es_estructura_base===true
  return `<article class="pieza-v2">
- <div class="pieza-title"><input value="${val(p.nombre)}" ${ro?'disabled':''} oninput="updP(${pi},'nombre',this.value)"><span>Ítem ${pi+1}</span></div>
+ <div class="pieza-title"><input value="${val(p.nombre)}" ${nombreBloqueado?'disabled':''} oninput="updP(${pi},'nombre',this.value)"><span>${p.es_estructura_base===true?'🔒 Fijo':`Ítem ${pi+1}`}</span></div>
  <div class="pieza-grid">
   <div><label>Sacabocado</label><select ${ro||!puedeSaca(secciones[activa])?'disabled':''} onchange="updP(${pi},'sacabocado_id',this.value||null)">${optsSaca(p.sacabocado_id)}</select></div>
   <div><label>Observación</label><input value="${val(p.observacion||"")}" ${ro?'disabled':''} oninput="updP(${pi},'observacion',this.value)"></div>
