@@ -3,6 +3,13 @@
   let articuloActualId = null
   let materialesMaestro = []
   let gruposPatron = []
+  let calculoTareaVersion = 0
+
+  function invalidarCalculoTarea() {
+    calculoTareaVersion++
+    const out = document.getElementById("tareaResultado")
+    if (out) out.innerHTML = '<div class="tarea-alerta">Calculá el patrón para verificar los rindes y habilitar la impresión.</div>'
+  }
 
   const esc = (v = "") => String(v ?? "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -49,6 +56,7 @@
   }
 
   function limpiar() {
+    cerrarCalculoTarea()
     patronActual = null
     articuloActualId = null
     document.getElementById("patronBloques").innerHTML = ""
@@ -66,6 +74,7 @@
   }
 
   async function cargarPatron(articuloId) {
+    cerrarCalculoTarea()
     articuloActualId = String(articuloId)
     patronActual = null
     document.getElementById("patronBloques").innerHTML = ""
@@ -298,10 +307,11 @@
         <div id="tareaResultado" class="tarea-resultado"></div>
       </div>`
     panel.classList.add("visible")
+    panel.oninput = invalidarCalculoTarea
     ;["35","36","37","38","39","40"].forEach(t => agregarTalleTarea(t, ""))
   }
 
-  function cerrarCalculoTarea(){const p=document.getElementById("tareaPanel");p.classList.remove("visible");p.innerHTML=""}
+  function cerrarCalculoTarea(){invalidarCalculoTarea();const p=document.getElementById("tareaPanel");p.classList.remove("visible");p.innerHTML=""}
 
   function agregarTalleTarea(talle="",pares=""){
     const head=document.getElementById("tareaTallesHead"), row=document.getElementById("tareaParesRow"); if(!head||!row)return
@@ -310,8 +320,9 @@
     th.innerHTML=`<div class="talle-head"><input class="tarea-talle" value="${esc(talle)}" placeholder="Talle"><button type="button" title="Quitar talle">×</button></div>`
     const td=document.createElement("td"); td.dataset.key=key
     td.innerHTML=`<input class="tarea-pares" type="number" min="0" step="1" value="${esc(pares)}" placeholder="0">`
-    th.querySelector("button").onclick=()=>{th.remove();td.remove()}
+    th.querySelector("button").onclick=()=>{th.remove();td.remove();invalidarCalculoTarea()}
     head.appendChild(th); row.appendChild(td)
+    invalidarCalculoTarea()
   }
 
   function agregarBloqueTalles(){
@@ -330,11 +341,15 @@
 
   async function calcularPatronTarea(){
     const curva=curvaTarea(), out=document.getElementById("tareaResultado")
+    invalidarCalculoTarea()
+    const version = calculoTareaVersion
     if(!curva.length)return alert("Ingresá al menos un talle y su cantidad de pares.")
     out.innerHTML='<div class="tarea-alerta">Calculando…</div>'
     try{
       const d=await leerJson(await apiFetch(`/api/rindes/v2/articulo/${articuloActualId}/calcular-tarea`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({curva})}))
-      let aviso=d.faltantes?.length?`<div class="tarea-alerta"><strong>⚠️ Cálculo incompleto.</strong><br>${d.faltantes.map(x=>`Falta rinde: ${esc(x.pieza||"Pieza")} · ${esc(x.material||"Material")} · talle ${esc(x.talle)}`).join("<br>")}</div>`:'<div class="tarea-alerta"><strong>✓ Rindes completos para la curva ingresada.</strong></div>'
+      if (version !== calculoTareaVersion) return
+      const completo = d.completo === true && Array.isArray(d.faltantes) && d.faltantes.length === 0
+      let aviso = `<div class="tarea-alerta" role="status"><strong>${completo ? "✓ Patrón de tarea completo" : "⚠️ Patrón de tarea incompleto"}</strong><br>${completo ? "Rindes completos para la curva ingresada." : "Impresión bloqueada: cargá los rindes requeridos para los talles con pares mayores a 0 y volvé a calcular."}${(d.faltantes || []).map(x=>`<br>Falta rinde: ${esc(x.pieza||"Pieza")} · ${esc(x.material||"Material")} · talle ${esc(x.talle)}`).join("")}</div>`
       const directos=(d.lineas||[]).filter(x=>x.metodo_consumo==="directo").length
       if(directos) aviso+=`<div class="tarea-alerta">${directos} línea(s) de consumo directo quedan identificadas pero todavía no calculadas en esta etapa.</div>`
       const visibles=(d.lineas||[]).filter(x=>!["CAJA","CORDONES"].includes(String(x.pieza||"").trim().toUpperCase()))
@@ -347,14 +362,15 @@
         <table><thead><tr><th>Pieza</th><th>Materiales</th><th>Detalle / color</th><th>U.M.</th><th>T. Tarea</th></tr></thead><tbody>
         ${lineas.map(x=>`<tr><td><strong>${esc(x.pieza||"-")}</strong></td><td>${esc(x.material||"-")}</td><td>${esc(x.color||"-")}</td><td>${esc(x.um||"-")}</td><td class="tarea-total">${x.t_tarea==null?"—":Number(x.t_tarea).toFixed(4)}</td></tr>`).join("")}
         </tbody></table></section>`).join("")
-      out.innerHTML=`<div class="patron-print-toolbar"><button type="button" onclick="imprimirPatronTarea()">🖨️ Imprimir patrón de tarea</button></div>
-        <article id="patronTareaPrint" class="patron-print">
+      out.innerHTML=`<div class="patron-print-toolbar"><button type="button" onclick="imprimirPatronTarea()" ${completo ? "" : 'disabled aria-describedby="tareaEstado"'}>🖨️ Imprimir patrón de tarea</button></div>
+        <div id="tareaEstado">${aviso}</div>
+        <article id="patronTareaPrint" class="patron-print" data-completo="${completo}">
           <h2>PATRON DEL ARTICULO</h2>
           <div class="patron-print-identidad"><strong>${esc(patronActual?.articulo?.modelos?.nombre||"ARTÍCULO")} ${esc(patronActual?.articulo?.color||"")}</strong><span>Cod. Interno: ${esc(patronActual?.articulo?.codigo||"-")}</span><span>Marca: ${esc(patronActual?.articulo?.modelos?.marca||"-")}</span><span>Ficha: V${esc(d.ficha_version||"-")}</span></div>
           <table class="patron-print-curva"><thead><tr><th>Total</th>${curvaHtml}</tr></thead><tbody><tr><td><strong>${d.total_pares}</strong></td>${paresHtml}</tr></tbody></table>
-          ${aviso}${bloquesHtml}
+          ${bloquesHtml}
         </article>`
-    }catch(err){out.innerHTML=`<div class="tarea-alerta">⚠️ ${esc(err.message)}</div>`}
+    }catch(err){if(version===calculoTareaVersion)out.innerHTML=`<div class="tarea-alerta">⚠️ ${esc(err.message)}</div>`}
   }
 
   window.initPatrones = initPatrones
@@ -366,7 +382,12 @@
   window.cerrarCalculoTarea = cerrarCalculoTarea
   window.agregarTalleTarea = agregarTalleTarea
   window.agregarBloqueTalles = agregarBloqueTalles
-  function imprimirPatronTarea(){ window.print() }
+  function imprimirPatronTarea(){
+    if(document.getElementById("patronTareaPrint")?.dataset.completo !== "true") {
+      return alert("Impresión bloqueada: calculá un patrón de tarea completo con todos los rindes requeridos.")
+    }
+    window.print()
+  }
 
   window.calcularPatronTarea = calcularPatronTarea
   window.imprimirPatronTarea = imprimirPatronTarea
