@@ -181,7 +181,20 @@
   function renderBloques(data) {
     const cont = document.getElementById("patronBloques")
     const excluirPatron = item => ["CAJA","CORDONES"].includes(String(item?.pieza || "").trim().toUpperCase())
-    const bloques = (Array.isArray(data.bloques) ? data.bloques : []).map(b => ({...b, items:(b.items||[]).filter(i=>!excluirPatron(i))})).filter(b => b.items.length)
+    const porGrupo = new Map()
+    ;(Array.isArray(data.bloques) ? data.bloques : []).forEach(b => {
+      ;(b.items || []).forEach((item, ii) => {
+        if (excluirPatron(item)) return
+        const grupoId = grupoInicial(item, b.bloque)
+        const grupo = gruposPatron.find(g => String(g.id) === grupoId)
+        const nombre = grupo?.nombre || String(item.bloque || b.bloque || "").trim() || "SIN GRUPO / SECCIÓN"
+        const clave = grupoId ? `id:${grupoId}` : `nombre:${nombre}`
+        if (!porGrupo.has(clave)) porGrupo.set(clave, { bloque: nombre, items: [] })
+        porGrupo.get(clave).items.push({ ...item, orden: item.orden ?? ii + 1 })
+      })
+    })
+    const bloques = [...porGrupo.values()]
+    bloques.forEach(b => b.items.sort((a, b) => a.orden - b.orden))
     if (!bloques.length) {
       cont.innerHTML = '<div class="patron-aviso">La Ficha vigente no tiene materiales para formar el patrón técnico.</div>'
       return
@@ -189,7 +202,7 @@
 
     cont.innerHTML = bloques.map((bloque, bi) => `
       <div class="patron-bloque" data-bloque-index="${bi}">
-        <div class="patron-bloque-head"><h3>Grupo / sección</h3><span class="patron-muted">Clasificación explícita por línea</span></div>
+        <div class="patron-bloque-head"><h3>${esc(bloque.bloque)}</h3><span class="patron-muted">Grupo / sección editable por línea · Los cambios se agrupan al guardar.</span></div>
         <table class="patron-tabla-v2">
           <thead><tr><th>Grupo / sección</th><th>Pieza</th><th>Material</th><th>Especificación / color</th><th>U.M.</th><th>Método de consumo</th><th>Resultado rinde</th></tr></thead>
           <tbody>
