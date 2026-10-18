@@ -22,6 +22,18 @@ function normalizar(valor) {
     .replace(/[\u0300-\u036f]/g, "")
 }
 
+const PIEZAS_EXCLUIDAS_PATRON = new Set([
+  "CAJA",
+  "CORDONES",
+  "GRIFA DE CAÑA EXT",
+  "CALCOMANIA",
+  "PLANTILLA"
+])
+
+function piezaExcluidaPatron(nombre) {
+  return PIEZAS_EXCLUIDAS_PATRON.has(normalizar(nombre))
+}
+
 function bloqueSugerido(seccion, pieza) {
   const nombreSeccion = normalizar(seccion?.nombre)
   const titulo = normalizar(seccion?.titulo_impresion)
@@ -143,7 +155,7 @@ router.get("/articulo/:articuloId", async (req, res) => {
 
     for (const material of estructura.materiales) {
       const pieza = piezaPorId.get(material.pieza_id)
-      if (!pieza) continue
+      if (!pieza || piezaExcluidaPatron(pieza.nombre)) continue
       const seccion = seccionPorId.get(pieza.seccion_id)
       const guardado = guardadoPorMaterial.get(material.id)
       const bloque = guardado?.bloque || bloqueSugerido(seccion, pieza)
@@ -224,6 +236,8 @@ router.put("/articulo/:articuloId", async (req, res) => {
       idsRecibidos.add(materialId)
 
       const material = materialesValidos.get(materialId)
+      const pieza = estructura.piezas.find(p => Number(p.id) === Number(material.pieza_id))
+      if (piezaExcluidaPatron(pieza?.nombre)) continue
       const materialMaestroId = Number(item.material_id)
       if (!materialMaestroId || !materialesMaestroValidos.has(materialMaestroId)) {
         return res.status(400).json({ ok: false, error: "Seleccioná un material válido del Maestro de Materiales" })
