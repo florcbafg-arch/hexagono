@@ -26,6 +26,7 @@ const PIEZAS_EXCLUIDAS_PATRON = new Set([
   "CAJA",
   "CORDONES",
   "GRIFA DE CAÑA EXT",
+  "ETIQ. DE LENGUA",
   "CALCOMANIA",
   "PLANTILLA"
 ])
