@@ -38,10 +38,10 @@
     .patron-print-toolbar{display:flex;justify-content:flex-end;margin:10px 0}.patron-print-toolbar button{padding:9px 14px;border-radius:8px;cursor:pointer}
     .patron-print-toolbar button:disabled{opacity:.55;cursor:not-allowed}
     @media print{#patronTareaPrint[data-completo="false"]{display:none!important}}
-    .patron-print{background:#fff;color:#111;padding:22px;border-radius:8px}.patron-print h2{text-align:center;margin:0 0 16px;font-family:Arial,sans-serif}.patron-print-identidad{display:grid;grid-template-columns:2fr 1fr;gap:7px 18px;margin-bottom:14px;font-family:Arial,sans-serif}.patron-print-curva{width:auto;border-collapse:collapse;margin:12px 0 18px}.patron-print-curva th,.patron-print-curva td{border:1px solid #777;padding:4px 10px;text-align:center}.patron-print-bloque{margin:0 0 12px}.patron-print-bloque-title{text-align:center;font-weight:800;background:#777;color:#fff;padding:4px;font-family:Arial,sans-serif}.patron-print-bloque table{width:100%;border-collapse:collapse}.patron-print-bloque th,.patron-print-bloque td{border-bottom:1px solid #aaa;padding:5px 7px;text-align:left;font-family:Arial,sans-serif;font-size:12px}.patron-print-bloque th:nth-last-child(-n+2),.patron-print-bloque td:nth-last-child(-n+2){text-align:center}
+    .patron-print{background:#fff;color:#111;padding:18px 20px;border-radius:8px;font-family:Arial,Helvetica,sans-serif}.patron-print h2{text-align:center;margin:0 0 12px;font-size:18px;letter-spacing:.2px}.patron-print-identidad{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:5px 20px;margin-bottom:10px;font-size:12px}.patron-print-curva{width:auto;border-collapse:collapse;margin:8px 0 12px;font-size:11px}.patron-print-curva th,.patron-print-curva td{border:1px solid #666;padding:3px 9px;text-align:center}.patron-print-bloque{margin:0 0 8px}.patron-print-bloque-title{text-align:center;font-weight:800;background:#747474;color:#fff;padding:3px 5px;font-size:11px;letter-spacing:.15px}.patron-print-bloque table{width:100%;border-collapse:collapse;table-layout:fixed}.patron-print-bloque th,.patron-print-bloque td{border-bottom:1px solid #999;padding:3px 5px;text-align:left;font-size:10.5px;line-height:1.12;overflow-wrap:anywhere}.patron-print-bloque th{font-weight:700}.patron-print-bloque th:nth-child(1){width:24%}.patron-print-bloque th:nth-child(2){width:30%}.patron-print-bloque th:nth-child(3){width:28%}.patron-print-bloque th:nth-child(4){width:8%;text-align:center}.patron-print-bloque th:nth-child(5){width:10%;text-align:right}.patron-print-bloque td:nth-child(4){text-align:center}.patron-print-bloque td:nth-child(5){text-align:right;font-variant-numeric:tabular-nums}
     .patron-muted{opacity:.65;font-size:12px}.patron-status{font-size:12px;font-weight:700}
-    @page{size:A4 portrait;margin:7mm}
-    @media print{html,body{width:210mm;margin:0!important;padding:0!important}body *{visibility:hidden!important}#patronTareaPrint,#patronTareaPrint *{visibility:visible!important}#patronTareaPrint{position:absolute;left:0;top:0;width:196mm;max-width:196mm;padding:0!important;margin:0!important;border-radius:0;box-sizing:border-box;overflow:visible}.patron-print-toolbar,.tarea-alerta{display:none!important}.patron-print-bloque{break-inside:avoid;page-break-inside:avoid}.patron-print{font-size:9pt}.patron-print-bloque table{table-layout:fixed;width:100%}.patron-print-bloque th,.patron-print-bloque td{font-size:8.5pt;padding:3px 4px;overflow-wrap:anywhere}.patron-print-bloque th:nth-child(1){width:18%}.patron-print-bloque th:nth-child(2){width:37%}.patron-print-bloque th:nth-child(3){width:25%}.patron-print-bloque th:nth-child(4){width:8%}.patron-print-bloque th:nth-child(5){width:12%}}
+    @page{size:A4 portrait;margin:10mm}
+    @media print{#patronTareaPrint[data-completo="false"]{display:none!important}}
     @media(max-width:760px){.patron-v2-wrap{padding:16px}.patron-selector{min-width:100%}.patron-tabla-v2{display:block;overflow-x:auto;white-space:nowrap}}
   </style>
 </head>
@@ -72,5 +72,6 @@
     <section id="tareaPanel" class="tarea-panel"></section>
   </main>
   <script src="js/patrones_admin.js"></script>
-  <script src="js/enter_navigation.js"></script>\n</body>
+  <script src="js/enter_navigation.js"></script>
+</body>
 </html>
