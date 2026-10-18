@@ -257,7 +257,7 @@
     document.querySelectorAll(".patron-bloque").forEach(bloque => {
       bloque.querySelectorAll("tbody tr[data-material-id]").forEach((fila, index) => {
         const pieza = fila.querySelector("td:nth-child(2) strong")?.textContent?.trim()?.toUpperCase()
-        if (["CAJA","CORDONES","GRIFA DE CAÑA EXT","CALCOMANIA","PLANTILLA"].includes(pieza)) return
+        if (["CAJA","CORDONES","GRIFA DE CAÑA EXT","ETIQ. DE LENGUA","CALCOMANIA","PLANTILLA"].includes(pieza)) return
         items.push({
           ficha_material_id: Number(fila.dataset.materialId),
           material_id: Number(fila.querySelector(".patron-material")?.value) || null,
