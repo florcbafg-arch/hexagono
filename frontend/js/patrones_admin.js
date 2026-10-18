@@ -399,10 +399,62 @@
   window.agregarTalleTarea = agregarTalleTarea
   window.agregarBloqueTalles = agregarBloqueTalles
   function imprimirPatronTarea(){
-    if(document.getElementById("patronTareaPrint")?.dataset.completo !== "true") {
+    const origen = document.getElementById("patronTareaPrint")
+    if(origen?.dataset.completo !== "true") {
       return alert("Impresión bloqueada: calculá un patrón de tarea completo con todos los rindes requeridos.")
     }
-    window.print()
+
+    const iframe = document.createElement("iframe")
+    iframe.setAttribute("aria-hidden","true")
+    iframe.style.position = "fixed"
+    iframe.style.right = "0"
+    iframe.style.bottom = "0"
+    iframe.style.width = "0"
+    iframe.style.height = "0"
+    iframe.style.border = "0"
+    document.body.appendChild(iframe)
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if(!doc) {
+      iframe.remove()
+      return alert("No se pudo preparar la impresión.")
+    }
+
+    const estilos = `
+      @page { size: A4 portrait; margin: 10mm; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+      body { font-family: Arial, Helvetica, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .patron-print { width: 190mm; max-width: 190mm; margin: 0 auto; padding: 0; background: #fff; color: #111; }
+      .patron-print h2 { text-align: center; margin: 0 0 3mm; font-size: 15pt; letter-spacing: .2px; }
+      .patron-print-identidad { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(0,1fr); gap: 1.2mm 6mm; margin-bottom: 2.5mm; font-size: 9pt; }
+      .patron-print-curva { width: auto; border-collapse: collapse; margin: 2mm 0 3mm; font-size: 8.5pt; }
+      .patron-print-curva th, .patron-print-curva td { border: .25mm solid #666; padding: 1mm 2.5mm; text-align: center; }
+      .patron-print-bloque { margin: 0 0 2.2mm; break-inside: avoid; page-break-inside: avoid; }
+      .patron-print-bloque-title { text-align: center; font-weight: 800; background: #747474; color: #fff; padding: 1mm 1.5mm; font-size: 8.5pt; letter-spacing: .15px; }
+      .patron-print-bloque table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .patron-print-bloque th, .patron-print-bloque td { border-bottom: .2mm solid #999; padding: .9mm 1.4mm; text-align: left; font-size: 8pt; line-height: 1.08; overflow-wrap: anywhere; vertical-align: top; }
+      .patron-print-bloque th { font-weight: 700; }
+      .patron-print-bloque th:nth-child(1) { width: 24%; }
+      .patron-print-bloque th:nth-child(2) { width: 30%; }
+      .patron-print-bloque th:nth-child(3) { width: 28%; }
+      .patron-print-bloque th:nth-child(4) { width: 8%; text-align: center; }
+      .patron-print-bloque th:nth-child(5) { width: 10%; text-align: right; }
+      .patron-print-bloque td:nth-child(4) { text-align: center; }
+      .patron-print-bloque td:nth-child(5) { text-align: right; font-variant-numeric: tabular-nums; }
+      .tarea-total { font-weight: 800; }
+    `
+
+    doc.open()
+    doc.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Patrón de tarea</title><style>${estilos}</style></head><body>${origen.outerHTML}</body></html>`)
+    doc.close()
+
+    const limpiar = () => setTimeout(() => iframe.remove(), 500)
+    iframe.contentWindow.addEventListener("afterprint", limpiar, { once:true })
+    setTimeout(() => {
+      iframe.contentWindow.focus()
+      iframe.contentWindow.print()
+    }, 120)
   }
 
   window.calcularPatronTarea = calcularPatronTarea
