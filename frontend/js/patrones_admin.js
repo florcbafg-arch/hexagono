@@ -4,6 +4,7 @@
   let materialesMaestro = []
   let gruposPatron = []
   let calculoTareaVersion = 0
+  let guardandoPatron = false
 
   function invalidarCalculoTarea() {
     calculoTareaVersion++
@@ -272,9 +273,18 @@
   }
 
   async function guardarPatron() {
+    if (guardandoPatron) return
     if (!articuloActualId) return alert("Seleccioná un artículo")
     const items = recolectarItems()
     if (!items.length) return alert("No hay materiales para guardar")
+
+    const btn = document.getElementById("btnGuardarPatron")
+    guardandoPatron = true
+    if (btn) {
+      btn.disabled = true
+      btn.dataset.textoOriginal = btn.textContent
+      btn.textContent = "Guardando…"
+    }
 
     try {
       const data = await leerJson(await apiFetch(`/api/patrones/v2/articulo/${articuloActualId}`, {
@@ -287,6 +297,12 @@
     } catch (err) {
       console.error(err)
       alert(err.message || "No se pudo guardar el patrón técnico")
+    } finally {
+      guardandoPatron = false
+      if (btn) {
+        btn.disabled = false
+        btn.textContent = btn.dataset.textoOriginal || "💾 Guardar patrón técnico"
+      }
     }
   }
 
