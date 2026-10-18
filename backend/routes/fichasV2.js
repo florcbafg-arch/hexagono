@@ -102,7 +102,8 @@ async function copiarEstructura(origen, destinoId, empresaId) {
     const { data: ns, error } = await supabase.from("fichas_secciones").insert([{
       ficha_id: destinoId, nombre: s.nombre, orden: s.orden, sector: s.sector,
       observaciones: s.observaciones, titulo_impresion: s.titulo_impresion,
-      tipo_seccion: s.tipo_seccion, empresa_id: empresaId
+      tipo_seccion: s.tipo_seccion, empresa_id: empresaId,
+      es_estructura_base: s.es_estructura_base === true
     }]).select().single();
     if (error) throw error;
     seccionMap.set(s.id, ns.id);
@@ -110,7 +111,8 @@ async function copiarEstructura(origen, destinoId, empresaId) {
     for (const p of s.piezas || []) {
       const { data: np, error: pe } = await supabase.from("fichas_piezas").insert([{
         seccion_id: ns.id, nombre: p.nombre, orden: p.orden, observacion: p.observacion,
-        tipo_pieza: p.tipo_pieza, sacabocado_id: p.sacabocado_id, empresa_id: empresaId
+        tipo_pieza: p.tipo_pieza, sacabocado_id: p.sacabocado_id, empresa_id: empresaId,
+        es_estructura_base: p.es_estructura_base === true
       }]).select().single();
       if (pe) throw pe;
 
@@ -245,7 +247,14 @@ router.post("/fichas-v2", async (req, res) => {
     }]).select().single();
 
     if (error) throw error;
-    res.status(201).json({ ok: true, message: "Ficha V1 creada como borrador", ficha });
+
+    const { error: estructuraError } = await supabase.rpc("asegurar_estructura_base_ficha", {
+      p_ficha_id: ficha.id,
+      p_empresa_id: empresaId
+    });
+    if (estructuraError) throw estructuraError;
+
+    res.status(201).json({ ok: true, message: "Ficha V1 creada como borrador con estructura base protegida", ficha });
   } catch (e) {
     console.error("Error creando ficha V2:", e);
     res.status(500).json({ ok: false, error: e.message });
