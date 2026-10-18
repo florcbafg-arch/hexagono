@@ -116,24 +116,6 @@ async function verHistorial(pid){
   h.classList.add("visible")
  }catch(e){alert(e.message)}
 }
-// UX de carga rápida: Enter avanza al siguiente campo editable del formulario.
-function activarEnterSiguiente(){
-  document.addEventListener("keydown",e=>{
-    if(e.key!=="Enter"||e.shiftKey||e.ctrlKey||e.altKey||e.metaKey)return
-    const actual=e.target
-    if(!actual?.matches?.("input:not([type=button]):not([type=submit]), select"))return
-    const form=actual.closest(".rinde-form")
-    if(!form)return
-    const campos=[...form.querySelectorAll("input:not([type=hidden]):not([type=button]):not([type=submit]), select, textarea, button")]
-      .filter(el=>!el.disabled&&!el.readOnly&&el.offsetParent!==null)
-    const i=campos.indexOf(actual)
-    if(i<0)return
-    e.preventDefault()
-    const siguiente=campos.slice(i+1).find(el=>el.matches("input, select, textarea")) || campos.slice(i+1).find(Boolean)
-    if(siguiente){siguiente.focus();if(siguiente.select&&siguiente.matches("input:not([type=number])"))siguiente.select()}
-  })
-}
-activarEnterSiguiente()
-window.cambioMaterialRinde=cambioMaterialRinde
+// La navegación con Enter ahora es global (js/enter_navigation.js).\nwindow.cambioMaterialRinde=cambioMaterialRinde
 window.initRendimientos=initRendimientos;window.calcularRinde=calcularRinde;window.abrirNuevoRinde=abrirNuevoRinde;window.abrirRevision=abrirRevision;window.cerrarForm=cerrarForm;window.guardarRinde=guardarRinde;window.verHistorial=verHistorial
 })()
