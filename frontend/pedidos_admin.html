@@ -29,6 +29,8 @@
           <th>Fecha carga</th>
           <th>Entrega</th>
           <th>Vendedor</th>
+          <th>Artículos</th>
+          <th>Pares</th>
           <th>Versión</th>
           <th>Estado</th>
           <th></th>
@@ -102,9 +104,90 @@
         </label>
       </div>
 
+      <section class="pedido-items-box">
+        <div class="pedido-items-head">
+          <div>
+            <h3>Artículos del pedido</h3>
+            <p id="pedidoItemsAyuda">Guardá primero el borrador para poder cargar artículos y curvas.</p>
+          </div>
+          <button type="button" class="pedidos-mini" id="btnAgregarPedidoItem" disabled>＋ Agregar artículo</button>
+        </div>
+
+        <div class="pedido-items-resumen">
+          <span>Artículos <strong id="pedidoItemsTotalArticulos">0</strong></span>
+          <span>Total pares <strong id="pedidoItemsTotalPares">0</strong></span>
+          <span>Pendientes <strong id="pedidoItemsTotalPendiente">0</strong></span>
+        </div>
+
+        <div class="pedido-items-table-wrap">
+          <table class="pedido-items-table">
+            <thead><tr>
+              <th>Ítem</th>
+              <th>Artículo</th>
+              <th>Color</th>
+              <th>Entrega</th>
+              <th>Curva</th>
+              <th>Pares</th>
+              <th>Pendiente</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="pedidoItemsTabla"></tbody>
+          </table>
+          <div id="pedidoItemsVacio" class="pedidos-vacio compact">Todavía no hay artículos cargados.</div>
+        </div>
+      </section>
+
             <div class="pedidos-dialog-actions">
         <button type="button" data-close="modalPedido">Cancelar</button>
         <button class="pedidos-primary" id="btnGuardarPedido" type="submit">💾 Guardar borrador</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalPedidoItem" class="pedidos-dialog">
+    <form id="formPedidoItem" method="dialog">
+      <div class="pedidos-dialog-head">
+        <div><p class="pedidos-eyebrow">ARTÍCULO DEL PEDIDO</p><h2 id="pedidoItemTitulo">Agregar artículo</h2></div>
+        <button type="button" class="pedidos-close" data-close="modalPedidoItem">✕</button>
+      </div>
+
+      <input type="hidden" id="pedidoItemId">
+
+      <div class="pedidos-grid">
+        <label class="pedidos-field pedidos-span-2">
+          <span>Artículo *</span>
+          <select id="pedidoItemArticulo" required></select>
+        </label>
+
+        <label class="pedidos-field">
+          <span>Fecha de entrega *</span>
+          <input id="pedidoItemFechaEntrega" type="date" required>
+        </label>
+
+        <label class="pedidos-field">
+          <span>Total pares</span>
+          <input id="pedidoItemTotal" type="number" readonly value="0">
+        </label>
+
+        <label class="pedidos-field pedidos-span-4">
+          <span>Curva del artículo *</span>
+          <div class="curva-toolbar">
+            <button type="button" class="pedidos-mini" id="btnCurvaMas1">＋ 1 talle</button>
+            <button type="button" class="pedidos-mini" id="btnCurvaMas5">＋ 5 talles</button>
+          </div>
+          <div id="pedidoCurvaEditor" class="curva-editor"></div>
+          <small>Los talles sin cantidad no se guardan. Cada talle puede aparecer una sola vez.</small>
+        </label>
+
+        <label class="pedidos-field pedidos-span-4">
+          <span>Observaciones del artículo</span>
+          <textarea id="pedidoItemObservaciones" rows="2"></textarea>
+        </label>
+      </div>
+
+      <div class="pedidos-dialog-actions">
+        <button type="button" data-close="modalPedidoItem">Cancelar</button>
+        <button class="pedidos-primary" id="btnGuardarPedidoItem" type="submit">💾 Guardar artículo</button>
       </div>
     </form>
   </dialog>
@@ -136,6 +219,6 @@
 </section>
 
 <style>
-.pedidos-v2{max-width:1320px;margin:0 auto}.pedidos-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.pedidos-head h1{margin:2px 0 5px;font-size:30px}.pedidos-eyebrow{margin:0;font-size:11px;font-weight:800;color:#673df4;letter-spacing:.7px}.pedidos-sub{margin:0;color:#6f7787}.pedidos-primary{border:0;background:#673df4;color:white;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}.pedidos-primary:disabled{opacity:.55;cursor:not-allowed}.pedidos-mensaje{margin-bottom:15px;padding:11px 13px;border-radius:8px;background:#edf9f0;color:#236c36;border:1px solid #cfe9d5}.pedidos-mensaje.error{background:#fff0f0;color:#a42a2a;border-color:#f0caca}.pedidos-resumen{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:12px;margin-bottom:16px}.pedidos-resumen>div,.pedidos-card{border:1px solid #dbe0e8;background:var(--card-bg,#fff);border-radius:12px}.pedidos-resumen>div{padding:13px 15px}.pedidos-resumen span{display:block;font-size:11px;color:#77808f;margin-bottom:5px}.pedidos-resumen strong{font-size:22px}.pedidos-card{overflow:hidden}.pedidos-card-head{padding:16px 18px;border-bottom:1px solid #e7e9ef}.pedidos-card-head h2{margin:0 0 3px}.pedidos-card-head p{margin:0;color:#7a8290;font-size:12px}.pedidos-table-wrap{overflow-x:auto}.pedidos-table{width:100%;border-collapse:collapse}.pedidos-table th,.pedidos-table td{padding:12px 14px;border-bottom:1px solid #eceef3;text-align:left;white-space:nowrap}.pedidos-table th{font-size:11px;color:#707888}.pedidos-table td{font-size:13px}.pedidos-vacio{padding:28px;text-align:center;color:#7b8290}.pedido-chip{display:inline-block;background:#eee9ff;color:#6039d3;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.pedido-chip.confirmado{background:#e8f7ed;color:#26713a}.pedidos-link{border:0;background:transparent;color:#673df4;font-weight:700;cursor:pointer}.pedidos-dialog{width:min(850px,92vw);border:0;border-radius:14px;padding:0;box-shadow:0 20px 70px rgba(0,0,0,.35);background:var(--card-bg,#fff);color:inherit}.pedidos-dialog::backdrop{background:rgba(0,0,0,.55)}.pedidos-dialog form{padding:20px}.pedidos-dialog-small{width:min(620px,92vw)}.pedidos-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}.pedidos-dialog-head h2{margin:0}.pedidos-close{border:0;background:transparent;font-size:18px;cursor:pointer}.pedido-estado-linea{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:rgba(103,61,244,.06);border-radius:9px;margin-bottom:15px;font-size:12px}.pedidos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.pedidos-field{display:flex;flex-direction:column;gap:6px}.pedidos-field>span{font-size:11px;font-weight:700;color:#6f7787}.pedidos-field input,.pedidos-field select,.pedidos-field textarea{width:100%;box-sizing:border-box;border:1px solid #cfd5df;border-radius:7px;padding:9px;background:var(--card-bg,#fff);color:inherit}.pedidos-field small{font-size:10px;color:#87909d}.pedidos-span-2{grid-column:span 2}.pedidos-span-4{grid-column:span 4}.pedidos-inline{display:flex;gap:7px}.pedidos-inline select{flex:1}.pedidos-mini{border:1px solid #c9c0ff;background:#f3f0ff;color:#5d37d3;border-radius:7px;padding:8px 10px;font-weight:700;cursor:pointer}.pedido-proximo{margin-top:16px;padding:10px 12px;border:1px dashed #cfd5df;border-radius:8px;font-size:12px;color:#707888}.pedidos-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.pedidos-dialog-actions>button:not(.pedidos-primary){border:1px solid #ccd1d9;background:transparent;color:inherit;border-radius:8px;padding:9px 14px;cursor:pointer}
+.pedidos-v2{max-width:1320px;margin:0 auto}.pedidos-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.pedidos-head h1{margin:2px 0 5px;font-size:30px}.pedidos-eyebrow{margin:0;font-size:11px;font-weight:800;color:#673df4;letter-spacing:.7px}.pedidos-sub{margin:0;color:#6f7787}.pedidos-primary{border:0;background:#673df4;color:white;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}.pedidos-primary:disabled{opacity:.55;cursor:not-allowed}.pedidos-mensaje{margin-bottom:15px;padding:11px 13px;border-radius:8px;background:#edf9f0;color:#236c36;border:1px solid #cfe9d5}.pedidos-mensaje.error{background:#fff0f0;color:#a42a2a;border-color:#f0caca}.pedidos-resumen{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:12px;margin-bottom:16px}.pedidos-resumen>div,.pedidos-card{border:1px solid #dbe0e8;background:var(--card-bg,#fff);border-radius:12px}.pedidos-resumen>div{padding:13px 15px}.pedidos-resumen span{display:block;font-size:11px;color:#77808f;margin-bottom:5px}.pedidos-resumen strong{font-size:22px}.pedidos-card{overflow:hidden}.pedidos-card-head{padding:16px 18px;border-bottom:1px solid #e7e9ef}.pedidos-card-head h2{margin:0 0 3px}.pedidos-card-head p{margin:0;color:#7a8290;font-size:12px}.pedidos-table-wrap{overflow-x:auto}.pedidos-table{width:100%;border-collapse:collapse}.pedidos-table th,.pedidos-table td{padding:12px 14px;border-bottom:1px solid #eceef3;text-align:left;white-space:nowrap}.pedidos-table th{font-size:11px;color:#707888}.pedidos-table td{font-size:13px}.pedidos-vacio{padding:28px;text-align:center;color:#7b8290}.pedido-chip{display:inline-block;background:#eee9ff;color:#6039d3;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.pedido-chip.confirmado{background:#e8f7ed;color:#26713a}.pedidos-link{border:0;background:transparent;color:#673df4;font-weight:700;cursor:pointer}.pedidos-dialog{width:min(850px,92vw);border:0;border-radius:14px;padding:0;box-shadow:0 20px 70px rgba(0,0,0,.35);background:var(--card-bg,#fff);color:inherit}.pedidos-dialog::backdrop{background:rgba(0,0,0,.55)}.pedidos-dialog form{padding:20px}.pedidos-dialog-small{width:min(620px,92vw)}.pedidos-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}.pedidos-dialog-head h2{margin:0}.pedidos-close{border:0;background:transparent;font-size:18px;cursor:pointer}.pedido-estado-linea{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:rgba(103,61,244,.06);border-radius:9px;margin-bottom:15px;font-size:12px}.pedidos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.pedidos-field{display:flex;flex-direction:column;gap:6px}.pedidos-field>span{font-size:11px;font-weight:700;color:#6f7787}.pedidos-field input,.pedidos-field select,.pedidos-field textarea{width:100%;box-sizing:border-box;border:1px solid #cfd5df;border-radius:7px;padding:9px;background:var(--card-bg,#fff);color:inherit}.pedidos-field small{font-size:10px;color:#87909d}.pedidos-span-2{grid-column:span 2}.pedidos-span-4{grid-column:span 4}.pedidos-inline{display:flex;gap:7px}.pedidos-inline select{flex:1}.pedidos-mini{border:1px solid #c9c0ff;background:#f3f0ff;color:#5d37d3;border-radius:7px;padding:8px 10px;font-weight:700;cursor:pointer}.pedido-items-box{margin-top:18px;border:1px solid #dfe3ea;border-radius:10px;overflow:hidden}.pedido-items-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:12px 14px;border-bottom:1px solid #e7e9ef}.pedido-items-head h3{margin:0 0 3px}.pedido-items-head p{margin:0;color:#7c8492;font-size:11px}.pedido-items-resumen{display:flex;gap:18px;flex-wrap:wrap;padding:9px 14px;background:rgba(103,61,244,.05);font-size:11px}.pedido-items-resumen strong{margin-left:5px}.pedido-items-table-wrap{overflow-x:auto}.pedido-items-table{width:100%;border-collapse:collapse}.pedido-items-table th,.pedido-items-table td{padding:9px 10px;border-bottom:1px solid #eceef3;text-align:left;font-size:11px;white-space:nowrap}.pedido-items-table th{color:#717988}.curva-toolbar{display:flex;gap:7px;margin-bottom:8px}.curva-editor{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 8px}.curva-celda{min-width:86px;border:1px solid #d5dae3;border-radius:8px;padding:7px;background:rgba(103,61,244,.025);position:relative}.curva-celda label{display:block;font-size:9px;color:#747c89;margin-bottom:3px}.curva-celda input{width:100%!important;padding:6px!important}.curva-celda .curva-remove{position:absolute;right:3px;top:2px;border:0;background:transparent;color:#9b4a4a;cursor:pointer;font-size:12px}.pedidos-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.pedidos-dialog-actions>button:not(.pedidos-primary){border:1px solid #ccd1d9;background:transparent;color:inherit;border-radius:8px;padding:9px 14px;cursor:pointer}
 @media(max-width:780px){.pedidos-head{align-items:stretch;flex-direction:column}.pedidos-resumen{grid-template-columns:1fr}.pedidos-grid{grid-template-columns:1fr}.pedidos-span-2,.pedidos-span-4{grid-column:span 1}.pedidos-inline{align-items:stretch}.pedidos-inline .pedidos-mini{white-space:nowrap}}
 </style>
