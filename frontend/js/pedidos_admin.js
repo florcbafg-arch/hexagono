@@ -3,10 +3,16 @@ window.initPedidos = function () {
   const headers = { "Content-Type": "application/json", Authorization: "Bearer " + token }
   const $ = id => document.getElementById(id)
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))
+
   let clientes = []
   let vendedores = []
   let pedidos = []
+  let articulos = []
+  let pedidoAbierto = null
+  let pedidoItems = []
+  let curvaEditor = []
   let guardando = false
+  let guardandoItem = false
 
   async function api(url, options = {}) {
     const res = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } })
@@ -36,6 +42,12 @@ window.initPedidos = function () {
     if (!v) return "—"
     const [y,m,d] = String(v).split("-")
     return y && m && d ? `${d}/${m}/${y}` : v
+  }
+
+  function etiquetaArticulo(a) {
+    const marca = a?.modelos?.marca || ""
+    const modelo = a?.modelos?.nombre || ""
+    return [a?.codigo, marca, modelo, a?.color].filter(Boolean).join(" · ")
   }
 
   function renderClientes(seleccionarId = null) {
@@ -81,6 +93,8 @@ window.initPedidos = function () {
         <td>${fechaVista(p.fecha_carga)}</td>
         <td><strong>${fechaVista(p.fecha_entrega)}</strong></td>
         <td>${esc(p.vendedor?.nombre || "—")}</td>
+        <td>${Number(p.resumen?.articulos || 0)}</td>
+        <td><strong>${Number(p.resumen?.pares || 0)}</strong></td>
         <td>V${esc(p.version)}</td>
         <td><span class="pedido-chip ${p.estado === "confirmado" ? "confirmado" : ""}">${esc(String(p.estado || "").toUpperCase())}</span></td>
         <td><button class="pedidos-link" data-edit-pedido="${p.id}">Abrir</button></td>
@@ -91,21 +105,88 @@ window.initPedidos = function () {
     })
   }
 
+  function renderSelectorArticulos(seleccionarId = null) {
+    const activos = articulos.filter(a => a.activo !== false)
+    $("pedidoItemArticulo").innerHTML = '<option value="">Seleccionar artículo</option>' + activos.map(a =>
+      `<option value="${a.id}">${esc(etiquetaArticulo(a))}</option>`
+    ).join("")
+    if (seleccionarId) $("pedidoItemArticulo").value = String(seleccionarId)
+  }
+
+  function renderPedidoItems() {
+    const totalPares = pedidoItems.reduce((acc, i) => acc + Number(i.cantidad_pares || 0), 0)
+    const totalPendiente = pedidoItems.reduce((acc, i) => acc + Number(i.cantidad_pendiente || 0), 0)
+
+    $("pedidoItemsTotalArticulos").textContent = pedidoItems.length
+    $("pedidoItemsTotalPares").textContent = totalPares
+    $("pedidoItemsTotalPendiente").textContent = totalPendiente
+    $("pedidoItemsVacio").hidden = pedidoItems.length > 0
+
+    $("pedidoItemsTabla").innerHTML = pedidoItems.map(i => {
+      const a = i.articulo || {}
+      const curva = (i.curva || []).map(t => `${esc(t.talle)}:${Number(t.cantidad || 0)}`).join(" · ")
+      return `
+        <tr>
+          <td><strong>${i.nro_item}</strong></td>
+          <td>${esc([a.codigo,a.modelos?.marca,a.modelos?.nombre].filter(Boolean).join(" · "))}</td>
+          <td>${esc(a.color || "—")}</td>
+          <td>${fechaVista(i.fecha_entrega)}</td>
+          <td>${curva || "—"}</td>
+          <td><strong>${Number(i.cantidad_pares || 0)}</strong></td>
+          <td>${Number(i.cantidad_pendiente || 0)}</td>
+          <td>
+            <button class="pedidos-link" type="button" data-edit-item="${i.id}">Editar</button>
+            <button class="pedidos-link" type="button" data-remove-item="${i.id}">Quitar</button>
+          </td>
+        </tr>`
+    }).join("")
+
+    document.querySelectorAll("[data-edit-item]").forEach(b => {
+      b.onclick = () => abrirPedidoItem(pedidoItems.find(i => Number(i.id) === Number(b.dataset.editItem)))
+    })
+    document.querySelectorAll("[data-remove-item]").forEach(b => {
+      b.onclick = () => quitarPedidoItem(Number(b.dataset.removeItem))
+    })
+  }
+
+  async function cargarPedidoItems() {
+    const pedidoId = Number($("pedidoId").value)
+    if (!pedidoId) {
+      pedidoItems = []
+      renderPedidoItems()
+      $("btnAgregarPedidoItem").disabled = true
+      $("pedidoItemsAyuda").textContent = "Guardá primero el borrador para poder cargar artículos y curvas."
+      return
+    }
+
+    const data = await api(`/api/pedidos/${pedidoId}/items`)
+    pedidoItems = data.items || []
+    renderPedidoItems()
+    $("btnAgregarPedidoItem").disabled = pedidoAbierto?.estado !== "borrador"
+    $("pedidoItemsAyuda").textContent = pedidoAbierto?.estado === "borrador"
+      ? "Cada artículo conserva su propia fecha de entrega, curva y cantidad."
+      : "El pedido ya no está en borrador."
+  }
+
   async function cargarBase() {
-    const [cs, vs, ps] = await Promise.all([
+    const [cs, vs, ps, arts] = await Promise.all([
       api("/api/pedidos/clientes"),
       api("/api/pedidos/vendedores"),
-      api("/api/pedidos")
+      api("/api/pedidos"),
+      api("/api/articulos")
     ])
     clientes = cs || []
     vendedores = vs || []
     pedidos = ps || []
+    articulos = arts || []
     renderClientes()
     renderVendedores()
     renderPedidos()
+    renderSelectorArticulos()
   }
 
-  function abrirPedido(pedido = null) {
+  async function abrirPedido(pedido = null) {
+    pedidoAbierto = pedido
     $("formPedido").reset()
     $("pedidoId").value = pedido?.id || ""
     $("pedidoModalTitulo").textContent = pedido ? "Editar pedido" : "Nuevo pedido"
@@ -119,11 +200,109 @@ window.initPedidos = function () {
     $("pedidoSolicitado").value = pedido?.solicitado_por || ""
     $("pedidoReferencia").value = pedido?.referencia_cliente || ""
     $("pedidoObservaciones").value = pedido?.observaciones || ""
+
+    pedidoItems = []
+    renderPedidoItems()
+    $("btnAgregarPedidoItem").disabled = !pedido?.id
+    $("pedidoItemsAyuda").textContent = pedido?.id
+      ? "Cargando artículos…"
+      : "Guardá primero el borrador para poder cargar artículos y curvas."
+
     $("modalPedido").showModal()
+    if (pedido?.id) {
+      try { await cargarPedidoItems() }
+      catch (err) { mensaje(err.message, true) }
+    }
+  }
+
+  function curvaInicial() {
+    return [35,36,37,38,39,40].map(t => ({ talle: String(t), cantidad: "" }))
+  }
+
+  function renderCurvaEditor() {
+    $("pedidoCurvaEditor").innerHTML = curvaEditor.map((c, index) => `
+      <div class="curva-celda">
+        <button type="button" class="curva-remove" data-curva-remove="${index}" title="Quitar talle">×</button>
+        <label>Talle</label>
+        <input type="text" value="${esc(c.talle)}" data-curva-index="${index}" data-curva-field="talle" inputmode="numeric">
+        <label>Pares</label>
+        <input type="number" min="0" step="1" value="${esc(c.cantidad)}" data-curva-index="${index}" data-curva-field="cantidad" inputmode="numeric">
+      </div>
+    `).join("")
+
+    document.querySelectorAll("[data-curva-index]").forEach(input => {
+      input.oninput = () => {
+        const index = Number(input.dataset.curvaIndex)
+        curvaEditor[index][input.dataset.curvaField] = input.value
+        actualizarTotalCurva()
+      }
+    })
+    document.querySelectorAll("[data-curva-remove]").forEach(b => {
+      b.onclick = () => {
+        curvaEditor.splice(Number(b.dataset.curvaRemove), 1)
+        renderCurvaEditor()
+        actualizarTotalCurva()
+      }
+    })
+  }
+
+  function actualizarTotalCurva() {
+    const total = curvaEditor.reduce((acc, c) => {
+      const n = Number(c.cantidad)
+      return acc + (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0)
+    }, 0)
+    $("pedidoItemTotal").value = total
+  }
+
+  function agregarTalles(cantidad) {
+    const numericos = curvaEditor.map(c => Number(c.talle)).filter(Number.isFinite)
+    let ultimo = numericos.length ? Math.max(...numericos) : 34
+    for (let i = 0; i < cantidad; i++) {
+      ultimo += 1
+      curvaEditor.push({ talle: String(ultimo), cantidad: "" })
+    }
+    renderCurvaEditor()
+  }
+
+  function abrirPedidoItem(item = null) {
+    if (!Number($("pedidoId").value)) return
+    $("formPedidoItem").reset()
+    $("pedidoItemId").value = item?.id || ""
+    $("pedidoItemTitulo").textContent = item ? `Editar ítem ${item.nro_item}` : "Agregar artículo"
+    renderSelectorArticulos(item?.articulo_id || null)
+    $("pedidoItemFechaEntrega").value = item?.fecha_entrega || $("pedidoFechaEntrega").value
+    $("pedidoItemObservaciones").value = item?.observaciones || ""
+    curvaEditor = item?.curva?.length
+      ? item.curva.map(t => ({ talle: String(t.talle), cantidad: String(t.cantidad) }))
+      : curvaInicial()
+    renderCurvaEditor()
+    actualizarTotalCurva()
+    $("modalPedidoItem").showModal()
+  }
+
+  async function quitarPedidoItem(itemId) {
+    const item = pedidoItems.find(i => Number(i.id) === itemId)
+    if (!item) return
+    const nombre = etiquetaArticulo(item.articulo)
+    if (!confirm(`¿Quitar ${nombre} del pedido?\nEl registro quedará preservado en la base.`)) return
+
+    try {
+      await api(`/api/pedidos/${pedidoAbierto.id}/items/${itemId}/estado`, {
+        method: "PATCH",
+        body: JSON.stringify({ activo: false })
+      })
+      await cargarPedidoItems()
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+    } catch (err) { mensaje(err.message, true) }
   }
 
   $("btnNuevoPedido").onclick = () => abrirPedido()
   $("pedidoCliente").onchange = () => renderSucursales()
+  $("btnAgregarPedidoItem").onclick = () => abrirPedidoItem()
+  $("btnCurvaMas1").onclick = () => agregarTalles(1)
+  $("btnCurvaMas5").onclick = () => agregarTalles(5)
+
   $("btnNuevoCliente").onclick = () => {
     $("formCliente").reset()
     $("clienteSucursalCodigo").value = "1"
@@ -179,6 +358,46 @@ window.initPedidos = function () {
     } catch (err) { mensaje(err.message, true) }
   }
 
+  $("formPedidoItem").onsubmit = async e => {
+    e.preventDefault()
+    if (guardandoItem) return
+
+    const pedidoId = Number($("pedidoId").value)
+    const itemId = Number($("pedidoItemId").value)
+    const curva = curvaEditor
+      .map(c => ({ talle: String(c.talle || "").trim(), cantidad: Number(c.cantidad) }))
+      .filter(c => c.talle && Number.isInteger(c.cantidad) && c.cantidad > 0)
+
+    const btn = $("btnGuardarPedidoItem")
+    guardandoItem = true
+    btn.disabled = true
+    btn.textContent = "Guardando…"
+
+    try {
+      await api(itemId
+        ? `/api/pedidos/${pedidoId}/items/${itemId}`
+        : `/api/pedidos/${pedidoId}/items`, {
+        method: itemId ? "PUT" : "POST",
+        body: JSON.stringify({
+          articulo_id: Number($("pedidoItemArticulo").value),
+          fecha_entrega: $("pedidoItemFechaEntrega").value,
+          observaciones: $("pedidoItemObservaciones").value,
+          curva
+        })
+      })
+      $("modalPedidoItem").close()
+      await cargarPedidoItems()
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      guardandoItem = false
+      btn.disabled = false
+      btn.textContent = "💾 Guardar artículo"
+    }
+  }
+
   $("formPedido").onsubmit = async e => {
     e.preventDefault()
     if (guardando) return
@@ -202,12 +421,20 @@ window.initPedidos = function () {
           observaciones: $("pedidoObservaciones").value
         })
       })
-      $("modalPedido").close()
-      mensaje(id ? `Pedido ${guardado.numero} actualizado.` : `Pedido ${guardado.numero} creado como borrador.`)
+
+      pedidoAbierto = guardado
+      $("pedidoId").value = guardado.id
+      $("pedidoModalTitulo").textContent = "Editar pedido"
+      $("pedidoNumeroVista").textContent = `Pedido N.º ${guardado.numero}`
+      $("pedidoEstadoVista").textContent = `${String(guardado.estado).toUpperCase()} · V${guardado.version}`
+      $("btnAgregarPedidoItem").disabled = false
+      $("pedidoItemsAyuda").textContent = "Cada artículo conserva su propia fecha de entrega, curva y cantidad."
+
       pedidos = await api("/api/pedidos")
       renderPedidos()
+      await cargarPedidoItems()
     } catch (err) {
-      mensaje(err.message, true)
+      alert(err.message)
     } finally {
       guardando = false
       btn.disabled = false
