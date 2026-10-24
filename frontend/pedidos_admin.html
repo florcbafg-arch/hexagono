@@ -1,0 +1,145 @@
+<section class="pedidos-v2">
+  <div class="pedidos-head">
+    <div>
+      <p class="pedidos-eyebrow">PREPRODUCCIÓN</p>
+      <h1>Pedidos</h1>
+      <p class="pedidos-sub">Registrá la demanda real antes de Despiece, Stock y Programación.</p>
+    </div>
+    <button class="pedidos-primary" id="btnNuevoPedido">＋ Nuevo pedido</button>
+  </div>
+
+  <div id="pedidosMensaje" class="pedidos-mensaje" hidden></div>
+
+  <section class="pedidos-resumen">
+    <div><span>Total pedidos</span><strong id="pedidosTotal">0</strong></div>
+    <div><span>Borradores</span><strong id="pedidosBorradores">0</strong></div>
+    <div><span>Confirmados</span><strong id="pedidosConfirmados">0</strong></div>
+  </section>
+
+  <section class="pedidos-card">
+    <div class="pedidos-card-head">
+      <div><h2>Pedidos cargados</h2><p>Fase 1.4.1 · encabezado e identidad del pedido.</p></div>
+    </div>
+    <div class="pedidos-table-wrap">
+      <table class="pedidos-table">
+        <thead><tr>
+          <th>N.º Pedido</th>
+          <th>Cliente</th>
+          <th>Sucursal</th>
+          <th>Fecha carga</th>
+          <th>Entrega</th>
+          <th>Vendedor</th>
+          <th>Versión</th>
+          <th>Estado</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="pedidosTabla"></tbody>
+      </table>
+      <div id="pedidosVacio" class="pedidos-vacio">Todavía no hay pedidos cargados.</div>
+    </div>
+  </section>
+
+  <dialog id="modalPedido" class="pedidos-dialog">
+    <form id="formPedido" method="dialog">
+      <div class="pedidos-dialog-head">
+        <div><p class="pedidos-eyebrow">PEDIDO</p><h2 id="pedidoModalTitulo">Nuevo pedido</h2></div>
+        <button type="button" class="pedidos-close" data-close="modalPedido">✕</button>
+      </div>
+
+      <input type="hidden" id="pedidoId">
+
+      <div class="pedido-estado-linea">
+        <span id="pedidoNumeroVista">N.º automático al guardar</span>
+        <span id="pedidoEstadoVista" class="pedido-chip">BORRADOR · V1</span>
+      </div>
+
+      <div class="pedidos-grid">
+        <label class="pedidos-field pedidos-span-2">
+          <span>Cliente *</span>
+          <div class="pedidos-inline">
+            <select id="pedidoCliente" required><option value="">Seleccionar cliente</option></select>
+            <button type="button" class="pedidos-mini" id="btnNuevoCliente">＋ Cliente</button>
+          </div>
+        </label>
+
+        <label class="pedidos-field pedidos-span-2">
+          <span>Sucursal *</span>
+          <div class="pedidos-inline">
+            <select id="pedidoSucursal" required><option value="">Seleccionar sucursal</option></select>
+            <button type="button" class="pedidos-mini" id="btnNuevaSucursal">＋ Sucursal</button>
+          </div>
+        </label>
+
+        <label class="pedidos-field">
+          <span>Fecha de carga</span>
+          <input id="pedidoFechaCarga" type="date" readonly>
+          <small>La registra Hexaflow.</small>
+        </label>
+
+        <label class="pedidos-field">
+          <span>Fecha de entrega *</span>
+          <input id="pedidoFechaEntrega" type="date" required>
+        </label>
+
+        <label class="pedidos-field">
+          <span>Vendedor</span>
+          <select id="pedidoVendedor"></select>
+        </label>
+
+        <label class="pedidos-field">
+          <span>Solicitado por</span>
+          <input id="pedidoSolicitado" type="text" placeholder="Nombre o referencia">
+        </label>
+
+        <label class="pedidos-field pedidos-span-2">
+          <span>Referencia / N.º pedido del cliente</span>
+          <input id="pedidoReferencia" type="text" placeholder="Ej: Pedido N.º 16">
+        </label>
+
+        <label class="pedidos-field pedidos-span-4">
+          <span>Observaciones</span>
+          <textarea id="pedidoObservaciones" rows="3" placeholder="Observaciones comerciales u operativas"></textarea>
+        </label>
+      </div>
+
+      <div class="pedido-proximo">
+        <strong>Siguiente fase:</strong> los artículos y sus curvas se cargan en 1.4.2.
+      </div>
+
+      <div class="pedidos-dialog-actions">
+        <button type="button" data-close="modalPedido">Cancelar</button>
+        <button class="pedidos-primary" id="btnGuardarPedido" type="submit">💾 Guardar borrador</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalCliente" class="pedidos-dialog pedidos-dialog-small">
+    <form id="formCliente" method="dialog">
+      <div class="pedidos-dialog-head"><h2>Nuevo cliente</h2><button type="button" class="pedidos-close" data-close="modalCliente">✕</button></div>
+      <div class="pedidos-grid">
+        <label class="pedidos-field"><span>Código *</span><input id="clienteCodigo" required placeholder="Ej: 000001"></label>
+        <label class="pedidos-field"><span>Nombre *</span><input id="clienteNombre" required placeholder="Ej: STOCK"></label>
+        <label class="pedidos-field"><span>Código sucursal *</span><input id="clienteSucursalCodigo" required value="1"></label>
+        <label class="pedidos-field"><span>Sucursal *</span><input id="clienteSucursalNombre" required value="CASA CENTRAL"></label>
+      </div>
+      <div class="pedidos-dialog-actions"><button type="button" data-close="modalCliente">Cancelar</button><button class="pedidos-primary" type="submit">Crear cliente</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="modalSucursal" class="pedidos-dialog pedidos-dialog-small">
+    <form id="formSucursal" method="dialog">
+      <div class="pedidos-dialog-head"><h2>Nueva sucursal</h2><button type="button" class="pedidos-close" data-close="modalSucursal">✕</button></div>
+      <p id="sucursalClienteNombre" class="pedidos-sub"></p>
+      <div class="pedidos-grid">
+        <label class="pedidos-field"><span>Código *</span><input id="sucursalCodigo" required></label>
+        <label class="pedidos-field"><span>Nombre *</span><input id="sucursalNombre" required></label>
+      </div>
+      <div class="pedidos-dialog-actions"><button type="button" data-close="modalSucursal">Cancelar</button><button class="pedidos-primary" type="submit">Crear sucursal</button></div>
+    </form>
+  </dialog>
+</section>
+
+<style>
+.pedidos-v2{max-width:1320px;margin:0 auto}.pedidos-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.pedidos-head h1{margin:2px 0 5px;font-size:30px}.pedidos-eyebrow{margin:0;font-size:11px;font-weight:800;color:#673df4;letter-spacing:.7px}.pedidos-sub{margin:0;color:#6f7787}.pedidos-primary{border:0;background:#673df4;color:white;border-radius:8px;padding:10px 15px;font-weight:700;cursor:pointer}.pedidos-primary:disabled{opacity:.55;cursor:not-allowed}.pedidos-mensaje{margin-bottom:15px;padding:11px 13px;border-radius:8px;background:#edf9f0;color:#236c36;border:1px solid #cfe9d5}.pedidos-mensaje.error{background:#fff0f0;color:#a42a2a;border-color:#f0caca}.pedidos-resumen{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:12px;margin-bottom:16px}.pedidos-resumen>div,.pedidos-card{border:1px solid #dbe0e8;background:var(--card-bg,#fff);border-radius:12px}.pedidos-resumen>div{padding:13px 15px}.pedidos-resumen span{display:block;font-size:11px;color:#77808f;margin-bottom:5px}.pedidos-resumen strong{font-size:22px}.pedidos-card{overflow:hidden}.pedidos-card-head{padding:16px 18px;border-bottom:1px solid #e7e9ef}.pedidos-card-head h2{margin:0 0 3px}.pedidos-card-head p{margin:0;color:#7a8290;font-size:12px}.pedidos-table-wrap{overflow-x:auto}.pedidos-table{width:100%;border-collapse:collapse}.pedidos-table th,.pedidos-table td{padding:12px 14px;border-bottom:1px solid #eceef3;text-align:left;white-space:nowrap}.pedidos-table th{font-size:11px;color:#707888}.pedidos-table td{font-size:13px}.pedidos-vacio{padding:28px;text-align:center;color:#7b8290}.pedido-chip{display:inline-block;background:#eee9ff;color:#6039d3;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.pedido-chip.confirmado{background:#e8f7ed;color:#26713a}.pedidos-link{border:0;background:transparent;color:#673df4;font-weight:700;cursor:pointer}.pedidos-dialog{width:min(850px,92vw);border:0;border-radius:14px;padding:0;box-shadow:0 20px 70px rgba(0,0,0,.35);background:var(--card-bg,#fff);color:inherit}.pedidos-dialog::backdrop{background:rgba(0,0,0,.55)}.pedidos-dialog form{padding:20px}.pedidos-dialog-small{width:min(620px,92vw)}.pedidos-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:14px}.pedidos-dialog-head h2{margin:0}.pedidos-close{border:0;background:transparent;font-size:18px;cursor:pointer}.pedido-estado-linea{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:rgba(103,61,244,.06);border-radius:9px;margin-bottom:15px;font-size:12px}.pedidos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.pedidos-field{display:flex;flex-direction:column;gap:6px}.pedidos-field>span{font-size:11px;font-weight:700;color:#6f7787}.pedidos-field input,.pedidos-field select,.pedidos-field textarea{width:100%;box-sizing:border-box;border:1px solid #cfd5df;border-radius:7px;padding:9px;background:var(--card-bg,#fff);color:inherit}.pedidos-field small{font-size:10px;color:#87909d}.pedidos-span-2{grid-column:span 2}.pedidos-span-4{grid-column:span 4}.pedidos-inline{display:flex;gap:7px}.pedidos-inline select{flex:1}.pedidos-mini{border:1px solid #c9c0ff;background:#f3f0ff;color:#5d37d3;border-radius:7px;padding:8px 10px;font-weight:700;cursor:pointer}.pedido-proximo{margin-top:16px;padding:10px 12px;border:1px dashed #cfd5df;border-radius:8px;font-size:12px;color:#707888}.pedidos-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.pedidos-dialog-actions>button:not(.pedidos-primary){border:1px solid #ccd1d9;background:transparent;color:inherit;border-radius:8px;padding:9px 14px;cursor:pointer}
+@media(max-width:780px){.pedidos-head{align-items:stretch;flex-direction:column}.pedidos-resumen{grid-template-columns:1fr}.pedidos-grid{grid-template-columns:1fr}.pedidos-span-2,.pedidos-span-4{grid-column:span 1}.pedidos-inline{align-items:stretch}.pedidos-inline .pedidos-mini{white-space:nowrap}}
+</style>
