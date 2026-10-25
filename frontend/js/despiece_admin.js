@@ -1,6 +1,29 @@
 window.initDespiece = function initDespiece() {
+  const token = localStorage.getItem("token")
+  const headers = { "Content-Type": "application/json", Authorization: "Bearer " + token }
   const $ = id => document.getElementById(id)
   const seleccionados = new Set()
+
+  async function api(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: { ...headers, ...(options.headers || {}) }
+    })
+    const data = await res.json().catch(() => ({}))
+
+    if (res.status === 401) {
+      localStorage.removeItem("token")
+      localStorage.removeItem("hexagono_user")
+      window.location.href = "login.html"
+      throw new Error("Sesión expirada")
+    }
+
+    if (!res.ok) {
+      throw new Error(data.error || "No se pudo completar la operación")
+    }
+
+    return data
+  }
   let pendientes = []
   let lotes = []
 
