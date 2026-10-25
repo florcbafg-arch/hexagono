@@ -394,7 +394,7 @@ router.get("/", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("pedidos")
-      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,codigo_legacy,created_at,updated_at")
+      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,pedido_raiz_id,reemplaza_pedido_id,codigo_legacy,motivo_correccion,motivo_anulacion,anulado_at,reemplazado_at,created_at,updated_at")
       .eq("empresa_id", empresaId)
       .order("id", { ascending: false })
     if (error) throw error
@@ -487,6 +487,15 @@ router.post("/", async (req, res) => {
       .single()
     if (ue) throw ue
 
+    await supabase.from("pedido_eventos").insert({
+      empresa_id: empresaId,
+      pedido_id: pedido.id,
+      tipo: "creado",
+      motivo: null,
+      datos: { version: 1, codigo_legacy: "F" },
+      usuario_id: req.user.id
+    })
+
     const [enriquecido] = await enriquecerPedidos([pedido], empresaId)
     return res.status(201).json(enriquecido)
   } catch (err) {
@@ -547,11 +556,138 @@ router.put("/:id", async (req, res) => {
       .single()
     if (error) throw error
 
+    await supabase.from("pedido_eventos").insert({
+      empresa_id: empresaId,
+      pedido_id: id,
+      tipo: "actualizado",
+      motivo: "Edición de borrador",
+      usuario_id: req.user.id
+    })
+
     const [enriquecido] = await enriquecerPedidos([data], empresaId)
     return res.json(enriquecido)
   } catch (err) {
     console.error("Error editando pedido:", err)
     return res.status(500).json({ error: "Error editando pedido" })
+  }
+})
+
+
+// ==========================
+// VERSIONES / CORRECCIONES / ANULACIÓN
+// ==========================
+router.get("/:id/versiones", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    if (!id) return res.status(400).json({ error: "Pedido inválido" })
+
+    const { data: pedido, error: pe } = await supabase
+      .from("pedidos")
+      .select("id,pedido_raiz_id")
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+    if (pe) throw pe
+    if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" })
+
+    const raizId = Number(pedido.pedido_raiz_id || pedido.id)
+
+    const { data: versiones, error: ve } = await supabase
+      .from("pedidos")
+      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,pedido_raiz_id,reemplaza_pedido_id,codigo_legacy,motivo_correccion,motivo_anulacion,anulado_at,reemplazado_at,creado_por,actualizado_por,created_at,updated_at")
+      .eq("empresa_id", empresaId)
+      .eq("pedido_raiz_id", raizId)
+      .order("version", { ascending: false })
+    if (ve) throw ve
+
+    const enriquecidas = await enriquecerPedidos(versiones || [], empresaId)
+    const versionIds = enriquecidas.map(v => v.id)
+
+    let eventos = []
+    if (versionIds.length) {
+      const { data, error } = await supabase
+        .from("pedido_eventos")
+        .select("id,pedido_id,tipo,motivo,datos,usuario_id,created_at")
+        .eq("empresa_id", empresaId)
+        .in("pedido_id", versionIds)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      eventos = data || []
+    }
+
+    return res.json({ pedido_raiz_id: raizId, versiones: enriquecidas, eventos })
+  } catch (err) {
+    console.error("Error obteniendo historial de pedido:", err)
+    return res.status(500).json({ error: "Error obteniendo historial del pedido" })
+  }
+})
+
+router.post("/:id/corregir", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    const motivo = clean(req.body.motivo)
+    if (!id || !motivo) return res.status(400).json({ error: "El motivo de corrección es obligatorio" })
+
+    const { data: nuevoId, error } = await supabase.rpc("crear_version_corregida_pedido", {
+      p_pedido_id: id,
+      p_empresa_id: empresaId,
+      p_usuario_id: req.user.id,
+      p_motivo: motivo
+    })
+    if (error) throw error
+
+    const { data: nuevo, error: ne } = await supabase
+      .from("pedidos")
+      .select("*")
+      .eq("id", Number(nuevoId))
+      .eq("empresa_id", empresaId)
+      .single()
+    if (ne) throw ne
+
+    const [enriquecido] = await enriquecerPedidos([nuevo], empresaId)
+    return res.status(201).json(enriquecido)
+  } catch (err) {
+    console.error("Error creando corrección de pedido:", err)
+    return res.status(409).json({ error: err.message || "No se pudo crear la corrección" })
+  }
+})
+
+router.post("/:id/anular", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    const motivo = clean(req.body.motivo)
+    if (!id || !motivo) return res.status(400).json({ error: "El motivo de anulación es obligatorio" })
+
+    const { error } = await supabase.rpc("anular_pedido", {
+      p_pedido_id: id,
+      p_empresa_id: empresaId,
+      p_usuario_id: req.user.id,
+      p_motivo: motivo
+    })
+    if (error) throw error
+
+    const { data, error: pe } = await supabase
+      .from("pedidos")
+      .select("*")
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+      .single()
+    if (pe) throw pe
+
+    const [enriquecido] = await enriquecerPedidos([data], empresaId)
+    return res.json(enriquecido)
+  } catch (err) {
+    console.error("Error anulando pedido:", err)
+    return res.status(409).json({ error: err.message || "No se pudo anular el pedido" })
   }
 })
 
