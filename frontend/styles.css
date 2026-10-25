@@ -3489,3 +3489,43 @@ body.admin-page.dark-mode .ficha-modal-card select{background:#0f131b!important;
 .ficha-card{background:#fff;border:1px solid #dce3ec;border-radius:14px;padding:16px;box-shadow:0 5px 18px rgba(15,23,42,.05)}.ficha-identidad{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px;margin-bottom:14px}.ficha-identidad div{display:flex;flex-direction:column;gap:5px}.ficha-identidad span,.ficha-identidad label{font-size:12px;color:#64748b}.ficha-identidad strong{color:#111827}.ficha-layout-v2{display:grid;grid-template-columns:190px minmax(500px,1fr) 300px;gap:14px;align-items:start}.ficha-nav h3,.ficha-preview-v2 h3{margin-top:0}.ficha-nav-btn{width:100%;display:flex;gap:8px;align-items:center;text-align:left;margin-bottom:7px;padding:9px;border:1px solid #e2e8f0;background:#f8fafc;color:#334155;border-radius:8px}.ficha-nav-btn.activo{border-color:#7c3aed;background:#f3e8ff;color:#581c87}.seccion-head,.pieza-title,.subtitulo,.seccion-pager,.ficha-actions{display:flex;justify-content:space-between;gap:10px;align-items:center}.seccion-head{border-bottom:1px solid #e5e7eb;margin-bottom:14px}.seccion-head h2{margin:0 0 3px}.pieza-v2{border:1px solid #e2e8f0;background:#fafbfc;border-radius:10px;padding:12px;margin:12px 0}.pieza-title input{font-weight:800;font-size:15px}.pieza-title span{font-size:11px;color:#94a3b8}.pieza-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.subbloque{border-top:1px solid #e5e7eb;padding-top:10px;margin-top:10px}.fila-tecnica{display:grid;grid-template-columns:1.2fr 1.5fr 1fr auto;gap:7px;margin-top:7px}.preview-list>div{padding:9px 0;border-bottom:1px solid #e5e7eb}.preview-list strong,.preview-list span{display:block}.preview-list span{font-size:12px;color:#64748b;margin-top:3px}.ficha-generales{margin-top:14px}.ficha-generales label{display:block;margin:8px 0 5px}.ficha-generales textarea{width:100%;box-sizing:border-box}.ficha-actions{margin-top:14px;justify-content:flex-end}.ficha-msg{padding:10px 12px;border-radius:8px;background:#dcfce7;color:#166534;margin-bottom:12px}.ficha-msg.error{background:#fee2e2;color:#991b1b}
 body.admin-page.dark-mode .ficha-card{background:#11151d;border-color:#2c3442;color:#e5eefc}body.admin-page.dark-mode .ficha-editor-head p,body.admin-page.dark-mode .ficha-identidad span,body.admin-page.dark-mode .ficha-identidad label,body.admin-page.dark-mode .preview-list span{color:#aab6c8}body.admin-page.dark-mode .ficha-identidad strong{color:#fff}body.admin-page.dark-mode .ficha-nav-btn{background:#171c26;color:#dbe5f3;border-color:#303949}body.admin-page.dark-mode .ficha-nav-btn.activo{background:#332050;border-color:#8b5cf6;color:#fff}body.admin-page.dark-mode .pieza-v2{background:#151a23;border-color:#303949}body.admin-page.dark-mode .seccion-head,body.admin-page.dark-mode .subbloque,body.admin-page.dark-mode .preview-list>div{border-color:#303949}
 @media(max-width:1100px){.ficha-identidad{grid-template-columns:repeat(3,1fr)}.ficha-layout-v2{grid-template-columns:170px 1fr}.ficha-preview-v2{grid-column:1/-1}}@media(max-width:760px){.ficha-identidad{grid-template-columns:1fr 1fr}.ficha-layout-v2{grid-template-columns:1fr}.fila-tecnica,.pieza-grid{grid-template-columns:1fr}.ficha-nav{display:none}}
+
+
+/* =========================
+   SIDEBAR COLAPSABLE
+========================= */
+body.admin-page .sidebar{
+  transition: width .22s ease, min-width .22s ease, padding .22s ease, opacity .18s ease;
+}
+body.admin-page .main{
+  transition: width .22s ease;
+}
+.btn-sidebar-toggle{
+  width:40px;
+  min-width:40px;
+  height:40px;
+  padding:0 !important;
+  margin-right:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px !important;
+  line-height:1;
+  border-radius:9px !important;
+}
+body.admin-page.sidebar-collapsed .sidebar{
+  width:0 !important;
+  min-width:0 !important;
+  padding-left:0 !important;
+  padding-right:0 !important;
+  border-right:0 !important;
+  overflow:hidden !important;
+  opacity:0;
+  pointer-events:none;
+}
+body.admin-page.sidebar-collapsed .main{
+  width:100%;
+}
+body.tv-mode .btn-sidebar-toggle{
+  display:none !important;
+}
