@@ -322,14 +322,122 @@ window.initPedidos = function () {
 
       $("consultaPedidoDocumento").innerHTML = documentoConsultaPedido(pedido, consultaPedidoActual.items)
       $("btnEditarDesdeConsulta").disabled = pedido.estado !== "borrador"
-      $("btnCorregirPedido").disabled = pedido.estado === "borrador" || pedido.estado === "anulado" || pedido.estado === "reemplazado"
+
+      const btnRevision = $("btnRevisionPedido")
+      btnRevision.disabled = ["confirmado","anulado","reemplazado"].includes(pedido.estado)
+      btnRevision.textContent = pedido.estado === "en_revision" ? "↩ Revisión / volver" : "✓ Revisar pedido"
+
+      $("btnCorregirPedido").disabled = pedido.estado !== "confirmado"
       $("btnAnularPedido").disabled = pedido.estado === "anulado" || pedido.estado === "reemplazado"
-      $("btnCorregirPedido").title = pedido.estado === "borrador"
-        ? "Un borrador se edita directamente; la nueva versión se crea cuando el pedido ya está cerrado."
-        : ""
+
+      $("btnCorregirPedido").title = pedido.estado === "confirmado"
+        ? "Crear una nueva versión preservando la anterior."
+        : "La corrección por versión se habilita únicamente sobre pedidos confirmados."
+
       $("modalConsultaPedido").showModal()
     } catch (err) {
       mensaje(err.message, true)
+    }
+  }
+
+  function renderChecklistRevision(validacion) {
+    const checks = validacion?.checks || []
+    $("revisionPedidoChecklist").innerHTML = checks.map(ch => `
+      <div class="pedido-check ${ch.ok ? "ok" : "bad"}">
+        <span class="pedido-check-icon">${ch.ok ? "✓" : "✕"}</span>
+        <span>${esc(ch.detalle || ch.clave)}</span>
+      </div>
+    `).join("")
+
+    if (!checks.length) {
+      $("revisionPedidoChecklist").innerHTML = '<div class="pedidos-vacio compact">No se encontraron validaciones.</div>'
+    }
+  }
+
+  async function abrirRevisionPedido() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido) return
+
+    try {
+      const validacion = await api(`/api/pedidos/${pedido.id}/validacion`)
+      renderChecklistRevision(validacion)
+
+      const enRevision = pedido.estado === "en_revision"
+      $("revisionPedidoTitulo").textContent = enRevision ? "Pedido en revisión" : "Revisión del pedido"
+      $("revisionPedidoTexto").textContent = enRevision
+        ? `Pedido ${pedido.numero} · V${pedido.version} está bloqueado para edición mientras se revisa. Si encontrás un error, devolvelo a borrador indicando el motivo.`
+        : validacion.completo
+          ? `Pedido ${pedido.numero} · V${pedido.version} está completo para pasar a revisión.`
+          : `Pedido ${pedido.numero} · V${pedido.version} todavía tiene controles pendientes.`
+
+      $("btnEnviarRevision").hidden = enRevision
+      $("btnEnviarRevision").disabled = !validacion.completo
+      $("btnVolverBorrador").hidden = !enRevision
+      $("revisionVolverMotivoWrap").hidden = !enRevision
+      $("revisionVolverMotivo").value = ""
+
+      $("modalRevisionPedido").showModal()
+    } catch (err) {
+      mensaje(err.message, true)
+    }
+  }
+
+  async function enviarPedidoARevision() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido) return
+
+    const btn = $("btnEnviarRevision")
+    btn.disabled = true
+    btn.textContent = "Enviando…"
+
+    try {
+      const resultado = await api(`/api/pedidos/${pedido.id}/enviar-revision`, {
+        method: "POST",
+        body: JSON.stringify({})
+      })
+
+      $("modalRevisionPedido").close()
+      $("modalConsultaPedido").close()
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+      mensaje(`Pedido ${pedido.numero} · V${pedido.version} enviado a revisión.`)
+      await abrirConsultaPedido(resultado.pedido.id)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = "Enviar a revisión"
+    }
+  }
+
+  async function volverPedidoABorrador() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido) return
+
+    const motivo = $("revisionVolverMotivo").value.trim()
+    if (!motivo) return alert("Escribí el motivo por el que el pedido vuelve a borrador.")
+
+    const btn = $("btnVolverBorrador")
+    btn.disabled = true
+    btn.textContent = "Volviendo…"
+
+    try {
+      const actualizado = await api(`/api/pedidos/${pedido.id}/volver-borrador`, {
+        method: "POST",
+        body: JSON.stringify({ motivo })
+      })
+
+      $("modalRevisionPedido").close()
+      $("modalConsultaPedido").close()
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+      mensaje(`Pedido ${pedido.numero} · V${pedido.version} volvió a borrador.`)
+      await abrirConsultaPedido(actualizado.id)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = "Volver a borrador"
     }
   }
 
@@ -404,11 +512,8 @@ window.initPedidos = function () {
     const pedido = consultaPedidoActual?.pedido
     if (!pedido) return
 
-    if (pedido.estado === "borrador") {
-      return alert("Este pedido todavía es borrador. Editalo directamente; no hace falta crear una nueva versión.")
-    }
-    if (["anulado","reemplazado"].includes(pedido.estado)) {
-      return alert("Ese pedido ya no admite correcciones.")
+    if (pedido.estado !== "confirmado") {
+      return alert("Solo un pedido confirmado puede originar una nueva versión. Si está en revisión, primero devolvelo a borrador.")
     }
 
     $("formCorregirPedido").reset()
@@ -632,6 +737,9 @@ window.initPedidos = function () {
 
   $("btnImprimirConsulta").onclick = imprimirConsultaPedido
   $("btnHistorialPedido").onclick = abrirHistorialPedido
+  $("btnRevisionPedido").onclick = abrirRevisionPedido
+  $("btnEnviarRevision").onclick = enviarPedidoARevision
+  $("btnVolverBorrador").onclick = volverPedidoABorrador
   $("btnCorregirPedido").onclick = abrirCorreccionPedido
   $("btnAnularPedido").onclick = abrirAnulacionPedido
 
