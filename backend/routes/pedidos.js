@@ -61,6 +61,68 @@ async function pedidoBorradorPropio(id, empresaId) {
   return data
 }
 
+async function validarPedidoRevision(pedidoId, empresaId) {
+  const { data: pedido, error: pe } = await supabase
+    .from("pedidos")
+    .select("id,numero,cliente_id,cliente_sucursal_id,fecha_entrega,vendedor_id,estado")
+    .eq("id", pedidoId)
+    .eq("empresa_id", empresaId)
+    .maybeSingle()
+  if (pe) throw pe
+  if (!pedido) return { pedido: null, checks: [], completo: false }
+
+  const checks = []
+  const push = (clave, ok, detalle) => checks.push({ clave, ok: Boolean(ok), detalle })
+
+  const [{ data: cliente, error: ce }, { data: sucursal, error: se }, { data: vendedor, error: ve }] = await Promise.all([
+    supabase.from("clientes").select("id,activo").eq("id", pedido.cliente_id).eq("empresa_id", empresaId).maybeSingle(),
+    supabase.from("cliente_sucursales").select("id,cliente_id,activo").eq("id", pedido.cliente_sucursal_id).eq("empresa_id", empresaId).maybeSingle(),
+    pedido.vendedor_id
+      ? supabase.from("usuarios").select("id,activo").eq("id", pedido.vendedor_id).eq("empresa_id", empresaId).maybeSingle()
+      : Promise.resolve({ data: null, error: null })
+  ])
+  if (ce) throw ce
+  if (se) throw se
+  if (ve) throw ve
+
+  push("cliente", cliente?.activo === true, "Cliente activo")
+  push(
+    "sucursal",
+    sucursal?.activo === true && Number(sucursal?.cliente_id) === Number(pedido.cliente_id),
+    "Sucursal activa y perteneciente al cliente"
+  )
+  push("fecha_entrega", fechaValida(pedido.fecha_entrega), "Fecha de entrega definida")
+  push("vendedor", vendedor?.activo === true, "Vendedor/usuario activo")
+
+  const items = await itemsPedido(pedidoId, empresaId)
+  push("articulos", items.length > 0, items.length ? `${items.length} artículo(s) cargado(s)` : "Falta cargar al menos un artículo")
+
+  for (const item of items) {
+    const curva = item.curva || []
+    const sumaCurva = curva.reduce((acc, t) => acc + Number(t.cantidad || 0), 0)
+    const sumaPendiente = curva.reduce((acc, t) => acc + Number(t.cantidad_pendiente || 0), 0)
+    const articuloOk = Boolean(item.articulo?.id)
+    const fechaOk = fechaValida(item.fecha_entrega)
+    const curvaOk = curva.length > 0 && sumaCurva > 0 && sumaCurva === Number(item.cantidad_pares || 0)
+    const pendienteOk =
+      Number(item.cantidad_pendiente || 0) === Number(item.cantidad_pares || 0) &&
+      sumaPendiente === sumaCurva
+
+    push(`item_${item.id}_articulo`, articuloOk, `Ítem ${item.nro_item}: artículo válido`)
+    push(`item_${item.id}_fecha`, fechaOk, `Ítem ${item.nro_item}: fecha de entrega definida`)
+    push(`item_${item.id}_curva`, curvaOk, `Ítem ${item.nro_item}: curva coincide con ${Number(item.cantidad_pares || 0)} pares`)
+    push(`item_${item.id}_pendiente`, pendienteOk, `Ítem ${item.nro_item}: cantidad pendiente íntegra antes de producción`)
+  }
+
+  return {
+    pedido,
+    checks,
+    completo: checks.length > 0 && checks.every(c => c.ok),
+    total_articulos: items.length,
+    total_pares: items.reduce((acc, i) => acc + Number(i.cantidad_pares || 0), 0)
+  }
+}
+
 async function articuloPropio(id, empresaId) {
   const { data, error } = await supabase
     .from("articulos")
@@ -572,6 +634,134 @@ router.put("/:id", async (req, res) => {
   }
 })
 
+
+// ==========================
+// REVISIÓN PREVIA DEL PEDIDO
+// ==========================
+router.get("/:id/validacion", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    if (!id) return res.status(400).json({ error: "Pedido inválido" })
+
+    const validacion = await validarPedidoRevision(id, empresaId)
+    if (!validacion.pedido) return res.status(404).json({ error: "Pedido no encontrado" })
+
+    return res.json(validacion)
+  } catch (err) {
+    console.error("Error validando pedido:", err)
+    return res.status(500).json({ error: "Error validando el pedido" })
+  }
+})
+
+router.post("/:id/enviar-revision", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    if (!id) return res.status(400).json({ error: "Pedido inválido" })
+
+    const validacion = await validarPedidoRevision(id, empresaId)
+    if (!validacion.pedido) return res.status(404).json({ error: "Pedido no encontrado" })
+    if (validacion.pedido.estado !== "borrador") {
+      return res.status(409).json({ error: "Solo un pedido en borrador puede enviarse a revisión" })
+    }
+    if (!validacion.completo) {
+      return res.status(409).json({
+        error: "El pedido todavía tiene datos incompletos",
+        validacion
+      })
+    }
+
+    const { data, error } = await supabase
+      .from("pedidos")
+      .update({
+        estado: "en_revision",
+        actualizado_por: req.user.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+      .eq("estado", "borrador")
+      .select("*")
+      .single()
+    if (error) throw error
+
+    await supabase.from("pedido_eventos").insert({
+      empresa_id: empresaId,
+      pedido_id: id,
+      tipo: "enviado_revision",
+      motivo: null,
+      datos: {
+        total_articulos: validacion.total_articulos,
+        total_pares: validacion.total_pares
+      },
+      usuario_id: req.user.id
+    })
+
+    const [enriquecido] = await enriquecerPedidos([data], empresaId)
+    return res.json({ pedido: enriquecido, validacion })
+  } catch (err) {
+    console.error("Error enviando pedido a revisión:", err)
+    return res.status(409).json({ error: err.message || "No se pudo enviar el pedido a revisión" })
+  }
+})
+
+router.post("/:id/volver-borrador", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    const motivo = clean(req.body.motivo)
+    if (!id || !motivo) {
+      return res.status(400).json({ error: "El motivo para volver a borrador es obligatorio" })
+    }
+
+    const { data: actual, error: ae } = await supabase
+      .from("pedidos")
+      .select("id,estado")
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+    if (ae) throw ae
+    if (!actual) return res.status(404).json({ error: "Pedido no encontrado" })
+    if (actual.estado !== "en_revision") {
+      return res.status(409).json({ error: "Solo un pedido en revisión puede volver a borrador" })
+    }
+
+    const { data, error } = await supabase
+      .from("pedidos")
+      .update({
+        estado: "borrador",
+        actualizado_por: req.user.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+      .eq("empresa_id", empresaId)
+      .eq("estado", "en_revision")
+      .select("*")
+      .single()
+    if (error) throw error
+
+    await supabase.from("pedido_eventos").insert({
+      empresa_id: empresaId,
+      pedido_id: id,
+      tipo: "vuelto_borrador",
+      motivo,
+      usuario_id: req.user.id
+    })
+
+    const [enriquecido] = await enriquecerPedidos([data], empresaId)
+    return res.json(enriquecido)
+  } catch (err) {
+    console.error("Error devolviendo pedido a borrador:", err)
+    return res.status(409).json({ error: err.message || "No se pudo devolver el pedido a borrador" })
+  }
+})
 
 // ==========================
 // VERSIONES / CORRECCIONES / ANULACIÓN
