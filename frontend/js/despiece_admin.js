@@ -77,6 +77,103 @@ window.initDespiece = function initDespiece() {
     return lineas.join("")
   }
 
+  function iconoControl(estado) {
+    if (estado === "ok") return "✅"
+    if (estado === "advertencia") return "⚠️"
+    return "⛔"
+  }
+
+  function renderChecklist(aptitud) {
+    const controles = Array.isArray(aptitud?.controles) ? aptitud.controles : []
+    if (!controles.length) {
+      return '<div class="despiece-empty">No hay controles técnicos disponibles.</div>'
+    }
+
+    return controles.map(control => `
+      <div class="aptitud-check ${esc(control.estado || "bloqueado")}">
+        <div class="aptitud-check-icon">${iconoControl(control.estado)}</div>
+        <div class="aptitud-check-name">${esc(control.nombre)}</div>
+        <div class="aptitud-check-detail">${esc(control.detalle || "Sin detalle")}</div>
+      </div>
+    `).join("")
+  }
+
+  function renderAptitudItem(item) {
+    const aptitud = item.aptitud || {}
+    return `
+      <article class="aptitud-item">
+        <div class="aptitud-item-head">
+          <div>
+            <strong>${esc(item.articulo_codigo)} · ${esc(item.articulo_modelo)}</strong>
+            <div class="aptitud-item-meta">${esc(item.articulo_marca)} · ${esc(item.articulo_color)} · ${Number(item.cantidad_pares || 0)} pares</div>
+          </div>
+          ${etiquetaAptitud(aptitud)}
+        </div>
+        <div class="aptitud-checklist">
+          ${renderChecklist(aptitud)}
+        </div>
+      </article>
+    `
+  }
+
+  function abrirModalAptitud(titulo, items, resumen = null, puedeGenerar = false, estado = null) {
+    $("aptitudTitulo").textContent = titulo
+
+    if (resumen) {
+      $("aptitudResumenWrap").innerHTML = `
+        <div class="aptitud-summary">
+          <div class="aptitud-summary-card"><span>Artículos</span><strong>${Number(resumen.total || 0)}</strong></div>
+          <div class="aptitud-summary-card"><span>Aptos</span><strong>${Number(resumen.aptos || 0)}</strong></div>
+          <div class="aptitud-summary-card"><span>Advertencias</span><strong>${Number(resumen.advertencias || 0)}</strong></div>
+          <div class="aptitud-summary-card"><span>Bloqueados</span><strong>${Number(resumen.bloqueados || 0)}</strong></div>
+        </div>
+        <div class="aptitud-lote-estado">
+          <p>Estado técnico general del lote</p>
+          ${etiquetaAptitud({ estado: estado || (puedeGenerar ? "apto" : "bloqueado") })}
+        </div>
+      `
+    } else {
+      $("aptitudResumenWrap").innerHTML = ""
+    }
+
+    $("aptitudItemsWrap").innerHTML = items.map(renderAptitudItem).join("")
+    $("aptitudEstadoFinal").innerHTML = puedeGenerar
+      ? '<span class="aptitud-ready">✅ Técnicamente listo para generar Despiece.</span>'
+      : '<span class="aptitud-not-ready">⛔ Todavía no está listo para generar Despiece.</span>'
+
+    $("modalAptitudDespiece").showModal()
+  }
+
+  async function verAptitudItem(snapshotItemId) {
+    try {
+      const data = await api(`/api/despiece/items/${snapshotItemId}/aptitud`)
+      abrirModalAptitud(
+        `Aptitud técnica · ${data.item.articulo_codigo}`,
+        [{ ...data.item, aptitud: data.aptitud }],
+        null,
+        data.aptitud?.puede_generar_despiece === true,
+        data.aptitud?.estado
+      )
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  async function verAptitudLote(loteId) {
+    try {
+      const data = await api(`/api/despiece/lotes/${loteId}/aptitud`)
+      abrirModalAptitud(
+        `Lote ${String(data.lote.numero).padStart(3,"0")} · Aptitud técnica`,
+        data.items || [],
+        data.resumen || null,
+        data.puede_generar_despiece === true,
+        data.estado
+      )
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   function actualizarSeleccion() {
     const seleccion = pendientes.filter(i => seleccionados.has(Number(i.id)))
     const pares = seleccion.reduce((acc,i) => acc + Number(i.cantidad_pares || 0), 0)
@@ -99,7 +196,7 @@ window.initDespiece = function initDespiece() {
     $("despieceBloqueados").textContent = pendientes.filter(i => i.aptitud?.estado === "bloqueado").length
 
     if (!pendientes.length) {
-      body.innerHTML = '<tr><td colspan="8" class="despiece-empty">No hay artículos confirmados pendientes de asignar a lote.</td></tr>'
+      body.innerHTML = '<tr><td colspan="9" class="despiece-empty">No hay artículos confirmados pendientes de asignar a lote.</td></tr>'
       actualizarSeleccion()
       return
     }
@@ -120,6 +217,7 @@ window.initDespiece = function initDespiece() {
             ${etiquetaAptitud(item.aptitud)}
             <div class="aptitud-detalle">${detalleAptitud(item.aptitud)}</div>
           </td>
+          <td><button type="button" class="despiece-btn secondary aptitud-action" data-ver-aptitud-item="${item.id}">Ver control</button></td>
         </tr>
       `
     }).join("")
@@ -133,6 +231,10 @@ window.initDespiece = function initDespiece() {
       }
     })
 
+    body.querySelectorAll("[data-ver-aptitud-item]").forEach(btn => {
+      btn.onclick = () => verAptitudItem(Number(btn.dataset.verAptitudItem))
+    })
+
     actualizarSeleccion()
   }
 
@@ -143,7 +245,7 @@ window.initDespiece = function initDespiece() {
     $("despieceLotes").textContent = lotes.length
 
     if (!lotes.length) {
-      body.innerHTML = '<tr><td colspan="6" class="despiece-empty">Todavía no hay lotes de Despiece creados.</td></tr>'
+      body.innerHTML = '<tr><td colspan="7" class="despiece-empty">Todavía no hay lotes de Despiece creados.</td></tr>'
       return
     }
 
@@ -160,9 +262,14 @@ window.initDespiece = function initDespiece() {
           <td><strong>${Number(lote.total_articulos || 0)}</strong></td>
           <td><strong>${Number(lote.total_pares || 0)}</strong></td>
           <td class="lote-items">${contenido || "—"}</td>
+          <td><button type="button" class="despiece-btn secondary aptitud-action" data-ver-aptitud-lote="${lote.id}">Revisar aptitud</button></td>
         </tr>
       `
     }).join("")
+
+    body.querySelectorAll("[data-ver-aptitud-lote]").forEach(btn => {
+      btn.onclick = () => verAptitudLote(Number(btn.dataset.verAptitudLote))
+    })
   }
 
   async function cargar() {
@@ -200,6 +307,10 @@ window.initDespiece = function initDespiece() {
 
   document.querySelectorAll("[data-close-despiece]").forEach(btn => {
     btn.onclick = () => $("modalNuevoLoteDespiece").close()
+  })
+
+  document.querySelectorAll("[data-close-aptitud]").forEach(btn => {
+    btn.onclick = () => $("modalAptitudDespiece").close()
   })
 
   $("formNuevoLoteDespiece").onsubmit = async e => {
