@@ -16,4 +16,14 @@ console.log("SUPABASE_SECRET_KEY OK:", !!supabaseKey)
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-module.exports = { supabase }
+// Cliente administrativo aislado para operaciones internas del backend.
+// Nunca se usa para signIn/signUp ni recibe sesiones de usuario.
+const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  }
+})
+
+module.exports = { supabase, supabaseAdmin }
