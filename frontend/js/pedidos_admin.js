@@ -347,24 +347,32 @@ window.initPedidos = function () {
     }
 
     const estilos = `
-      @page { size: A4 landscape; margin: 9mm; }
+      @page { size: A4 portrait; margin: 10mm; }
       * { box-sizing: border-box; }
       html,body { margin:0; padding:0; background:#fff; color:#111; }
       body { font-family: Arial, Helvetica, sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-      .consulta-pedido-doc { width:279mm; max-width:279mm; margin:0 auto; padding:0; border:0; background:#fff; color:#111; }
-      .consulta-doc-title { text-align:center; font-size:16pt; margin:0 0 4mm; letter-spacing:.2px; }
-      .consulta-doc-head { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.3mm 6mm; font-size:8.3pt; margin-bottom:3mm; }
-      .consulta-doc-observaciones { font-size:8.3pt; border-top:.25mm solid #777; border-bottom:.25mm solid #777; padding:1.6mm 0; margin-bottom:2.5mm; }
-      .consulta-doc-item { border-bottom:.4mm solid #555; padding:1.7mm 0 2mm; break-inside:avoid; page-break-inside:avoid; }
-      .consulta-item-top { display:grid; grid-template-columns:18mm minmax(70mm,2fr) 1fr 1fr; gap:2mm 5mm; align-items:end; font-size:7.5pt; }
+      .consulta-pedido-doc {
+        width:190mm;
+        max-width:190mm;
+        margin:0 auto;
+        padding:6mm 3mm 4mm;
+        border:0;
+        background:#fff;
+        color:#111;
+      }
+      .consulta-doc-title { text-align:center; font-size:15pt; margin:0 0 4mm; letter-spacing:.2px; }
+      .consulta-doc-head { display:grid; grid-template-columns:1fr 1fr; gap:1.2mm 6mm; font-size:8pt; margin-bottom:3mm; }
+      .consulta-doc-observaciones { font-size:8pt; border-top:.25mm solid #777; border-bottom:.25mm solid #777; padding:1.5mm 0; margin-bottom:2.5mm; }
+      .consulta-doc-item { border-bottom:.4mm solid #555; padding:1.8mm 0 2.2mm; break-inside:avoid; page-break-inside:avoid; }
+      .consulta-item-top { display:grid; grid-template-columns:15mm minmax(62mm,2fr) minmax(28mm,.8fr) minmax(30mm,.9fr); gap:2mm 4mm; align-items:end; font-size:7.1pt; }
       .consulta-item-top span { color:#555; }
-      .consulta-item-top strong { display:block; font-size:8pt; }
-      .consulta-item-foot { display:flex; justify-content:flex-end; gap:7mm; margin-top:1.5mm; font-size:7.5pt; }
-      .consulta-curva { width:100%; border-collapse:collapse; margin-top:1.5mm; font-size:7.2pt; table-layout:fixed; }
-      .consulta-curva th,.consulta-curva td { border:.2mm solid #999; padding:1mm 1.2mm; text-align:center; }
-      .consulta-curva th:first-child,.consulta-curva td:first-child { text-align:left; font-weight:700; width:31mm; }
-      .consulta-doc-total { display:flex; justify-content:flex-end; gap:9mm; border-top:.5mm solid #222; margin-top:2.5mm; padding-top:2mm; font-size:8.5pt; }
-      .consulta-doc-total strong { font-size:10pt; margin-left:1.5mm; }
+      .consulta-item-top strong { display:block; font-size:7.6pt; }
+      .consulta-item-foot { display:flex; justify-content:flex-end; gap:5mm; margin-top:1.4mm; font-size:7.1pt; flex-wrap:wrap; }
+      .consulta-curva { width:100%; border-collapse:collapse; margin-top:1.5mm; font-size:6.8pt; table-layout:fixed; }
+      .consulta-curva th,.consulta-curva td { border:.2mm solid #999; padding:.9mm .8mm; text-align:center; }
+      .consulta-curva th:first-child,.consulta-curva td:first-child { text-align:left; font-weight:700; width:29mm; }
+      .consulta-doc-total { display:flex; justify-content:flex-end; gap:6mm; border-top:.5mm solid #222; margin-top:2.5mm; padding-top:2mm; font-size:8pt; flex-wrap:wrap; }
+      .consulta-doc-total strong { font-size:9.5pt; margin-left:1.2mm; }
     `
 
     doc.open()
