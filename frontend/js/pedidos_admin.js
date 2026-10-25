@@ -271,6 +271,8 @@ window.initPedidos = function () {
 
       <div class="consulta-doc-observaciones">
         <strong>Observaciones:</strong> ${esc(pedido.observaciones || "—")}
+        ${pedido.motivo_correccion ? `<br><strong>Motivo de corrección:</strong> ${esc(pedido.motivo_correccion)}` : ""}
+        ${pedido.motivo_anulacion ? `<br><strong>Motivo de anulación:</strong> ${esc(pedido.motivo_anulacion)}` : ""}
       </div>
 
       <section>
@@ -320,10 +322,110 @@ window.initPedidos = function () {
 
       $("consultaPedidoDocumento").innerHTML = documentoConsultaPedido(pedido, consultaPedidoActual.items)
       $("btnEditarDesdeConsulta").disabled = pedido.estado !== "borrador"
+      $("btnCorregirPedido").disabled = pedido.estado === "borrador" || pedido.estado === "anulado" || pedido.estado === "reemplazado"
+      $("btnAnularPedido").disabled = pedido.estado === "anulado" || pedido.estado === "reemplazado"
+      $("btnCorregirPedido").title = pedido.estado === "borrador"
+        ? "Un borrador se edita directamente; la nueva versión se crea cuando el pedido ya está cerrado."
+        : ""
       $("modalConsultaPedido").showModal()
     } catch (err) {
       mensaje(err.message, true)
     }
+  }
+
+  function fechaHoraVista(v) {
+    if (!v) return "—"
+    const d = new Date(v)
+    if (Number.isNaN(d.getTime())) return String(v)
+    return d.toLocaleString("es-AR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit"
+    })
+  }
+
+  async function abrirHistorialPedido() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido) return
+
+    try {
+      const data = await api(`/api/pedidos/${pedido.id}/versiones`)
+      const versiones = data.versiones || []
+      const eventos = data.eventos || []
+
+      $("historialPedidoContenido").innerHTML = `
+        <div class="pedido-version-meta" style="margin-bottom:12px">
+          Pedido N.º <strong>${esc(pedido.numero)}</strong> · ${versiones.length} versión${versiones.length === 1 ? "" : "es"}
+        </div>
+
+        ${versiones.map(v => `
+          <article class="pedido-version-card">
+            <div class="pedido-version-top">
+              <div>
+                <strong>V${v.version} · ${esc(String(v.estado || "").toUpperCase())}</strong>
+                <div class="pedido-version-meta">
+                  Carga ${fechaVista(v.fecha_carga)} · Entrega ${fechaVista(v.fecha_entrega)} ·
+                  ${Number(v.resumen?.articulos || 0)} artículos · ${Number(v.resumen?.pares || 0)} pares
+                </div>
+              </div>
+              <button type="button" class="pedidos-link" data-ver-version="${v.id}">Consultar</button>
+            </div>
+            ${v.motivo_correccion ? `<div class="pedido-version-reason"><strong>Motivo de corrección:</strong> ${esc(v.motivo_correccion)}</div>` : ""}
+            ${v.motivo_anulacion ? `<div class="pedido-version-reason"><strong>Motivo de anulación:</strong> ${esc(v.motivo_anulacion)}</div>` : ""}
+            ${v.reemplaza_pedido_id ? `<div class="pedido-version-meta">Reemplaza la versión asociada al registro #${v.reemplaza_pedido_id}.</div>` : ""}
+          </article>
+        `).join("")}
+
+        <div class="pedido-eventos">
+          <h3>Eventos</h3>
+          ${eventos.length ? eventos.map(e => `
+            <div class="pedido-evento">
+              <strong>${fechaHoraVista(e.created_at)}</strong>
+              <span>${esc(String(e.tipo || "").replaceAll("_"," ").toUpperCase())}${e.motivo ? " · " + esc(e.motivo) : ""}</span>
+            </div>
+          `).join("") : '<div class="pedidos-vacio compact">Sin eventos registrados.</div>'}
+        </div>
+      `
+
+      $("modalHistorialPedido").showModal()
+
+      document.querySelectorAll("[data-ver-version]").forEach(btn => {
+        btn.onclick = () => {
+          $("modalHistorialPedido").close()
+          $("modalConsultaPedido").close()
+          abrirConsultaPedido(Number(btn.dataset.verVersion))
+        }
+      })
+    } catch (err) {
+      mensaje(err.message, true)
+    }
+  }
+
+  function abrirCorreccionPedido() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido) return
+
+    if (pedido.estado === "borrador") {
+      return alert("Este pedido todavía es borrador. Editalo directamente; no hace falta crear una nueva versión.")
+    }
+    if (["anulado","reemplazado"].includes(pedido.estado)) {
+      return alert("Ese pedido ya no admite correcciones.")
+    }
+
+    $("formCorregirPedido").reset()
+    $("corregirPedidoTexto").textContent =
+      `Se creará el Pedido ${pedido.numero} · V${Number(pedido.version) + 1} copiando encabezado, artículos y curvas de V${pedido.version}.`
+    $("modalCorregirPedido").showModal()
+  }
+
+  function abrirAnulacionPedido() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido) return
+    if (["anulado","reemplazado"].includes(pedido.estado)) return
+
+    $("formAnularPedido").reset()
+    $("anularPedidoTexto").textContent =
+      `Vas a anular el Pedido ${pedido.numero} · V${pedido.version}. No se borrará ningún dato y el motivo quedará en el historial.`
+    $("modalAnularPedido").showModal()
   }
 
   function imprimirConsultaPedido() {
@@ -529,6 +631,69 @@ window.initPedidos = function () {
   }
 
   $("btnImprimirConsulta").onclick = imprimirConsultaPedido
+  $("btnHistorialPedido").onclick = abrirHistorialPedido
+  $("btnCorregirPedido").onclick = abrirCorreccionPedido
+  $("btnAnularPedido").onclick = abrirAnulacionPedido
+
+  $("formCorregirPedido").onsubmit = async e => {
+    e.preventDefault()
+    const pedido = consultaPedidoActual?.pedido
+    const motivo = $("pedidoMotivoCorreccion").value.trim()
+    if (!pedido || !motivo) return
+
+    const btn = $("btnConfirmarCorreccion")
+    btn.disabled = true
+    btn.textContent = "Creando versión…"
+
+    try {
+      const nueva = await api(`/api/pedidos/${pedido.id}/corregir`, {
+        method: "POST",
+        body: JSON.stringify({ motivo })
+      })
+
+      $("modalCorregirPedido").close()
+      $("modalConsultaPedido").close()
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+      mensaje(`Pedido ${nueva.numero} · V${nueva.version} creado como borrador de corrección.`)
+      await abrirPedido(nueva)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = "Crear nueva versión"
+    }
+  }
+
+  $("formAnularPedido").onsubmit = async e => {
+    e.preventDefault()
+    const pedido = consultaPedidoActual?.pedido
+    const motivo = $("pedidoMotivoAnulacion").value.trim()
+    if (!pedido || !motivo) return
+
+    const btn = $("btnConfirmarAnulacion")
+    btn.disabled = true
+    btn.textContent = "Anulando…"
+
+    try {
+      await api(`/api/pedidos/${pedido.id}/anular`, {
+        method: "POST",
+        body: JSON.stringify({ motivo })
+      })
+
+      $("modalAnularPedido").close()
+      $("modalConsultaPedido").close()
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+      mensaje(`Pedido ${pedido.numero} · V${pedido.version} anulado. El registro quedó preservado.`)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = "Anular pedido"
+    }
+  }
+
   $("btnEditarDesdeConsulta").onclick = () => {
     const pedido = consultaPedidoActual?.pedido
     if (!pedido || pedido.estado !== "borrador") return
