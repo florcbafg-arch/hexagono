@@ -456,7 +456,7 @@ router.get("/", async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("pedidos")
-      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,pedido_raiz_id,reemplaza_pedido_id,codigo_legacy,motivo_correccion,motivo_anulacion,anulado_at,reemplazado_at,created_at,updated_at")
+      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,pedido_raiz_id,reemplaza_pedido_id,codigo_legacy,motivo_correccion,motivo_anulacion,anulado_at,reemplazado_at,confirmado_at,confirmado_por,created_at,updated_at")
       .eq("empresa_id", empresaId)
       .order("id", { ascending: false })
     if (error) throw error
@@ -764,6 +764,123 @@ router.post("/:id/volver-borrador", async (req, res) => {
 })
 
 // ==========================
+// CONFIRMACIÓN + SNAPSHOT
+// ==========================
+router.post("/:id/confirmar", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const id = Number(req.params.id)
+    if (!id) return res.status(400).json({ error: "Pedido inválido" })
+
+    const validacion = await validarPedidoRevision(id, empresaId)
+    if (!validacion.pedido) return res.status(404).json({ error: "Pedido no encontrado" })
+    if (validacion.pedido.estado !== "en_revision") {
+      return res.status(409).json({ error: "Solo un pedido EN REVISIÓN puede confirmarse" })
+    }
+    if (!validacion.completo) {
+      return res.status(409).json({
+        error: "El pedido ya no supera los controles de confirmación",
+        validacion
+      })
+    }
+
+    const { data: snapshotId, error } = await supabase.rpc("confirmar_pedido", {
+      p_pedido_id: id,
+      p_empresa_id: empresaId,
+      p_usuario_id: req.user.id
+    })
+    if (error) throw error
+
+    const [{ data: pedido, error: pe }, { data: snapshot, error: se }] = await Promise.all([
+      supabase
+        .from("pedidos")
+        .select("*")
+        .eq("id", id)
+        .eq("empresa_id", empresaId)
+        .single(),
+      supabase
+        .from("pedido_snapshots")
+        .select("*")
+        .eq("id", Number(snapshotId))
+        .eq("empresa_id", empresaId)
+        .single()
+    ])
+    if (pe) throw pe
+    if (se) throw se
+
+    const [enriquecido] = await enriquecerPedidos([pedido], empresaId)
+    return res.json({
+      pedido: enriquecido,
+      snapshot,
+      validacion
+    })
+  } catch (err) {
+    console.error("Error confirmando pedido:", err)
+    return res.status(409).json({ error: err.message || "No se pudo confirmar el pedido" })
+  }
+})
+
+router.get("/:id/snapshot", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const pedidoId = Number(req.params.id)
+    if (!pedidoId) return res.status(400).json({ error: "Pedido inválido" })
+
+    const { data: snapshot, error: se } = await supabase
+      .from("pedido_snapshots")
+      .select("*")
+      .eq("pedido_id", pedidoId)
+      .eq("empresa_id", empresaId)
+      .maybeSingle()
+    if (se) throw se
+    if (!snapshot) return res.status(404).json({ error: "Este pedido todavía no tiene snapshot confirmado" })
+
+    const { data: items, error: ie } = await supabase
+      .from("pedido_snapshot_items")
+      .select("*")
+      .eq("snapshot_id", snapshot.id)
+      .eq("empresa_id", empresaId)
+      .order("nro_item", { ascending: true })
+    if (ie) throw ie
+
+    const itemIds = (items || []).map(i => i.id)
+    let talles = []
+    if (itemIds.length) {
+      const { data, error } = await supabase
+        .from("pedido_snapshot_talles")
+        .select("*")
+        .eq("empresa_id", empresaId)
+        .in("snapshot_item_id", itemIds)
+        .order("orden", { ascending: true })
+      if (error) throw error
+      talles = data || []
+    }
+
+    const porItem = new Map()
+    talles.forEach(t => {
+      const key = Number(t.snapshot_item_id)
+      if (!porItem.has(key)) porItem.set(key, [])
+      porItem.get(key).push(t)
+    })
+
+    return res.json({
+      snapshot,
+      items: (items || []).map(i => ({
+        ...i,
+        curva: porItem.get(Number(i.id)) || []
+      }))
+    })
+  } catch (err) {
+    console.error("Error obteniendo snapshot del pedido:", err)
+    return res.status(500).json({ error: "Error obteniendo snapshot del pedido" })
+  }
+})
+
+// ==========================
 // VERSIONES / CORRECCIONES / ANULACIÓN
 // ==========================
 router.get("/:id/versiones", async (req, res) => {
@@ -787,7 +904,7 @@ router.get("/:id/versiones", async (req, res) => {
 
     const { data: versiones, error: ve } = await supabase
       .from("pedidos")
-      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,pedido_raiz_id,reemplaza_pedido_id,codigo_legacy,motivo_correccion,motivo_anulacion,anulado_at,reemplazado_at,creado_por,actualizado_por,created_at,updated_at")
+      .select("id,numero,cliente_id,cliente_sucursal_id,fecha_carga,fecha_entrega,vendedor_id,solicitado_por,referencia_cliente,observaciones,estado,version,pedido_raiz_id,reemplaza_pedido_id,codigo_legacy,motivo_correccion,motivo_anulacion,anulado_at,reemplazado_at,confirmado_at,confirmado_por,creado_por,actualizado_por,created_at,updated_at")
       .eq("empresa_id", empresaId)
       .eq("pedido_raiz_id", raizId)
       .order("version", { ascending: false })
