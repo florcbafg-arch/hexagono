@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const { supabase } = require("../../config/supabase")
+const { supabase, supabaseAdmin } = require("../../config/supabase")
 
 function empresa(req, res) {
   const empresaId = req.user?.empresa_id
@@ -891,7 +891,7 @@ router.post("/lotes/:loteId/explotar", async (req, res) => {
       items: resultados
     }
 
-    const { data: ejecucionId, error: ge } = await supabase.rpc("guardar_explosion_despiece", {
+    const { data: ejecucionId, error: ge } = await supabaseAdmin.rpc("guardar_explosion_despiece", {
       p_empresa_id: empresaId,
       p_lote_id: loteId,
       p_usuario_id: req.user.id,
