@@ -45,6 +45,26 @@ window.initPedidos = function () {
     return y && m && d ? `${d}/${m}/${y}` : v
   }
 
+  function ayudaEstadoPedido(estado) {
+    const ayudas = {
+      borrador: "Borrador: el pedido todavía puede editarse antes de enviarlo a revisión.",
+      en_revision: "En revisión: el pedido está bloqueado mientras se controla antes de confirmar.",
+      confirmado: "Confirmado: esta versión quedó congelada. Los cambios posteriores generan una nueva versión.",
+      reemplazado: "Reemplazado: esta versión fue sustituida por una versión posterior confirmada.",
+      anulado: "Anulado: el pedido se conserva por trazabilidad, pero ya no está vigente."
+    }
+    return ayudas[estado] || ""
+  }
+
+  function claveGuiaPedidos() {
+    const user = JSON.parse(localStorage.getItem("hexagono_user") || "{}")
+    return `hexaflow_pedidos_guia_estados_v1_${user?.id || "anon"}`
+  }
+
+  function abrirGuiaPedidos() {
+    $("modalGuiaPedidos").showModal()
+  }
+
   function normalizarTexto(v) {
     return String(v ?? "")
       .normalize("NFD")
@@ -141,7 +161,7 @@ window.initPedidos = function () {
         <td>${Number(p.resumen?.articulos || 0)}</td>
         <td><strong>${Number(p.resumen?.pares || 0)}</strong></td>
         <td>V${esc(p.version)}</td>
-        <td><span class="pedido-chip ${p.estado === "confirmado" ? "confirmado" : ""}">${esc(String(p.estado || "").toUpperCase())}</span></td>
+        <td><span class="pedido-chip ${p.estado === "confirmado" ? "confirmado" : ""}" title="${esc(ayudaEstadoPedido(p.estado))}">${esc(String(p.estado || "").toUpperCase())}</span></td>
         <td>
           <button class="pedidos-link" data-consulta-pedido="${p.id}">Consultar</button>
           <button class="pedidos-link" data-edit-pedido="${p.id}">Abrir</button>
@@ -325,7 +345,12 @@ window.initPedidos = function () {
 
       const btnRevision = $("btnRevisionPedido")
       btnRevision.disabled = ["confirmado","anulado","reemplazado"].includes(pedido.estado)
-      btnRevision.textContent = pedido.estado === "en_revision" ? "↩ Revisión / volver" : "✓ Revisar pedido"
+      btnRevision.textContent = pedido.estado === "en_revision"
+        ? "↩ Revisión / confirmar"
+        : pedido.estado === "confirmado"
+          ? "✓ Confirmado"
+          : "✓ Revisar pedido"
+      btnRevision.title = ayudaEstadoPedido(pedido.estado)
 
       $("btnCorregirPedido").disabled = pedido.estado !== "confirmado"
       $("btnAnularPedido").disabled = pedido.estado === "anulado" || pedido.estado === "reemplazado"
@@ -372,6 +397,8 @@ window.initPedidos = function () {
 
       $("btnEnviarRevision").hidden = enRevision
       $("btnEnviarRevision").disabled = !validacion.completo
+      $("btnConfirmarPedido").hidden = !enRevision
+      $("btnConfirmarPedido").disabled = !validacion.completo
       $("btnVolverBorrador").hidden = !enRevision
       $("revisionVolverMotivoWrap").hidden = !enRevision
       $("revisionVolverMotivo").value = ""
@@ -407,6 +434,50 @@ window.initPedidos = function () {
     } finally {
       btn.disabled = false
       btn.textContent = "Enviar a revisión"
+    }
+  }
+
+  function abrirConfirmacionPedido() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido || pedido.estado !== "en_revision") return
+
+    $("confirmarPedidoTexto").textContent =
+      `Vas a confirmar el Pedido ${pedido.numero} · V${pedido.version}. Hexaflow volverá a validar sus datos y guardará una copia inmutable de esta versión.`
+    $("modalConfirmarPedido").showModal()
+  }
+
+  async function ejecutarConfirmacionPedido() {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido || pedido.estado !== "en_revision") return
+
+    const btn = $("btnEjecutarConfirmacion")
+    btn.disabled = true
+    btn.textContent = "Confirmando…"
+
+    try {
+      const resultado = await api(`/api/pedidos/${pedido.id}/confirmar`, {
+        method: "POST",
+        body: JSON.stringify({})
+      })
+
+      $("modalConfirmarPedido").close()
+      $("modalRevisionPedido").close()
+      $("modalConsultaPedido").close()
+
+      pedidos = await api("/api/pedidos")
+      renderPedidos()
+
+      const reemplazo = Number(resultado.pedido?.version || 1) > 1
+        ? " La versión anterior quedó REEMPLAZADA."
+        : ""
+
+      mensaje(`Pedido ${resultado.pedido.numero} · V${resultado.pedido.version} CONFIRMADO. Snapshot #${resultado.snapshot.id} guardado.${reemplazo}`)
+      await abrirConsultaPedido(resultado.pedido.id)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = "✅ Confirmar pedido"
     }
   }
 
@@ -609,6 +680,12 @@ window.initPedidos = function () {
     renderVendedores()
     renderPedidos()
     renderSelectorArticulos()
+
+    if (!localStorage.getItem(claveGuiaPedidos())) {
+      setTimeout(() => {
+        if (!$("modalGuiaPedidos").open) abrirGuiaPedidos()
+      }, 250)
+    }
   }
 
   async function abrirPedido(pedido = null) {
@@ -618,6 +695,7 @@ window.initPedidos = function () {
     $("pedidoModalTitulo").textContent = pedido ? "Editar pedido" : "Nuevo pedido"
     $("pedidoNumeroVista").textContent = pedido?.numero ? `Pedido N.º ${pedido.numero}` : "N.º automático al guardar"
     $("pedidoEstadoVista").textContent = pedido ? `${String(pedido.estado).toUpperCase()} · V${pedido.version}` : "BORRADOR · V1"
+    $("pedidoEstadoVista").title = ayudaEstadoPedido(pedido?.estado || "borrador")
     $("pedidoFechaCarga").value = pedido?.fecha_carga || hoyLocal()
     $("pedidoFechaEntrega").value = pedido?.fecha_entrega || ""
     renderClientes(pedido?.cliente_id || null)
@@ -739,7 +817,14 @@ window.initPedidos = function () {
   $("btnHistorialPedido").onclick = abrirHistorialPedido
   $("btnRevisionPedido").onclick = abrirRevisionPedido
   $("btnEnviarRevision").onclick = enviarPedidoARevision
+  $("btnConfirmarPedido").onclick = abrirConfirmacionPedido
+  $("btnEjecutarConfirmacion").onclick = ejecutarConfirmacionPedido
   $("btnVolverBorrador").onclick = volverPedidoABorrador
+  $("btnGuiaPedidos").onclick = abrirGuiaPedidos
+  $("btnEntendiGuiaPedidos").onclick = () => {
+    localStorage.setItem(claveGuiaPedidos(), "1")
+    $("modalGuiaPedidos").close()
+  }
   $("btnCorregirPedido").onclick = abrirCorreccionPedido
   $("btnAnularPedido").onclick = abrirAnulacionPedido
 
@@ -939,6 +1024,7 @@ window.initPedidos = function () {
       $("pedidoModalTitulo").textContent = "Editar pedido"
       $("pedidoNumeroVista").textContent = `Pedido N.º ${guardado.numero}`
       $("pedidoEstadoVista").textContent = `${String(guardado.estado).toUpperCase()} · V${guardado.version}`
+      $("pedidoEstadoVista").title = ayudaEstadoPedido(guardado.estado)
       $("btnAgregarPedidoItem").disabled = false
       $("pedidoItemsAyuda").textContent = "Cada artículo conserva su propia fecha de entrega, curva y cantidad."
 
