@@ -231,9 +231,105 @@ window.initDespiece = function initDespiece() {
     `
   }
 
-  function renderExplosionItem(item) {
+  let explosionActual = null
+  let filtroClasificacionExplosion = "todos"
+
+  function etiquetaTipoEscalado(tipo) {
+    const mapa = {
+      no_escalado: "No escalado",
+      escalado_alineado: "Escalado alineado",
+      escalado_desalineado: "Escalado desalineado"
+    }
+    return mapa[tipo] || "Sin clasificar"
+  }
+
+  function descripcionTipoEscalado(tipo) {
+    const mapa = {
+      no_escalado: "Insumo o material sin talle propio. Puede tener consumo distinto por talle del calzado, pero la materia prima se consolida globalmente.",
+      escalado_alineado: "Componente con talle propio que usa la misma escala del artículo: talle de artículo y talle de componente avanzan alineados.",
+      escalado_desalineado: "Componente con talle propio cuya escala no coincide con la del artículo y necesita una equivalencia explícita entre talles."
+    }
+    return mapa[tipo] || ""
+  }
+
+  function resumenClasificacionDesdeItems(items) {
+    const lineas = (items || []).flatMap(i => i.lineas || [])
+    return {
+      total: lineas.length,
+      no_escalados: lineas.filter(l => l.tipo_escalado === "no_escalado").length,
+      escalados_alineados: lineas.filter(l => l.tipo_escalado === "escalado_alineado").length,
+      escalados_desalineados: lineas.filter(l => l.tipo_escalado === "escalado_desalineado").length
+    }
+  }
+
+  function renderClasificacionExplosion(clasificacion) {
+    const r = clasificacion || { total:0, no_escalados:0, escalados_alineados:0, escalados_desalineados:0 }
+    $("explosionClasificacion").innerHTML = `
+      <section class="clasificacion-wrap">
+        <div class="clasificacion-head">
+          <div>
+            <h3>Clasificación del Despiece</h3>
+            <p>Hexaflow separa las líneas según cómo se relacionan con la escala de talles del artículo.</p>
+          </div>
+          <span class="explosion-chip">${Number(r.total || 0)} líneas</span>
+        </div>
+
+        <div class="clasificacion-resumen">
+          <div class="clasificacion-card">
+            <strong>${Number(r.no_escalados || 0)}</strong>
+            <span>No escalados</span>
+          </div>
+          <div class="clasificacion-card">
+            <strong>${Number(r.escalados_alineados || 0)}</strong>
+            <span>Escalados alineados</span>
+          </div>
+          <div class="clasificacion-card">
+            <strong>${Number(r.escalados_desalineados || 0)}</strong>
+            <span>Escalados desalineados</span>
+          </div>
+        </div>
+
+        <div class="clasificacion-filtros">
+          <button type="button" class="clasificacion-btn active" data-filtro-clasificacion="todos">Todos (${Number(r.total || 0)})</button>
+          <button type="button" class="clasificacion-btn" data-filtro-clasificacion="no_escalado">No escalados (${Number(r.no_escalados || 0)})</button>
+          <button type="button" class="clasificacion-btn" data-filtro-clasificacion="escalado_alineado">Alineados (${Number(r.escalados_alineados || 0)})</button>
+          <button type="button" class="clasificacion-btn" data-filtro-clasificacion="escalado_desalineado">Desalineados (${Number(r.escalados_desalineados || 0)})</button>
+        </div>
+
+        <div class="clasificacion-ayuda">
+          <div><strong>No escalados</strong>${esc(descripcionTipoEscalado("no_escalado"))}</div>
+          <div><strong>Escalados alineados</strong>${esc(descripcionTipoEscalado("escalado_alineado"))}</div>
+          <div><strong>Escalados desalineados</strong>${esc(descripcionTipoEscalado("escalado_desalineado"))}</div>
+        </div>
+      </section>
+    `
+
+    $("explosionClasificacion").querySelectorAll("[data-filtro-clasificacion]").forEach(btn => {
+      btn.onclick = () => {
+        filtroClasificacionExplosion = btn.dataset.filtroClasificacion || "todos"
+        $("explosionClasificacion").querySelectorAll("[data-filtro-clasificacion]").forEach(b => {
+          b.classList.toggle("active", b === btn)
+        })
+        renderExplosionItemsFiltrados()
+      }
+    })
+  }
+
+  function renderExplosionItemsFiltrados() {
+    const items = Array.isArray(explosionActual?.items) ? explosionActual.items : []
+    $("explosionItems").innerHTML = items.map(item => renderExplosionItem(item, filtroClasificacionExplosion)).join("")
+
+    if (!$("explosionItems").textContent.trim()) {
+      $("explosionItems").innerHTML = '<div class="despiece-empty">No hay líneas en esta clasificación.</div>'
+    }
+  }
+
+  function renderExplosionItem(item, filtro = "todos") {
     const grupos = new Map()
-    ;(item.lineas || []).forEach(linea => {
+    const lineasVisibles = (item.lineas || []).filter(linea =>
+      filtro === "todos" || linea.tipo_escalado === filtro
+    )
+    ;lineasVisibles.forEach(linea => {
       const nombre = linea.grupo_nombre || "SIN GRUPO"
       if (!grupos.has(nombre)) grupos.set(nombre, [])
       grupos.get(nombre).push(linea)
@@ -242,6 +338,8 @@ window.initDespiece = function initDespiece() {
     const gruposOrdenados = [...grupos.entries()].sort((a,b) =>
       ordenGrupo(a[0]) - ordenGrupo(b[0]) || a[0].localeCompare(b[0])
     )
+
+    if (!lineasVisibles.length) return ""
 
     return `
       <article class="explosion-item">
@@ -280,7 +378,7 @@ window.initDespiece = function initDespiece() {
                     <td>${esc(linea.material_nombre)}</td>
                     <td>${esc([linea.especificacion,linea.color].filter(Boolean).join(" · ") || "—")}</td>
                     <td>${esc(linea.um)}</td>
-                    <td><span class="explosion-chip">${esc(String(linea.tipo_escalado || "no_escalado").replaceAll("_"," "))}</span></td>
+                    <td><span class="explosion-chip ${esc(linea.tipo_escalado || "no_escalado")}">${esc(etiquetaTipoEscalado(linea.tipo_escalado || "no_escalado"))}</span></td>
                     <td class="num">${fmtCantidad(linea.necesidad_total)} ${esc(linea.um)}</td>
                   </tr>
                 `).join("")}
@@ -297,6 +395,9 @@ window.initDespiece = function initDespiece() {
     const items = Array.isArray(data?.items) ? data.items : []
     const numero = loteNumero || lotes.find(l => Number(l.id) === Number(ejecucion.lote_id))?.numero || "—"
 
+    explosionActual = { ...data, items }
+    filtroClasificacionExplosion = "todos"
+
     $("explosionTitulo").textContent = `Lote ${String(numero).padStart(3,"0")} · Explosión individual`
     $("explosionResumen").innerHTML = `
       <div class="explosion-summary">
@@ -306,7 +407,10 @@ window.initDespiece = function initDespiece() {
         <div class="explosion-summary-card"><span>Líneas calculadas</span><strong>${Number(ejecucion.total_lineas || 0)}</strong></div>
       </div>
     `
-    $("explosionItems").innerHTML = items.map(renderExplosionItem).join("")
+
+    const clasificacion = data?.clasificacion || resumenClasificacionDesdeItems(items)
+    renderClasificacionExplosion(clasificacion)
+    renderExplosionItemsFiltrados()
     $("modalExplosionDespiece").showModal()
   }
 
