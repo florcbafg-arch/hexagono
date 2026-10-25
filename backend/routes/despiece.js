@@ -130,16 +130,6 @@ async function evaluarAptitudItem(item, empresaId) {
     bloqueos.push(`${directosIncompletos.length} línea(s) de consumo directo no tienen consumo por par definido`)
   }
 
-  const componentesFicha = await supabase
-    .from("fichas_materiales")
-    .select("id,tipo_escalado,escala_confirmada")
-    .eq("empresa_id", empresaId)
-    .in("tipo_escalado", ["escalado_alineado","escalado_desalineado"])
-
-  if (!componentesFicha.error && componentesFicha.data?.some(m => m.escala_confirmada === false)) {
-    advertencias.push("Existen componentes escalados de ficha con escala pendiente; se incorporarán al control detallado en 1.5.4")
-  }
-
   return {
     estado: bloqueos.length ? "bloqueado" : advertencias.length ? "advertencia" : "apto",
     bloqueos,
