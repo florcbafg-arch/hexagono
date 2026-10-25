@@ -564,12 +564,29 @@ async function obtenerExplosionVigente(loteId, empresaId) {
     lineasPorItem.get(key).push({ ...l, talles: detallesPorLinea.get(Number(l.id)) || [] })
   })
 
+  const resumenClasificacion = {
+    no_escalados: lineas.filter(l => l.tipo_escalado === "no_escalado").length,
+    escalados_alineados: lineas.filter(l => l.tipo_escalado === "escalado_alineado").length,
+    escalados_desalineados: lineas.filter(l => l.tipo_escalado === "escalado_desalineado").length,
+    total: lineas.length
+  }
+
   return {
     ejecucion,
-    items: (items || []).map(i => ({
-      ...i,
-      lineas: lineasPorItem.get(Number(i.id)) || []
-    }))
+    clasificacion: resumenClasificacion,
+    items: (items || []).map(i => {
+      const itemLineas = lineasPorItem.get(Number(i.id)) || []
+      return {
+        ...i,
+        clasificacion: {
+          no_escalados: itemLineas.filter(l => l.tipo_escalado === "no_escalado").length,
+          escalados_alineados: itemLineas.filter(l => l.tipo_escalado === "escalado_alineado").length,
+          escalados_desalineados: itemLineas.filter(l => l.tipo_escalado === "escalado_desalineado").length,
+          total: itemLineas.length
+        },
+        lineas: itemLineas
+      }
+    })
   }
 }
 
