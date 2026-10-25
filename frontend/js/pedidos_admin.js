@@ -13,6 +13,7 @@ window.initPedidos = function () {
   let curvaEditor = []
   let guardando = false
   let guardandoItem = false
+  let consultaPedidoActual = null
 
   async function api(url, options = {}) {
     const res = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } })
@@ -42,6 +43,45 @@ window.initPedidos = function () {
     if (!v) return "—"
     const [y,m,d] = String(v).split("-")
     return y && m && d ? `${d}/${m}/${y}` : v
+  }
+
+  function normalizarTexto(v) {
+    return String(v ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim()
+  }
+
+  function pedidosFiltrados() {
+    const q = normalizarTexto($("pedidoBuscar")?.value)
+    const estado = $("pedidoFiltroEstado")?.value || ""
+    const desde = $("pedidoFiltroDesde")?.value || ""
+    const hasta = $("pedidoFiltroHasta")?.value || ""
+
+    return pedidos.filter(p => {
+      if (estado && p.estado !== estado) return false
+      if (desde && String(p.fecha_carga || "") < desde) return false
+      if (hasta && String(p.fecha_carga || "") > hasta) return false
+
+      if (!q) return true
+
+      const texto = normalizarTexto([
+        p.numero,
+        p.cliente?.codigo,
+        p.cliente?.nombre,
+        p.sucursal?.codigo,
+        p.sucursal?.nombre,
+        p.referencia_cliente,
+        p.observaciones,
+        p.estado,
+        p.fecha_carga,
+        p.fecha_entrega,
+        ...(p.resumen?.terminos_articulos || [])
+      ].filter(Boolean).join(" "))
+
+      return texto.includes(q)
+    })
   }
 
   function etiquetaArticulo(a) {
@@ -80,12 +120,17 @@ window.initPedidos = function () {
   }
 
   function renderPedidos() {
+    const filtrados = pedidosFiltrados()
+
     $("pedidosTotal").textContent = pedidos.length
     $("pedidosBorradores").textContent = pedidos.filter(p => p.estado === "borrador").length
     $("pedidosConfirmados").textContent = pedidos.filter(p => p.estado === "confirmado").length
-    $("pedidosVacio").hidden = pedidos.length > 0
+    $("pedidosVacio").hidden = filtrados.length > 0
+    $("pedidosVacio").textContent = pedidos.length && !filtrados.length
+      ? "No hay pedidos que coincidan con los filtros."
+      : "Todavía no hay pedidos cargados."
 
-    $("pedidosTabla").innerHTML = pedidos.map(p => `
+    $("pedidosTabla").innerHTML = filtrados.map(p => `
       <tr>
         <td><strong>${esc(p.numero || "—")}</strong></td>
         <td>${esc(p.cliente?.nombre || "—")}</td>
@@ -97,11 +142,18 @@ window.initPedidos = function () {
         <td><strong>${Number(p.resumen?.pares || 0)}</strong></td>
         <td>V${esc(p.version)}</td>
         <td><span class="pedido-chip ${p.estado === "confirmado" ? "confirmado" : ""}">${esc(String(p.estado || "").toUpperCase())}</span></td>
-        <td><button class="pedidos-link" data-edit-pedido="${p.id}">Abrir</button></td>
+        <td>
+          <button class="pedidos-link" data-consulta-pedido="${p.id}">Consultar</button>
+          <button class="pedidos-link" data-edit-pedido="${p.id}">Abrir</button>
+        </td>
       </tr>`).join("")
 
     document.querySelectorAll("[data-edit-pedido]").forEach(b => {
       b.onclick = () => abrirPedido(pedidos.find(p => Number(p.id) === Number(b.dataset.editPedido)))
+    })
+
+    document.querySelectorAll("[data-consulta-pedido]").forEach(b => {
+      b.onclick = () => abrirConsultaPedido(Number(b.dataset.consultaPedido))
     })
   }
 
@@ -166,6 +218,165 @@ window.initPedidos = function () {
     $("pedidoItemsAyuda").textContent = pedidoAbierto?.estado === "borrador"
       ? "Cada artículo conserva su propia fecha de entrega, curva y cantidad."
       : "El pedido ya no está en borrador."
+  }
+
+  function curvaConsulta(item) {
+    const talles = item.curva || []
+    if (!talles.length) return ""
+
+    return `
+      <table class="consulta-curva">
+        <thead>
+          <tr>
+            <th>Curva</th>
+            ${talles.map(t => `<th>${esc(t.talle)}</th>`).join("")}
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cantidad</td>
+            ${talles.map(t => `<td>${Number(t.cantidad || 0)}</td>`).join("")}
+            <td><strong>${Number(item.cantidad_pares || 0)}</strong></td>
+          </tr>
+          <tr>
+            <td>Cantidad pendiente</td>
+            ${talles.map(t => `<td>${Number(t.cantidad_pendiente || 0)}</td>`).join("")}
+            <td><strong>${Number(item.cantidad_pendiente || 0)}</strong></td>
+          </tr>
+        </tbody>
+      </table>`
+  }
+
+  function documentoConsultaPedido(pedido, items) {
+    const totalPares = items.reduce((acc, i) => acc + Number(i.cantidad_pares || 0), 0)
+    const totalPendiente = items.reduce((acc, i) => acc + Number(i.cantidad_pendiente || 0), 0)
+
+    return `
+      <h1 class="consulta-doc-title">CONSULTA DEL PEDIDO</h1>
+
+      <div class="consulta-doc-head">
+        <div><strong>Fecha:</strong> ${fechaVista(pedido.fecha_carga)}</div>
+        <div><strong>Nro. Pedido:</strong> ${esc(pedido.numero || "—")}</div>
+        <div><strong>Cliente:</strong> ${esc(pedido.cliente?.nombre || "—")}</div>
+        <div><strong>Cód. Cliente:</strong> ${esc(pedido.cliente?.codigo || "—")}</div>
+        <div><strong>Nro. Sucursal:</strong> ${esc(pedido.sucursal?.codigo || "—")}</div>
+        <div><strong>Sucursal:</strong> ${esc(pedido.sucursal?.nombre || "—")}</div>
+        <div><strong>Entrega general:</strong> ${fechaVista(pedido.fecha_entrega)}</div>
+        <div><strong>Versión / Estado:</strong> V${esc(pedido.version)} · ${esc(String(pedido.estado || "").toUpperCase())}</div>
+        <div><strong>Vendedor:</strong> ${esc(pedido.vendedor?.nombre || "—")}</div>
+        <div><strong>Solicitado por:</strong> ${esc(pedido.solicitado_por || "—")}</div>
+        <div><strong>Referencia cliente:</strong> ${esc(pedido.referencia_cliente || "—")}</div>
+      </div>
+
+      <div class="consulta-doc-observaciones">
+        <strong>Observaciones:</strong> ${esc(pedido.observaciones || "—")}
+      </div>
+
+      <section>
+        ${items.length ? items.map(item => {
+          const a = item.articulo || {}
+          return `
+            <article class="consulta-doc-item">
+              <div class="consulta-item-top">
+                <div><span>Nro. Ítem</span><strong>${Number(item.nro_item || 0)}</strong></div>
+                <div><span>Artículo</span><strong>${esc(a.codigo || "—")} · ${esc(a.modelos?.nombre || "—")}</strong></div>
+                <div><span>Color</span><strong>${esc(a.color || "—")}</strong></div>
+                <div><span>Marca</span><strong>${esc(a.modelos?.marca || "—")}</strong></div>
+              </div>
+
+              <div class="consulta-item-foot">
+                <span><strong>Fecha entrega:</strong> ${fechaVista(item.fecha_entrega)}</span>
+                <span><strong>Cantidad:</strong> ${Number(item.cantidad_pares || 0)}</span>
+                <span><strong>Cantidad pendiente:</strong> ${Number(item.cantidad_pendiente || 0)}</span>
+              </div>
+
+              ${curvaConsulta(item)}
+
+              ${item.observaciones ? `<div class="consulta-item-foot"><span><strong>Observación:</strong> ${esc(item.observaciones)}</span></div>` : ""}
+            </article>`
+        }).join("") : '<p>El pedido todavía no contiene artículos.</p>'}
+      </section>
+
+      <div class="consulta-doc-total">
+        <span>Total artículos <strong>${items.length}</strong></span>
+        <span>Total pedido <strong>${totalPares}</strong></span>
+        <span>Total pendiente <strong>${totalPendiente}</strong></span>
+      </div>
+    `
+  }
+
+  async function abrirConsultaPedido(pedidoId) {
+    try {
+      const [pedido, detalle] = await Promise.all([
+        api(`/api/pedidos/${pedidoId}`),
+        api(`/api/pedidos/${pedidoId}/items`)
+      ])
+
+      consultaPedidoActual = {
+        pedido,
+        items: detalle.items || []
+      }
+
+      $("consultaPedidoDocumento").innerHTML = documentoConsultaPedido(pedido, consultaPedidoActual.items)
+      $("btnEditarDesdeConsulta").disabled = pedido.estado !== "borrador"
+      $("modalConsultaPedido").showModal()
+    } catch (err) {
+      mensaje(err.message, true)
+    }
+  }
+
+  function imprimirConsultaPedido() {
+    if (!consultaPedidoActual) return
+
+    const origen = $("consultaPedidoDocumento")
+    const iframe = document.createElement("iframe")
+    iframe.setAttribute("aria-hidden", "true")
+    iframe.style.position = "fixed"
+    iframe.style.right = "0"
+    iframe.style.bottom = "0"
+    iframe.style.width = "0"
+    iframe.style.height = "0"
+    iframe.style.border = "0"
+    document.body.appendChild(iframe)
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!doc) {
+      iframe.remove()
+      return mensaje("No se pudo preparar la impresión.", true)
+    }
+
+    const estilos = `
+      @page { size: A4 landscape; margin: 9mm; }
+      * { box-sizing: border-box; }
+      html,body { margin:0; padding:0; background:#fff; color:#111; }
+      body { font-family: Arial, Helvetica, sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .consulta-pedido-doc { width:279mm; max-width:279mm; margin:0 auto; padding:0; border:0; background:#fff; color:#111; }
+      .consulta-doc-title { text-align:center; font-size:16pt; margin:0 0 4mm; letter-spacing:.2px; }
+      .consulta-doc-head { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.3mm 6mm; font-size:8.3pt; margin-bottom:3mm; }
+      .consulta-doc-observaciones { font-size:8.3pt; border-top:.25mm solid #777; border-bottom:.25mm solid #777; padding:1.6mm 0; margin-bottom:2.5mm; }
+      .consulta-doc-item { border-bottom:.4mm solid #555; padding:1.7mm 0 2mm; break-inside:avoid; page-break-inside:avoid; }
+      .consulta-item-top { display:grid; grid-template-columns:18mm minmax(70mm,2fr) 1fr 1fr; gap:2mm 5mm; align-items:end; font-size:7.5pt; }
+      .consulta-item-top span { color:#555; }
+      .consulta-item-top strong { display:block; font-size:8pt; }
+      .consulta-item-foot { display:flex; justify-content:flex-end; gap:7mm; margin-top:1.5mm; font-size:7.5pt; }
+      .consulta-curva { width:100%; border-collapse:collapse; margin-top:1.5mm; font-size:7.2pt; table-layout:fixed; }
+      .consulta-curva th,.consulta-curva td { border:.2mm solid #999; padding:1mm 1.2mm; text-align:center; }
+      .consulta-curva th:first-child,.consulta-curva td:first-child { text-align:left; font-weight:700; width:31mm; }
+      .consulta-doc-total { display:flex; justify-content:flex-end; gap:9mm; border-top:.5mm solid #222; margin-top:2.5mm; padding-top:2mm; font-size:8.5pt; }
+      .consulta-doc-total strong { font-size:10pt; margin-left:1.5mm; }
+    `
+
+    doc.open()
+    doc.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Consulta Pedido ${esc(consultaPedidoActual.pedido.numero || "")}</title><style>${estilos}</style></head><body>${origen.outerHTML}</body></html>`)
+    doc.close()
+
+    const limpiar = () => setTimeout(() => iframe.remove(), 500)
+    iframe.contentWindow.addEventListener("afterprint", limpiar, { once: true })
+    setTimeout(() => {
+      iframe.contentWindow.focus()
+      iframe.contentWindow.print()
+    }, 120)
   }
 
   async function cargarBase() {
@@ -295,6 +506,26 @@ window.initPedidos = function () {
       pedidos = await api("/api/pedidos")
       renderPedidos()
     } catch (err) { mensaje(err.message, true) }
+  }
+
+  $("pedidoBuscar").oninput = renderPedidos
+  $("pedidoFiltroEstado").onchange = renderPedidos
+  $("pedidoFiltroDesde").onchange = renderPedidos
+  $("pedidoFiltroHasta").onchange = renderPedidos
+  $("btnLimpiarFiltros").onclick = () => {
+    $("pedidoBuscar").value = ""
+    $("pedidoFiltroEstado").value = ""
+    $("pedidoFiltroDesde").value = ""
+    $("pedidoFiltroHasta").value = ""
+    renderPedidos()
+  }
+
+  $("btnImprimirConsulta").onclick = imprimirConsultaPedido
+  $("btnEditarDesdeConsulta").onclick = () => {
+    const pedido = consultaPedidoActual?.pedido
+    if (!pedido || pedido.estado !== "borrador") return
+    $("modalConsultaPedido").close()
+    abrirPedido(pedido)
   }
 
   $("btnNuevoPedido").onclick = () => abrirPedido()
