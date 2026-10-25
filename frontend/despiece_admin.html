@@ -1,0 +1,142 @@
+<section class="despiece-v1">
+  <style>
+    .despiece-v1{
+      --hf-title:28px;--hf-subtitle:18px;--hf-body:16px;--hf-control:15px;--hf-table:14px;--hf-helper:13px;
+      color:var(--text-color,#151923);font-size:var(--hf-body);line-height:1.45;
+    }
+    .despiece-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+    .despiece-head h1{margin:2px 0 5px;font-size:var(--hf-title);line-height:1.15}
+    .despiece-eyebrow{margin:0;font-size:var(--hf-helper);font-weight:800;color:#673df4;letter-spacing:.04em}
+    .despiece-sub{margin:0;color:#697386}
+    .despiece-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .despiece-btn{border:0;border-radius:8px;padding:10px 14px;min-height:40px;font-size:14px;font-weight:700;cursor:pointer;background:#673df4;color:#fff}
+    .despiece-btn.secondary{background:#eef0f5;color:#333a48}
+    .despiece-btn:disabled{opacity:.45;cursor:not-allowed}
+    .despiece-resumen{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+    .despiece-card{background:#fff;border:1px solid #dfe3ea;border-radius:10px;padding:14px 16px}
+    .despiece-card span{display:block;font-size:14px;color:#667085}
+    .despiece-card strong{display:block;margin-top:3px;font-size:24px}
+    .despiece-panel{background:#fff;border:1px solid #dfe3ea;border-radius:12px;overflow:hidden;margin-bottom:16px}
+    .despiece-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid #e7eaf0}
+    .despiece-panel-head h2{margin:0;font-size:20px}
+    .despiece-panel-head p{margin:3px 0 0;font-size:14px;color:#697386}
+    .despiece-table-wrap{overflow:auto}
+    .despiece-table{width:100%;border-collapse:collapse;min-width:1020px}
+    .despiece-table th,.despiece-table td{padding:11px 12px;border-bottom:1px solid #eceff3;text-align:left;vertical-align:top;font-size:14px}
+    .despiece-table th{font-size:13px;background:#fafbfc;color:#505866}
+    .despiece-table tr:last-child td{border-bottom:0}
+    .despiece-check{width:18px;height:18px}
+    .semaforo{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:13px;padding:5px 8px;border-radius:999px;white-space:nowrap}
+    .semaforo.apto{background:#eaf8ee;color:#237340}
+    .semaforo.advertencia{background:#fff6d8;color:#8a6600}
+    .semaforo.bloqueado{background:#fff0f0;color:#a33}
+    .aptitud-detalle{margin-top:6px;font-size:12px;color:#6b7280;max-width:360px}
+    .aptitud-detalle div{margin-top:2px}
+    .lote-chip{display:inline-block;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:800;background:#f0ebff;color:#5a32c8}
+    .lote-items{font-size:13px;color:#586171}
+    .despiece-empty{padding:24px;text-align:center;color:#7b8492}
+    .despiece-dialog{border:0;border-radius:14px;width:min(720px,88vw);max-height:88vh;padding:0;box-shadow:0 22px 70px rgba(0,0,0,.28)}
+    .despiece-dialog::backdrop{background:rgba(10,15,25,.58)}
+    .despiece-dialog form{padding:24px 26px}
+    .despiece-dialog-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:18px}
+    .despiece-dialog-head h2{margin:2px 0 0;font-size:22px}
+    .despiece-close{border:0;background:#673df4;color:#fff;width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px}
+    .despiece-field{display:grid;gap:7px;margin-top:12px}
+    .despiece-field span{font-size:14px;font-weight:700}
+    .despiece-field input,.despiece-field textarea{width:100%;box-sizing:border-box;border:1px solid #ccd2dd;border-radius:8px;padding:10px 11px;font-size:15px}
+    .despiece-seleccion{margin-top:12px;padding:12px 14px;border:1px solid #e0e4ea;border-radius:9px;background:#fafbfc;font-size:14px}
+    .despiece-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+    .despiece-status{margin-bottom:12px;padding:10px 12px;border-radius:8px;display:none;font-size:14px}
+    .despiece-status.ok{display:block;background:#edf9f0;color:#276f3d}
+    .despiece-status.error{display:block;background:#fff1f1;color:#a23838}
+    @media(max-width:900px){
+      .despiece-resumen{grid-template-columns:1fr 1fr}
+      .despiece-head{flex-direction:column}
+    }
+  </style>
+
+  <div class="despiece-head">
+    <div>
+      <p class="despiece-eyebrow">PREPRODUCCIÓN</p>
+      <h1>Despiece</h1>
+      <p class="despiece-sub">Agrupá artículos confirmados en lotes y prepará su necesidad técnica de materiales.</p>
+    </div>
+    <div class="despiece-actions">
+      <button class="despiece-btn" id="btnNuevoLoteDespiece" disabled>＋ Crear lote con seleccionados</button>
+    </div>
+  </div>
+
+  <div id="despieceMensaje" class="despiece-status"></div>
+
+  <div class="despiece-resumen">
+    <div class="despiece-card"><span>Artículos pendientes</span><strong id="despiecePendientes">0</strong></div>
+    <div class="despiece-card"><span>Aptos técnicamente</span><strong id="despieceAptos">0</strong></div>
+    <div class="despiece-card"><span>Con bloqueo</span><strong id="despieceBloqueados">0</strong></div>
+    <div class="despiece-card"><span>Lotes creados</span><strong id="despieceLotes">0</strong></div>
+  </div>
+
+  <section class="despiece-panel">
+    <div class="despiece-panel-head">
+      <div>
+        <h2>Artículos confirmados pendientes de lote</h2>
+        <p>Cada fila pertenece al snapshot confirmado de un Pedido. El semáforo anticipa si técnicamente puede despiezarse.</p>
+      </div>
+    </div>
+    <div class="despiece-table-wrap">
+      <table class="despiece-table">
+        <thead>
+          <tr>
+            <th></th><th>Pedido</th><th>Artículo</th><th>Marca</th><th>Color</th><th>Pares</th><th>Entrega</th><th>Aptitud técnica</th>
+          </tr>
+        </thead>
+        <tbody id="despiecePendientesBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="despiece-panel">
+    <div class="despiece-panel-head">
+      <div>
+        <h2>Lotes de Despiece / Compra</h2>
+        <p>Un lote puede reunir artículos de distintos pedidos confirmados. Todavía no descuenta Stock ni genera Compras.</p>
+      </div>
+    </div>
+    <div class="despiece-table-wrap">
+      <table class="despiece-table">
+        <thead>
+          <tr><th>Lote</th><th>Estado</th><th>Descripción</th><th>Artículos</th><th>Pares</th><th>Contenido</th></tr>
+        </thead>
+        <tbody id="despieceLotesBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="modalNuevoLoteDespiece" class="despiece-dialog">
+    <form id="formNuevoLoteDespiece" method="dialog">
+      <div class="despiece-dialog-head">
+        <div>
+          <p class="despiece-eyebrow">NUEVO LOTE</p>
+          <h2>Crear Lote de Despiece / Compra</h2>
+        </div>
+        <button type="button" class="despiece-close" data-close-despiece>✕</button>
+      </div>
+
+      <div id="despieceSeleccionResumen" class="despiece-seleccion"></div>
+
+      <label class="despiece-field">
+        <span>Descripción</span>
+        <input id="despieceDescripcion" maxlength="160" placeholder="Ej: Compra noviembre · primera tanda">
+      </label>
+
+      <label class="despiece-field">
+        <span>Observaciones</span>
+        <textarea id="despieceObservaciones" rows="3" placeholder="Notas opcionales del lote"></textarea>
+      </label>
+
+      <div class="despiece-dialog-actions">
+        <button type="button" class="despiece-btn secondary" data-close-despiece>Cancelar</button>
+        <button type="submit" class="despiece-btn" id="btnConfirmarLoteDespiece">Crear lote</button>
+      </div>
+    </form>
+  </dialog>
+</section>
