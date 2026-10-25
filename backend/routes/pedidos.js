@@ -176,23 +176,47 @@ async function enriquecerPedidos(pedidos, empresaId) {
 
   const pedidoIds = pedidos.map(p => p.id)
   let items = []
+  let articulosPedido = []
   if (pedidoIds.length) {
     const { data, error } = await supabase
       .from("pedido_items")
-      .select("pedido_id,cantidad_pares")
+      .select("pedido_id,articulo_id,cantidad_pares,cantidad_pendiente")
       .eq("empresa_id", empresaId)
       .eq("activo", true)
       .in("pedido_id", pedidoIds)
     if (error) throw error
     items = data || []
+
+    const articuloIds = [...new Set(items.map(i => i.articulo_id).filter(Boolean))]
+    if (articuloIds.length) {
+      const { data: arts, error: ae } = await supabase
+        .from("articulos")
+        .select("id,codigo,color,modelo_id,modelos(id,nombre,marca)")
+        .eq("empresa_id", empresaId)
+        .in("id", articuloIds)
+      if (ae) throw ae
+      articulosPedido = arts || []
+    }
   }
 
+  const am = new Map(articulosPedido.map(a => [Number(a.id), a]))
   const resumen = new Map()
   items.forEach(i => {
     const key = Number(i.pedido_id)
-    const actual = resumen.get(key) || { articulos: 0, pares: 0 }
+    const actual = resumen.get(key) || { articulos: 0, pares: 0, pendiente: 0, terminos_articulos: [] }
     actual.articulos += 1
     actual.pares += Number(i.cantidad_pares) || 0
+    actual.pendiente += Number(i.cantidad_pendiente) || 0
+
+    const articulo = am.get(Number(i.articulo_id))
+    if (articulo) {
+      actual.terminos_articulos.push([
+        articulo.codigo,
+        articulo.color,
+        articulo.modelos?.nombre,
+        articulo.modelos?.marca
+      ].filter(Boolean).join(" "))
+    }
     resumen.set(key, actual)
   })
 
@@ -201,7 +225,7 @@ async function enriquecerPedidos(pedidos, empresaId) {
     cliente: cm.get(Number(p.cliente_id)) || null,
     sucursal: sm.get(Number(p.cliente_sucursal_id)) || null,
     vendedor: um.get(Number(p.vendedor_id)) || null,
-    resumen: resumen.get(Number(p.id)) || { articulos: 0, pares: 0 }
+    resumen: resumen.get(Number(p.id)) || { articulos: 0, pares: 0, pendiente: 0, terminos_articulos: [] }
   }))
 }
 
@@ -361,7 +385,7 @@ router.get("/vendedores", async (req, res) => {
 })
 
 // ==========================
-// PEDIDOS — FASE 1.4.1
+// PEDIDOS
 // ==========================
 router.get("/", async (req, res) => {
   const empresaId = empresa(req, res)
