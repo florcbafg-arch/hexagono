@@ -49,6 +49,32 @@
     .despiece-status{margin-bottom:12px;padding:10px 12px;border-radius:8px;display:none;font-size:14px}
     .despiece-status.ok{display:block;background:#edf9f0;color:#276f3d}
     .despiece-status.error{display:block;background:#fff1f1;color:#a23838}
+    .aptitud-action{white-space:nowrap}
+    .aptitud-dialog{width:min(980px,90vw)}
+    .aptitud-body{padding:0 26px 26px}
+    .aptitud-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+    .aptitud-summary-card{border:1px solid #dfe3ea;border-radius:10px;padding:12px 14px;background:#fff}
+    .aptitud-summary-card span{display:block;color:#667085;font-size:13px}
+    .aptitud-summary-card strong{display:block;font-size:22px;margin-top:2px}
+    .aptitud-lote-estado{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #e2e6ed;border-radius:10px;margin-bottom:14px;background:#fafbfc}
+    .aptitud-lote-estado p{margin:0;font-size:14px;color:#586171}
+    .aptitud-item{border:1px solid #dfe3ea;border-radius:10px;margin-top:12px;overflow:hidden;background:#fff}
+    .aptitud-item-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:13px 15px;background:#fafbfc;border-bottom:1px solid #e8ebf0}
+    .aptitud-item-head strong{font-size:15px}
+    .aptitud-item-meta{margin-top:3px;font-size:13px;color:#6b7280}
+    .aptitud-checklist{padding:8px 15px 13px}
+    .aptitud-check{display:grid;grid-template-columns:28px minmax(160px,.75fr) 1.5fr;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #eef0f4}
+    .aptitud-check:last-child{border-bottom:0}
+    .aptitud-check-icon{font-size:16px;line-height:1.2}
+    .aptitud-check-name{font-weight:800;font-size:14px}
+    .aptitud-check-detail{font-size:13px;color:#626b79;line-height:1.4}
+    .aptitud-check.ok .aptitud-check-name{color:#237340}
+    .aptitud-check.advertencia .aptitud-check-name{color:#8a6600}
+    .aptitud-check.bloqueado .aptitud-check-name{color:#a33}
+    .aptitud-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid #e4e7ec}
+    .aptitud-foot-note{font-size:13px;color:#667085}
+    .aptitud-ready{font-weight:800;color:#237340}
+    .aptitud-not-ready{font-weight:800;color:#a33}
     @media(max-width:900px){
       .despiece-resumen{grid-template-columns:1fr 1fr}
       .despiece-head{flex-direction:column}
@@ -86,7 +112,7 @@
       <table class="despiece-table">
         <thead>
           <tr>
-            <th></th><th>Pedido</th><th>Artículo</th><th>Marca</th><th>Color</th><th>Pares</th><th>Entrega</th><th>Aptitud técnica</th>
+            <th></th><th>Pedido</th><th>Artículo</th><th>Marca</th><th>Color</th><th>Pares</th><th>Entrega</th><th>Aptitud técnica</th><th>Acción</th>
           </tr>
         </thead>
         <tbody id="despiecePendientesBody"></tbody>
@@ -104,7 +130,7 @@
     <div class="despiece-table-wrap">
       <table class="despiece-table">
         <thead>
-          <tr><th>Lote</th><th>Estado</th><th>Descripción</th><th>Artículos</th><th>Pares</th><th>Contenido</th></tr>
+          <tr><th>Lote</th><th>Estado</th><th>Descripción</th><th>Artículos</th><th>Pares</th><th>Contenido</th><th>Acción</th></tr>
         </thead>
         <tbody id="despieceLotesBody"></tbody>
       </table>
@@ -138,5 +164,25 @@
         <button type="submit" class="despiece-btn" id="btnConfirmarLoteDespiece">Crear lote</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="modalAptitudDespiece" class="despiece-dialog aptitud-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">CONTROL TÉCNICO</p>
+        <h2 id="aptitudTitulo">Aptitud para Despiece</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-aptitud>✕</button>
+    </div>
+
+    <div class="aptitud-body">
+      <div id="aptitudResumenWrap"></div>
+      <div id="aptitudItemsWrap"></div>
+
+      <div class="aptitud-foot">
+        <div id="aptitudEstadoFinal" class="aptitud-foot-note"></div>
+        <button type="button" class="despiece-btn secondary" data-close-aptitud>Cerrar</button>
+      </div>
+    </div>
   </dialog>
 </section>
