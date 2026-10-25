@@ -75,6 +75,30 @@
     .aptitud-foot-note{font-size:13px;color:#667085}
     .aptitud-ready{font-weight:800;color:#237340}
     .aptitud-not-ready{font-weight:800;color:#a33}
+    .explosion-dialog{width:min(1120px,92vw)}
+    .explosion-body{padding:0 26px 26px}
+    .explosion-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+    .explosion-summary-card{border:1px solid #dfe3ea;border-radius:10px;padding:12px 14px;background:#fafbfc}
+    .explosion-summary-card span{display:block;font-size:13px;color:#667085}
+    .explosion-summary-card strong{display:block;font-size:21px;margin-top:2px}
+    .explosion-item{border:1px solid #dfe3ea;border-radius:11px;overflow:hidden;margin-top:14px}
+    .explosion-item-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:14px 16px;background:#fafbfc;border-bottom:1px solid #e4e7ec}
+    .explosion-item-head strong{font-size:16px}
+    .explosion-item-meta{font-size:13px;color:#667085;margin-top:3px}
+    .explosion-grupo{margin:0}
+    .explosion-grupo-title{padding:8px 12px;background:#686b70;color:#fff;font-size:13px;text-align:center;font-weight:800;letter-spacing:.03em}
+    .explosion-table{width:100%;border-collapse:collapse}
+    .explosion-table th,.explosion-table td{padding:8px 10px;border-bottom:1px solid #e9ecf1;text-align:left;font-size:13px;vertical-align:top}
+    .explosion-table th{background:#f8f9fb;color:#525b69;font-size:12px}
+    .explosion-table td.num{text-align:right;font-weight:800;white-space:nowrap}
+    .explosion-line-detail{margin-top:6px}
+    .explosion-line-detail summary{cursor:pointer;font-size:12px;font-weight:700;color:#5f3de2}
+    .explosion-talles{margin-top:7px;border:1px solid #e3e6ec;border-radius:7px;overflow:hidden}
+    .explosion-talle-row{display:grid;grid-template-columns:80px 80px 1fr 90px;gap:8px;padding:6px 8px;font-size:12px;border-bottom:1px solid #eceff3}
+    .explosion-talle-row:last-child{border-bottom:0}
+    .explosion-talle-row.head{background:#f7f8fa;font-weight:800;color:#5d6573}
+    .explosion-chip{display:inline-flex;padding:4px 7px;border-radius:999px;background:#eef0f5;color:#4d5664;font-size:11px;font-weight:800}
+    .lote-actions{display:flex;gap:6px;flex-wrap:wrap}
     @media(max-width:900px){
       .despiece-resumen{grid-template-columns:1fr 1fr}
       .despiece-head{flex-direction:column}
@@ -181,7 +205,30 @@
 
       <div class="aptitud-foot">
         <div id="aptitudEstadoFinal" class="aptitud-foot-note"></div>
-        <button type="button" class="despiece-btn secondary" data-close-aptitud>Cerrar</button>
+        <div class="despiece-actions">
+          <button type="button" class="despiece-btn" id="btnGenerarDespiece" hidden>⚙ Generar Despiece</button>
+          <button type="button" class="despiece-btn secondary" data-close-aptitud>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalExplosionDespiece" class="despiece-dialog explosion-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">EXPLOSIÓN INDIVIDUAL</p>
+        <h2 id="explosionTitulo">Despiece calculado</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-explosion>✕</button>
+    </div>
+
+    <div class="explosion-body">
+      <div id="explosionResumen"></div>
+      <div id="explosionItems"></div>
+
+      <div class="aptitud-foot">
+        <div class="aptitud-foot-note">Necesidad técnica bruta. Todavía no descuenta Stock ni genera Compras.</div>
+        <button type="button" class="despiece-btn secondary" data-close-explosion>Cerrar</button>
       </div>
     </div>
   </dialog>
