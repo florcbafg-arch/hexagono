@@ -117,7 +117,16 @@
     <div class="main">
       <div class="header">
   <div class="header-left">
-    Panel Administrador | 👤 <span id="usuarioNombre"></span>
+    <button
+      type="button"
+      class="btn-sidebar-toggle"
+      id="btnSidebarToggle"
+      onclick="toggleSidebar()"
+      aria-label="Ocultar menú lateral"
+      aria-expanded="true"
+      title="Ocultar menú lateral"
+    >☰</button>
+    <span>Panel Administrador | 👤 <span id="usuarioNombre"></span></span>
   </div>
 
   <div class="header-right">
@@ -151,6 +160,7 @@
   }
 
   actualizarTextoTema()
+  aplicarEstadoSidebar()
 
   const user = JSON.parse(localStorage.getItem("hexagono_user"))
   const usuarioNombre = document.getElementById("usuarioNombre")
@@ -248,6 +258,29 @@ function toggleDarkMode() {
   localStorage.setItem("hexaflow_theme", activo ? "dark" : "light")
 
   actualizarTextoTema()
+}
+
+function aplicarEstadoSidebar() {
+  const cerrado = localStorage.getItem("hexaflow_sidebar_collapsed") === "1"
+  document.body.classList.toggle("sidebar-collapsed", cerrado)
+  actualizarBotonSidebar()
+}
+
+function actualizarBotonSidebar() {
+  const btn = document.getElementById("btnSidebarToggle")
+  if (!btn) return
+
+  const cerrado = document.body.classList.contains("sidebar-collapsed")
+  btn.setAttribute("aria-expanded", cerrado ? "false" : "true")
+  btn.setAttribute("aria-label", cerrado ? "Mostrar menú lateral" : "Ocultar menú lateral")
+  btn.title = cerrado ? "Mostrar menú lateral" : "Ocultar menú lateral"
+  btn.innerText = cerrado ? "☰" : "☰"
+}
+
+function toggleSidebar() {
+  const cerrado = document.body.classList.toggle("sidebar-collapsed")
+  localStorage.setItem("hexaflow_sidebar_collapsed", cerrado ? "1" : "0")
+  actualizarBotonSidebar()
 }
   </script>
 
