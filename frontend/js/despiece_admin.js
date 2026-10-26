@@ -423,6 +423,119 @@ window.initDespiece = function initDespiece() {
     }
   }
 
+  function renderOrigenGlobal(material) {
+    const aportes = Array.isArray(material.contribuciones) ? material.contribuciones : []
+    if (!aportes.length) return ""
+
+    return `
+      <details class="global-origin">
+        <summary>Ver origen · ${aportes.length} línea(s)</summary>
+        <div class="global-origin-list">
+          <div class="global-origin-row head">
+            <span>Pedido</span><span>Artículo / pieza</span><span>Grupo</span><span>Aporte</span>
+          </div>
+          ${aportes.map(a => `
+            <div class="global-origin-row">
+              <span>${esc(a.pedido_numero)} · V${esc(a.pedido_version)}</span>
+              <span><strong>${esc(a.articulo_codigo)}</strong> · ${esc(a.pieza_nombre)}</span>
+              <span>${esc(a.grupo_nombre || "—")}</span>
+              <strong>${fmtCantidad(a.necesidad)} ${esc(a.um)}</strong>
+            </div>
+          `).join("")}
+        </div>
+      </details>
+    `
+  }
+
+  function renderTallesGlobal(material) {
+    const talles = Array.isArray(material.por_talle) ? material.por_talle : []
+    if (!talles.length) return ""
+
+    return `
+      <div class="global-talles">
+        ${talles.map(t => `
+          <span class="global-talle">Talle ${esc(t.talle)} · ${fmtCantidad(t.necesidad)} ${esc(material.um)}</span>
+        `).join("")}
+      </div>
+    `
+  }
+
+  function renderSeccionGlobal(titulo, tipo, materiales) {
+    const filas = Array.isArray(materiales) ? materiales : []
+    if (!filas.length) return ""
+
+    return `
+      <section class="global-section">
+        <div class="global-section-title">
+          <span>${esc(titulo)}</span>
+          <span>${filas.length} material(es)</span>
+        </div>
+        <table class="global-table">
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Detalle / color</th>
+              <th>U.M.</th>
+              <th>Origen</th>
+              <th style="text-align:right">Necesidad global</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filas.map(m => `
+              <tr>
+                <td>
+                  <strong>${esc(m.material_nombre)}</strong>
+                  ${tipo !== "no_escalado" ? renderTallesGlobal(m) : ""}
+                </td>
+                <td>${esc([m.especificacion,m.color].filter(Boolean).join(" · ") || "—")}</td>
+                <td>${esc(m.um)}</td>
+                <td>${renderOrigenGlobal(m)}</td>
+                <td class="num">${fmtCantidad(m.necesidad_global)} ${esc(m.um)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </section>
+    `
+  }
+
+  function abrirNecesidadGlobal(data) {
+    const ejecucion = data?.ejecucion || {}
+    const resumen = data?.resumen || {}
+    const grupos = data?.grupos || {}
+    const numero = lotes.find(l => Number(l.id) === Number(ejecucion.lote_id))?.numero || "—"
+
+    $("globalTitulo").textContent = `Lote ${String(numero).padStart(3,"0")} · Necesidad global`
+    $("globalResumen").innerHTML = `
+      <div class="explosion-summary">
+        <div class="explosion-summary-card"><span>Versión Despiece</span><strong>V${Number(ejecucion.version || 1)}</strong></div>
+        <div class="explosion-summary-card"><span>Materiales globales</span><strong>${Number(resumen.materiales_globales || 0)}</strong></div>
+        <div class="explosion-summary-card"><span>Líneas de origen</span><strong>${Number(resumen.lineas_origen || 0)}</strong></div>
+        <div class="explosion-summary-card"><span>Pares del lote</span><strong>${Number(resumen.pares || 0)}</strong></div>
+      </div>
+    `
+
+    const contenido = [
+      renderSeccionGlobal("MATERIALES NO ESCALADOS", "no_escalado", grupos.no_escalado),
+      renderSeccionGlobal("MATERIALES ESCALADOS · USO ALINEADO", "escalado_alineado", grupos.escalado_alineado),
+      renderSeccionGlobal("MATERIALES ESCALADOS · USO DESALINEADO", "escalado_desalineado", grupos.escalado_desalineado)
+    ].join("")
+
+    $("globalContenido").innerHTML = contenido ||
+      '<div class="despiece-empty">No hay materiales consolidados para esta versión del Despiece.</div>'
+
+    $("modalNecesidadGlobal").showModal()
+  }
+
+  async function verNecesidadGlobalLote(loteId) {
+    try {
+      const data = await api(`/api/despiece/lotes/${loteId}/necesidad-global`)
+      abrirNecesidadGlobal(data)
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   async function generarDespieceLote(loteId) {
     const lote = lotes.find(l => Number(l.id) === Number(loteId))
     if (!lote) return
@@ -549,7 +662,10 @@ window.initDespiece = function initDespiece() {
           <td>
             <div class="lote-actions">
               <button type="button" class="despiece-btn secondary aptitud-action" data-ver-aptitud-lote="${lote.id}">Revisar aptitud</button>
-              ${explosion ? `<button type="button" class="despiece-btn aptitud-action" data-ver-explosion-lote="${lote.id}">Ver Despiece</button>` : ""}
+              ${explosion ? `
+                <button type="button" class="despiece-btn aptitud-action" data-ver-explosion-lote="${lote.id}">Ver Despiece</button>
+                <button type="button" class="despiece-btn secondary aptitud-action" data-ver-global-lote="${lote.id}">Necesidad global</button>
+              ` : ""}
             </div>
           </td>
         </tr>
@@ -562,6 +678,10 @@ window.initDespiece = function initDespiece() {
 
     body.querySelectorAll("[data-ver-explosion-lote]").forEach(btn => {
       btn.onclick = () => verExplosionLote(Number(btn.dataset.verExplosionLote))
+    })
+
+    body.querySelectorAll("[data-ver-global-lote]").forEach(btn => {
+      btn.onclick = () => verNecesidadGlobalLote(Number(btn.dataset.verGlobalLote))
     })
   }
   async function cargar() {
@@ -608,6 +728,17 @@ window.initDespiece = function initDespiece() {
   document.querySelectorAll("[data-close-explosion]").forEach(btn => {
     btn.onclick = () => $("modalExplosionDespiece").close()
   })
+
+  document.querySelectorAll("[data-close-global]").forEach(btn => {
+    btn.onclick = () => $("modalNecesidadGlobal").close()
+  })
+
+  $("btnVerNecesidadGlobal").onclick = () => {
+    const loteId = Number(explosionActual?.ejecucion?.lote_id)
+    if (!loteId) return
+    $("modalExplosionDespiece").close()
+    verNecesidadGlobalLote(loteId)
+  }
 
   $("btnGenerarDespiece").onclick = () => {
     if (loteAptitudActual) generarDespieceLote(loteAptitudActual)
