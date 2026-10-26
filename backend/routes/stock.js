@@ -159,6 +159,101 @@ router.post("/variantes/:varianteId/saldo-inicial", async (req, res) => {
   }
 })
 
+router.get("/variantes/:varianteId/parametros-compra", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const varianteId = Number(req.params.varianteId)
+    if (!varianteId) return res.status(400).json({ error:"Variante inválida" })
+
+    const { data: variante, error: ve } = await supabaseAdmin
+      .from("material_variantes")
+      .select("id,material_id,especificacion,color,um")
+      .eq("empresa_id", empresaId)
+      .eq("id", varianteId)
+      .maybeSingle()
+
+    if (ve) throw ve
+    if (!variante) return res.status(404).json({ error:"Variante de material no encontrada" })
+
+    const { data: parametros, error: pe } = await supabaseAdmin
+      .from("material_compra_parametros")
+      .select("id,variante_id,unidad_compra,factor_conversion,compra_minima,plazo_entrega_dias,activo,created_at,updated_at")
+      .eq("empresa_id", empresaId)
+      .eq("variante_id", varianteId)
+      .eq("activo", true)
+      .maybeSingle()
+
+    if (pe) throw pe
+    return res.json({ variante, parametros: parametros || null })
+  } catch (err) {
+    console.error("Error consultando parámetros de compra:", err)
+    return res.status(500).json({ error:err.message || "No se pudieron consultar los parámetros de compra" })
+  }
+})
+
+router.put("/variantes/:varianteId/parametros-compra", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const varianteId = Number(req.params.varianteId)
+    const unidadCompra = String(req.body?.unidad_compra || "").trim().toUpperCase()
+    const factorConversion = Number(req.body?.factor_conversion)
+    const compraMinima = Number(req.body?.compra_minima ?? 0)
+    const plazoRaw = req.body?.plazo_entrega_dias
+    const plazoEntregaDias = plazoRaw === "" || plazoRaw === null || plazoRaw === undefined
+      ? null
+      : Number(plazoRaw)
+
+    if (!varianteId) return res.status(400).json({ error:"Variante inválida" })
+    if (!unidadCompra) return res.status(400).json({ error:"Definí la unidad de compra" })
+    if (!Number.isFinite(factorConversion) || factorConversion <= 0) {
+      return res.status(400).json({ error:"El factor de conversión debe ser mayor que cero" })
+    }
+    if (!Number.isFinite(compraMinima) || compraMinima < 0) {
+      return res.status(400).json({ error:"La compra mínima no puede ser negativa" })
+    }
+    if (plazoEntregaDias !== null && (!Number.isInteger(plazoEntregaDias) || plazoEntregaDias < 0)) {
+      return res.status(400).json({ error:"El plazo de entrega debe ser un número entero de días" })
+    }
+
+    const { data: variante, error: ve } = await supabaseAdmin
+      .from("material_variantes")
+      .select("id,um")
+      .eq("empresa_id", empresaId)
+      .eq("id", varianteId)
+      .maybeSingle()
+
+    if (ve) throw ve
+    if (!variante) return res.status(404).json({ error:"Variante de material no encontrada" })
+
+    const payload = {
+      empresa_id:empresaId,
+      variante_id:varianteId,
+      unidad_compra:unidadCompra,
+      factor_conversion:n8(factorConversion),
+      compra_minima:n8(compraMinima),
+      plazo_entrega_dias:plazoEntregaDias,
+      activo:true,
+      updated_at:new Date().toISOString()
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("material_compra_parametros")
+      .upsert(payload, { onConflict:"empresa_id,variante_id" })
+      .select("id,variante_id,unidad_compra,factor_conversion,compra_minima,plazo_entrega_dias,activo,created_at,updated_at")
+      .single()
+
+    if (error) throw error
+    return res.json({ ok:true, parametros:data })
+  } catch (err) {
+    console.error("Error guardando parámetros de compra:", err)
+    return res.status(500).json({ error:err.message || "No se pudieron guardar los parámetros de compra" })
+  }
+})
+
 router.get("/variantes/:varianteId/movimientos", async (req, res) => {
   const empresaId = empresa(req, res)
   if (!empresaId) return
