@@ -225,6 +225,25 @@ if (window[nombreInit]) {
             } else {
               console.warn("No existe la función:", nombreInit)
             }
+
+            if (modulo === "despiece") {
+              try {
+                delete window.initDespieceCompra
+              } catch (_) {}
+
+              const extra = document.createElement("script")
+              extra.src = "js/despiece_compra.js?v=" + Date.now()
+              extra.classList.add("modulo-script")
+              extra.onload = () => {
+                if (typeof window.initDespieceCompra === "function") {
+                  window.initDespieceCompra()
+                }
+              }
+              extra.onerror = () => {
+                console.error("Error cargando extensión de necesidad de compra")
+              }
+              document.body.appendChild(extra)
+            }
           }
 
           script.onerror = () => {
