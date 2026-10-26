@@ -717,6 +717,138 @@ function consolidarNecesidadGlobal(explosion) {
   }
 }
 
+function claveVarianteStock(materialId, especificacion, color, um) {
+  return [
+    Number(materialId || 0),
+    normalizarClaveGlobal(especificacion),
+    normalizarClaveGlobal(color),
+    normalizarClaveGlobal(um)
+  ].join("::")
+}
+
+async function cruzarNecesidadConStock(necesidadGlobal, empresaId) {
+  const materiales = Array.isArray(necesidadGlobal?.materiales) ? necesidadGlobal.materiales : []
+  const materialIds = [...new Set(materiales.map(m => Number(m.material_id)).filter(Boolean))]
+
+  let variantes = []
+  if (materialIds.length) {
+    const { data, error } = await supabaseAdmin
+      .from("material_variantes")
+      .select("id,material_id,especificacion,color,um,activo")
+      .eq("empresa_id", empresaId)
+      .eq("activo", true)
+      .in("material_id", materialIds)
+    if (error) throw error
+    variantes = data || []
+  }
+
+  const variantePorClave = new Map()
+  variantes.forEach(v => {
+    variantePorClave.set(
+      claveVarianteStock(v.material_id, v.especificacion, v.color, v.um),
+      v
+    )
+  })
+
+  const varianteIds = variantes.map(v => Number(v.id))
+  let movimientos = []
+  if (varianteIds.length) {
+    const { data, error } = await supabaseAdmin
+      .from("stock_movimientos")
+      .select("id,variante_id,tipo,delta_fisico,delta_reservado,created_at")
+      .eq("empresa_id", empresaId)
+      .in("variante_id", varianteIds)
+    if (error) throw error
+    movimientos = data || []
+  }
+
+  const saldoPorVariante = new Map()
+  movimientos.forEach(m => {
+    const id = Number(m.variante_id)
+    const actual = saldoPorVariante.get(id) || {
+      movimientos:0,
+      fisico:0,
+      reservado:0,
+      ultimo_movimiento:null
+    }
+    actual.movimientos += 1
+    actual.fisico = n8(actual.fisico + Number(m.delta_fisico || 0))
+    actual.reservado = n8(actual.reservado + Number(m.delta_reservado || 0))
+    if (!actual.ultimo_movimiento || new Date(m.created_at) > new Date(actual.ultimo_movimiento)) {
+      actual.ultimo_movimiento = m.created_at
+    }
+    saldoPorVariante.set(id, actual)
+  })
+
+  const filas = materiales.map(m => {
+    const variante = variantePorClave.get(
+      claveVarianteStock(m.material_id, m.especificacion, m.color, m.um)
+    ) || null
+
+    const saldo = variante ? saldoPorVariante.get(Number(variante.id)) || null : null
+    const necesidad = n8(m.necesidad_global)
+
+    if (!variante || !saldo) {
+      return {
+        ...m,
+        variante_id:variante ? Number(variante.id) : null,
+        stock_registrado:false,
+        stock_fisico:null,
+        stock_reservado:null,
+        stock_disponible:null,
+        faltante:null,
+        excedente:null,
+        cobertura_pct:null,
+        estado_stock:"sin_registro",
+        ultimo_movimiento:null
+      }
+    }
+
+    const fisico = n8(saldo.fisico)
+    const reservado = n8(saldo.reservado)
+    const disponible = n8(fisico - reservado)
+    const disponibleParaCubrir = Math.max(0, disponible)
+    const faltante = n8(Math.max(0, necesidad - disponibleParaCubrir))
+    const excedente = n8(Math.max(0, disponibleParaCubrir - necesidad))
+    const coberturaPct = necesidad > 0
+      ? Number(Math.min(100, (disponibleParaCubrir / necesidad) * 100).toFixed(2))
+      : 100
+
+    let estadoStock = "cubierto"
+    if (faltante > 0 && disponibleParaCubrir > 0) estadoStock = "parcial"
+    if (faltante > 0 && disponibleParaCubrir <= 0) estadoStock = "faltante"
+
+    return {
+      ...m,
+      variante_id:Number(variante.id),
+      stock_registrado:true,
+      stock_fisico:fisico,
+      stock_reservado:reservado,
+      stock_disponible:disponible,
+      faltante,
+      excedente,
+      cobertura_pct:coberturaPct,
+      estado_stock:estadoStock,
+      ultimo_movimiento:saldo.ultimo_movimiento
+    }
+  })
+
+  const resumen = {
+    materiales:filas.length,
+    sin_registro:filas.filter(f => f.estado_stock === "sin_registro").length,
+    cubiertos:filas.filter(f => f.estado_stock === "cubierto").length,
+    parciales:filas.filter(f => f.estado_stock === "parcial").length,
+    faltantes:filas.filter(f => f.estado_stock === "faltante").length,
+    con_stock_registrado:filas.filter(f => f.stock_registrado).length
+  }
+
+  return {
+    ejecucion:necesidadGlobal.ejecucion,
+    resumen,
+    materiales:filas
+  }
+}
+
 async function cargarPendientes(empresaId) {
   const { data: pedidos, error: pe } = await supabase
     .from("pedidos")
@@ -1086,6 +1218,28 @@ router.get("/lotes/:loteId/necesidad-global", async (req, res) => {
   } catch (err) {
     console.error("Error consolidando necesidad global del Despiece:", err)
     return res.status(500).json({ error: err.message || "No se pudo consolidar la necesidad global" })
+  }
+})
+
+router.get("/lotes/:loteId/cruce-stock", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const loteId = Number(req.params.loteId)
+    if (!loteId) return res.status(400).json({ error:"Lote inválido" })
+
+    const explosion = await obtenerExplosionVigente(loteId, empresaId)
+    if (!explosion) {
+      return res.status(404).json({ error:"Primero generá el Despiece del lote" })
+    }
+
+    const necesidadGlobal = consolidarNecesidadGlobal(explosion)
+    const cruce = await cruzarNecesidadConStock(necesidadGlobal, empresaId)
+    return res.json(cruce)
+  } catch (err) {
+    console.error("Error cruzando Despiece contra Stock:", err)
+    return res.status(500).json({ error:err.message || "No se pudo cruzar la necesidad contra Stock" })
   }
 })
 
