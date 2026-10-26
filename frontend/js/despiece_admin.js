@@ -562,6 +562,7 @@ window.initDespiece = function initDespiece() {
     const ejecucion = data?.ejecucion || {}
     const filas = Array.isArray(data?.materiales) ? data.materiales : []
     const numero = lotes.find(l => Number(l.id) === Number(ejecucion.lote_id))?.numero || "—"
+    $("modalCruceStock").dataset.loteId = String(ejecucion.lote_id || "")
 
     $("stockCruceTitulo").textContent = `Lote ${String(numero).padStart(3,"0")} · Necesidad vs Stock`
     $("stockCruceResumen").innerHTML = `
