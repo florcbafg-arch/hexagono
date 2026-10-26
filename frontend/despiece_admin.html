@@ -176,6 +176,20 @@
     .compra-status.listo{background:#e9efff;color:#3155a6}
     .param-dialog{width:min(600px,92vw)}
     .param-body{padding:0 26px 26px}
+    .informe-dialog{width:min(1120px,94vw)}
+    .informe-body{padding:0 26px 26px}
+    .informe-alerta{padding:11px 13px;border-radius:9px;margin-bottom:12px;font-size:13px;line-height:1.4}
+    .informe-alerta.ok{background:#e9f7ee;color:#1f7040;border:1px solid #cfead8}
+    .informe-alerta.warn{background:#fff4dc;color:#7b5a00;border:1px solid #f3dfae}
+    .informe-doc{background:#fff;border:1px solid #d9dde5;padding:22px;color:#111}
+    .informe-doc h2{text-align:center;margin:0 0 14px;font-size:20px}
+    .informe-doc-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:12px;margin-bottom:12px}
+    .informe-doc-badge{text-align:center;font-weight:900;font-size:12px;padding:7px;border:1px solid #ccc;margin-bottom:12px}
+    .informe-doc-table{width:100%;border-collapse:collapse;font-size:11px}
+    .informe-doc-table th,.informe-doc-table td{border:1px solid #bbb;padding:5px 6px;text-align:left}
+    .informe-doc-table th{background:#ececec}
+    .informe-doc-table td.num{text-align:right;font-weight:800;white-space:nowrap}
+    .informe-doc-foot{display:flex;justify-content:flex-end;gap:18px;margin-top:12px;font-size:12px;font-weight:800}
     .param-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .param-help{grid-column:1/-1;padding:10px 12px;border-radius:8px;background:#f7f5ff;color:#5b4a83;font-size:12px;line-height:1.45}
     .lote-actions{display:flex;gap:6px;flex-wrap:wrap}
@@ -406,7 +420,32 @@
       </div>
       <div class="aptitud-foot">
         <div class="aptitud-foot-note">Esto calcula qué hace falta comprar; todavía no crea una Orden de Compra.</div>
-        <button type="button" class="despiece-btn secondary" data-close-compra>Cerrar</button>
+        <div class="despiece-actions">
+          <button type="button" class="despiece-btn secondary" id="btnVistaPreviaCompra">🧾 Vista previa informe</button>
+          <button type="button" class="despiece-btn" id="btnCerrarCompra">✅ Cerrar para Compras</button>
+          <button type="button" class="despiece-btn secondary" data-close-compra>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalInformeCompra" class="despiece-dialog informe-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">DOCUMENTO FINAL</p>
+        <h2>Informe de necesidad de compra</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-informe>✕</button>
+    </div>
+    <div class="informe-body">
+      <div id="informeCompraEstado"></div>
+      <div id="informeCompraDocumento"></div>
+      <div class="aptitud-foot">
+        <div class="aptitud-foot-note" id="informeCompraNota"></div>
+        <div class="despiece-actions">
+          <button type="button" class="despiece-btn" id="btnImprimirInformeCompra">🖨 Imprimir</button>
+          <button type="button" class="despiece-btn secondary" data-close-informe>Cerrar</button>
+        </div>
       </div>
     </div>
   </dialog>
