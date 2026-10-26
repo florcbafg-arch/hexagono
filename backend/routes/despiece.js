@@ -590,6 +590,133 @@ async function obtenerExplosionVigente(loteId, empresaId) {
   }
 }
 
+
+function normalizarClaveGlobal(v) {
+  return String(v ?? "").trim().replace(/\s+/g, " ").toUpperCase()
+}
+
+function consolidarNecesidadGlobal(explosion) {
+  if (!explosion) return null
+
+  const grupos = new Map()
+  const items = Array.isArray(explosion.items) ? explosion.items : []
+
+  items.forEach(item => {
+    ;(item.lineas || []).forEach(linea => {
+      const tipo = linea.tipo_escalado || "no_escalado"
+      const clave = [
+        tipo,
+        Number(linea.material_id || 0),
+        normalizarClaveGlobal(linea.especificacion),
+        normalizarClaveGlobal(linea.color),
+        normalizarClaveGlobal(linea.um)
+      ].join("::")
+
+      if (!grupos.has(clave)) {
+        grupos.set(clave, {
+          clave,
+          tipo_escalado: tipo,
+          material_id: Number(linea.material_id),
+          material_nombre: linea.material_nombre || "MATERIAL",
+          especificacion: linea.especificacion || "",
+          color: linea.color || "",
+          um: linea.um || "",
+          necesidad_global: 0,
+          lineas_fuente: 0,
+          articulos_ids: new Set(),
+          contribuciones: [],
+          por_talle: new Map()
+        })
+      }
+
+      const grupo = grupos.get(clave)
+      grupo.necesidad_global = n8(grupo.necesidad_global + Number(linea.necesidad_total || 0))
+      grupo.lineas_fuente += 1
+      grupo.articulos_ids.add(Number(item.articulo_id))
+
+      grupo.contribuciones.push({
+        pedido_numero: item.pedido_numero,
+        pedido_version: item.pedido_version,
+        articulo_id: item.articulo_id,
+        articulo_codigo: item.articulo_codigo,
+        articulo_modelo: item.articulo_modelo,
+        articulo_marca: item.articulo_marca || "",
+        articulo_color: item.articulo_color || "",
+        grupo_nombre: linea.grupo_nombre,
+        pieza_nombre: linea.pieza_nombre,
+        necesidad: Number(linea.necesidad_total || 0),
+        um: linea.um
+      })
+
+      if (tipo !== "no_escalado") {
+        ;(linea.talles || []).forEach(t => {
+          const talle = String(t.talle_componente || t.talle_articulo || "").trim()
+          if (!talle) return
+          const actual = grupo.por_talle.get(talle) || {
+            talle,
+            necesidad: 0,
+            pares_origen: 0,
+            aportes: 0
+          }
+          actual.necesidad = n8(actual.necesidad + Number(t.necesidad || 0))
+          actual.pares_origen += Number(t.pares || 0)
+          actual.aportes += 1
+          grupo.por_talle.set(talle, actual)
+        })
+      }
+    })
+  })
+
+  const materiales = [...grupos.values()].map(g => ({
+    clave: g.clave,
+    tipo_escalado: g.tipo_escalado,
+    material_id: g.material_id,
+    material_nombre: g.material_nombre,
+    especificacion: g.especificacion,
+    color: g.color,
+    um: g.um,
+    necesidad_global: n8(g.necesidad_global),
+    lineas_fuente: g.lineas_fuente,
+    articulos_fuente: g.articulos_ids.size,
+    contribuciones: g.contribuciones.sort((a,b) =>
+      String(a.articulo_codigo).localeCompare(String(b.articulo_codigo), "es", { numeric:true }) ||
+      String(a.pieza_nombre).localeCompare(String(b.pieza_nombre), "es")
+    ),
+    por_talle: [...g.por_talle.values()].sort((a,b) =>
+      String(a.talle).localeCompare(String(b.talle), "es", { numeric:true })
+    )
+  }))
+
+  const ordenTipo = { no_escalado: 10, escalado_alineado: 20, escalado_desalineado: 30 }
+  materiales.sort((a,b) =>
+    (ordenTipo[a.tipo_escalado] || 99) - (ordenTipo[b.tipo_escalado] || 99) ||
+    String(a.material_nombre).localeCompare(String(b.material_nombre), "es") ||
+    String(a.especificacion).localeCompare(String(b.especificacion), "es") ||
+    String(a.color).localeCompare(String(b.color), "es")
+  )
+
+  const porTipo = {
+    no_escalado: materiales.filter(m => m.tipo_escalado === "no_escalado"),
+    escalado_alineado: materiales.filter(m => m.tipo_escalado === "escalado_alineado"),
+    escalado_desalineado: materiales.filter(m => m.tipo_escalado === "escalado_desalineado")
+  }
+
+  return {
+    ejecucion: explosion.ejecucion,
+    resumen: {
+      articulos: Number(explosion.ejecucion?.total_articulos || items.length),
+      pares: Number(explosion.ejecucion?.total_pares || 0),
+      lineas_origen: Number(explosion.ejecucion?.total_lineas || materiales.reduce((a,m) => a + m.lineas_fuente,0)),
+      materiales_globales: materiales.length,
+      no_escalados: porTipo.no_escalado.length,
+      escalados_alineados: porTipo.escalado_alineado.length,
+      escalados_desalineados: porTipo.escalado_desalineado.length
+    },
+    materiales,
+    grupos: porTipo
+  }
+}
+
 async function cargarPendientes(empresaId) {
   const { data: pedidos, error: pe } = await supabase
     .from("pedidos")
@@ -939,6 +1066,26 @@ router.get("/lotes/:loteId/explosion", async (req, res) => {
   } catch (err) {
     console.error("Error consultando explosión de Despiece:", err)
     return res.status(500).json({ error: "No se pudo consultar el Despiece" })
+  }
+})
+
+router.get("/lotes/:loteId/necesidad-global", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const loteId = Number(req.params.loteId)
+    if (!loteId) return res.status(400).json({ error: "Lote inválido" })
+
+    const explosion = await obtenerExplosionVigente(loteId, empresaId)
+    if (!explosion) {
+      return res.status(404).json({ error: "Primero generá el Despiece del lote para calcular su necesidad global" })
+    }
+
+    return res.json(consolidarNecesidadGlobal(explosion))
+  } catch (err) {
+    console.error("Error consolidando necesidad global del Despiece:", err)
+    return res.status(500).json({ error: err.message || "No se pudo consolidar la necesidad global" })
   }
 })
 
