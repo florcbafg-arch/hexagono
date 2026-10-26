@@ -1,141 +1,245 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hexaflow | Stock</title>
+<section class="stock-v1">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
+    .stock-v1{
+      --hf-title:28px;--hf-body:16px;--hf-control:15px;--hf-table:14px;--hf-helper:13px;
+      color:var(--text-color,#151923);font-size:var(--hf-body);line-height:1.45;
     }
-
-    body {
-      background: #f4f6f8;
-      color: #1f1f1f;
-    }
-
-    .placeholder-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 30px;
-    }
-
-    .placeholder-card {
-      width: 100%;
-      max-width: 760px;
-      background: #ffffff;
-      border: 1px solid #dcdcdc;
-      border-radius: 18px;
-      padding: 42px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-    }
-
-    .placeholder-icon {
-      font-size: 52px;
-      margin-bottom: 16px;
-    }
-
-    .placeholder-card h1 {
-      font-size: 32px;
-      margin-bottom: 12px;
-      color: #111;
-    }
-
-    .placeholder-card p {
-      font-size: 16px;
-      color: #666;
-      line-height: 1.6;
-      margin-bottom: 26px;
-    }
-
-    .placeholder-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 28px;
-      text-align: left;
-    }
-
-    .placeholder-list .item {
-      background: #f7f7f7;
-      border: 1px solid #ececec;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 15px;
-      color: #333;
-    }
-
-    .placeholder-badge {
-      display: inline-block;
-      background: #111;
-      color: #fff;
-      border-radius: 999px;
-      padding: 9px 18px;
-      font-size: 13px;
-      letter-spacing: 0.3px;
-      margin-bottom: 18px;
-    }
-
-    .placeholder-footer {
-      margin-top: 18px;
-      font-size: 14px;
-      color: #7a7a7a;
-      line-height: 1.6;
-    }
-
-    .highlight {
-      color: #111;
-      font-weight: 600;
-    }
-
-    @media (max-width: 768px) {
-      .placeholder-card {
-        padding: 30px 22px;
-      }
-
-      .placeholder-card h1 {
-        font-size: 26px;
-      }
-
-      .placeholder-card p {
-        font-size: 15px;
-      }
-
-      .placeholder-icon {
-        font-size: 44px;
-      }
+    .stock-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+    .stock-head h1{margin:2px 0 5px;font-size:var(--hf-title);line-height:1.15}
+    .stock-eyebrow{margin:0;font-size:var(--hf-helper);font-weight:800;color:#673df4;letter-spacing:.04em}
+    .stock-sub{margin:0;color:#697386}
+    .stock-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+    .stock-card{background:#fff;border:1px solid #dfe3ea;border-radius:10px;padding:14px 16px}
+    .stock-card span{display:block;font-size:14px;color:#667085}
+    .stock-card strong{display:block;margin-top:3px;font-size:24px}
+    .stock-panel{background:#fff;border:1px solid #dfe3ea;border-radius:12px;overflow:hidden}
+    .stock-panel-head{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:16px 18px;border-bottom:1px solid #e7eaf0}
+    .stock-panel-head h2{margin:0;font-size:20px}
+    .stock-panel-head p{margin:3px 0 0;font-size:14px;color:#697386}
+    .stock-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .stock-tools input,.stock-tools select{border:1px solid #ccd2dd;border-radius:8px;padding:9px 10px;font-size:14px;background:#fff;color:#222}
+    .stock-tools input{min-width:280px}
+    .stock-table-wrap{overflow:auto}
+    .stock-table{width:100%;border-collapse:collapse;min-width:1120px}
+    .stock-table th,.stock-table td{padding:11px 12px;border-bottom:1px solid #eceff3;text-align:left;vertical-align:middle;font-size:14px}
+    .stock-table th{font-size:13px;background:#fafbfc;color:#505866}
+    .stock-table td.num{text-align:right;font-weight:800;white-space:nowrap}
+    .stock-table tr:last-child td{border-bottom:0}
+    .stock-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .stock-btn{border:0;border-radius:8px;padding:9px 12px;min-height:38px;font-size:13px;font-weight:800;cursor:pointer;background:#673df4;color:#fff}
+    .stock-btn.secondary{background:#eef0f5;color:#333a48}
+    .stock-btn:disabled{opacity:.45;cursor:not-allowed}
+    .stock-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}
+    .stock-chip.sin_registro{background:#eef0f4;color:#626a77}
+    .stock-chip.disponible{background:#e7f7ec;color:#176b38}
+    .stock-chip.reservado{background:#fff4dc;color:#866000}
+    .stock-chip.agotado{background:#fff0f0;color:#a33}
+    .stock-empty{padding:28px;text-align:center;color:#7b8492}
+    .stock-help{margin-bottom:14px;padding:12px 14px;border:1px solid #e0e4eb;border-radius:10px;background:#fafbfc;color:#5f6876;font-size:13px}
+    .stock-dialog{border:0;border-radius:14px;width:min(720px,92vw);max-height:88vh;padding:0;box-shadow:0 22px 70px rgba(0,0,0,.28)}
+    .stock-dialog::backdrop{background:rgba(10,15,25,.58)}
+    .stock-dialog-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:24px 26px 0;margin-bottom:18px}
+    .stock-dialog-head h2{margin:2px 0 0;font-size:22px}
+    .stock-close{border:0;background:#673df4;color:#fff;width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px}
+    .stock-dialog-body{padding:0 26px 26px}
+    .stock-material{padding:11px 12px;border:1px solid #e1e5eb;border-radius:9px;background:#fafbfc;margin-bottom:14px;font-size:13px}
+    .stock-material strong{font-size:15px}
+    .stock-balance{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
+    .stock-balance div{border:1px solid #e1e5eb;border-radius:9px;padding:10px 12px}
+    .stock-balance span{display:block;color:#667085;font-size:12px}
+    .stock-balance strong{font-size:18px}
+    .stock-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .stock-field{display:grid;gap:6px}
+    .stock-field.full{grid-column:1/-1}
+    .stock-field span{font-size:13px;font-weight:800}
+    .stock-field input,.stock-field select,.stock-field textarea{width:100%;font:inherit;border:1px solid #ccd2dd;border-radius:8px;padding:9px 10px;background:#fff;color:#222}
+    .stock-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+    .stock-warning{padding:10px 12px;border-radius:8px;background:#fff5df;color:#7a5b08;font-size:12px;margin-top:12px}
+    .hist-table-wrap{overflow:auto;border:1px solid #e0e4ea;border-radius:10px}
+    .hist-table{width:100%;border-collapse:collapse;min-width:900px}
+    .hist-table th,.hist-table td{padding:9px 10px;border-bottom:1px solid #eceff3;text-align:left;font-size:12px;vertical-align:top}
+    .hist-table th{background:#f8f9fb}
+    .hist-table td.num{text-align:right;font-weight:800;white-space:nowrap}
+    .mov-pos{color:#176b38;font-weight:900}
+    .mov-neg{color:#a33;font-weight:900}
+    .mov-zero{color:#667085}
+    @media(max-width:900px){
+      .stock-summary,.stock-balance{grid-template-columns:1fr 1fr}
+      .stock-grid{grid-template-columns:1fr}
+      .stock-field.full{grid-column:1}
+      .stock-panel-head{align-items:flex-start;flex-direction:column}
+      .stock-tools{width:100%}
+      .stock-tools input{min-width:0;flex:1}
     }
   </style>
-</head>
-<body class="modulo-en-construccion-page">
-  <div class="placeholder-wrap">
-    <div class="placeholder-card">
-      <div class="placeholder-icon">📦</div>
-      <h1>Módulo de Stock en construcción</h1>
-      <p>
-        Estamos desarrollando esta sección para darte un control total sobre los materiales,
-        movimientos y disponibilidad de insumos dentro de tu operación.
-      </p>
 
-      <div class="placeholder-list">
-        <div class="item">✔ Control de ingresos y egresos de materiales</div>
-        <div class="item">✔ Alertas automáticas de faltantes y stock crítico</div>
-        <div class="item">✔ Trazabilidad por material y vínculo con producción</div>
-      </div>
-
-      <span class="placeholder-badge">Próximamente</span>
-
-      <div class="placeholder-footer">
-        Muy pronto vas a poder saber <span class="highlight">exactamente qué tenés</span>,
-        <span class="highlight">qué te falta</span> y <span class="highlight">qué necesitás para producir sin frenar</span>.
-      </div>
+  <div class="stock-head">
+    <div>
+      <p class="stock-eyebrow">DEPÓSITO</p>
+      <h1>Stock</h1>
+      <p class="stock-sub">Controlá existencias y trazabilidad de cada material sin editar saldos manualmente.</p>
     </div>
   </div>
-</body>
-</html>
+
+  <div class="stock-help">
+    <strong>Regla de Stock:</strong> Físico = lo que existe en depósito. Reservado = material comprometido por el sistema. Disponible = físico − reservado.
+    Cada cambio se registra como un movimiento y queda en historial; un movimiento guardado no se reemplaza ni se borra.
+  </div>
+
+  <div class="stock-summary">
+    <div class="stock-card"><span>Variantes de material</span><strong id="stockTotalVariantes">0</strong></div>
+    <div class="stock-card"><span>Con Stock registrado</span><strong id="stockRegistradas">0</strong></div>
+    <div class="stock-card"><span>Sin registro</span><strong id="stockSinRegistro">0</strong></div>
+    <div class="stock-card"><span>Con material reservado</span><strong id="stockConReserva">0</strong></div>
+  </div>
+
+  <div class="stock-panel">
+    <div class="stock-panel-head">
+      <div>
+        <h2>Estado de depósito</h2>
+        <p>Una fila representa una variante concreta de material, especificación, color y unidad de medida.</p>
+      </div>
+      <div class="stock-tools">
+        <input id="stockBuscar" placeholder="Buscar material, color, especificación...">
+        <select id="stockFiltro">
+          <option value="todos">Todos</option>
+          <option value="registrado">Con Stock</option>
+          <option value="sin_registro">Sin registro</option>
+          <option value="con_reserva">Con reserva</option>
+          <option value="agotado">Agotados</option>
+        </select>
+      </div>
+    </div>
+    <div class="stock-table-wrap">
+      <table class="stock-table">
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Detalle / color</th>
+            <th>U.M.</th>
+            <th>Físico</th>
+            <th>Reservado</th>
+            <th>Disponible</th>
+            <th>Estado</th>
+            <th>Último movimiento</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="stockBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <dialog id="modalStockMovimiento" class="stock-dialog">
+    <div class="stock-dialog-head">
+      <div>
+        <p class="stock-eyebrow">MOVIMIENTO DE DEPÓSITO</p>
+        <h2 id="stockMovimientoTitulo">Registrar movimiento</h2>
+      </div>
+      <button class="stock-close" type="button" data-close-mov>✕</button>
+    </div>
+    <div class="stock-dialog-body">
+      <div id="stockMovimientoMaterial" class="stock-material"></div>
+      <div id="stockMovimientoBalance" class="stock-balance"></div>
+
+      <div class="stock-grid">
+        <label class="stock-field">
+          <span>Tipo de movimiento</span>
+          <select id="stockMovimientoTipo">
+            <option value="ingreso">Ingreso de material</option>
+            <option value="salida">Salida manual</option>
+            <option value="ajuste_positivo">Ajuste positivo</option>
+            <option value="ajuste_negativo">Ajuste negativo</option>
+            <option value="devolucion">Devolución</option>
+          </select>
+        </label>
+        <label class="stock-field">
+          <span id="stockCantidadLabel">Cantidad</span>
+          <input id="stockMovimientoCantidad" type="number" min="0.00000001" step="0.00000001" inputmode="decimal">
+        </label>
+        <label class="stock-field">
+          <span>Referencia</span>
+          <input id="stockMovimientoReferencia" placeholder="Ej: remito, conteo, nota...">
+        </label>
+        <label class="stock-field full">
+          <span>Motivo / observación</span>
+          <textarea id="stockMovimientoObservacion" rows="3" placeholder="Explicá el movimiento cuando corresponda"></textarea>
+        </label>
+      </div>
+
+      <div class="stock-warning">
+        Las reservas no se cargan manualmente en este bloque. Más adelante las generará el flujo de Liberación/Programación para que el Stock reservado tenga una fuente operativa real.
+      </div>
+
+      <div class="stock-dialog-actions">
+        <button type="button" class="stock-btn secondary" data-close-mov>Cancelar</button>
+        <button type="button" class="stock-btn" id="btnGuardarMovimientoStock">Guardar movimiento</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalStockSaldoInicial" class="stock-dialog">
+    <div class="stock-dialog-head">
+      <div>
+        <p class="stock-eyebrow">ALTA DE INVENTARIO</p>
+        <h2>Registrar saldo inicial</h2>
+      </div>
+      <button class="stock-close" type="button" data-close-inicial>✕</button>
+    </div>
+    <div class="stock-dialog-body">
+      <div id="stockInicialMaterial" class="stock-material"></div>
+      <div class="stock-grid">
+        <label class="stock-field">
+          <span id="stockInicialCantidadLabel">Cantidad inicial</span>
+          <input id="stockInicialCantidad" type="number" min="0" step="0.00000001" inputmode="decimal">
+        </label>
+        <label class="stock-field full">
+          <span>Observación</span>
+          <textarea id="stockInicialObservacion" rows="3" placeholder="Ej: conteo físico inicial del depósito"></textarea>
+        </label>
+      </div>
+      <div class="stock-warning">
+        El saldo inicial se registra una sola vez. Después, cualquier diferencia se corrige mediante un ajuste para conservar el historial.
+      </div>
+      <div class="stock-dialog-actions">
+        <button type="button" class="stock-btn secondary" data-close-inicial>Cancelar</button>
+        <button type="button" class="stock-btn" id="btnGuardarSaldoInicialStock">Guardar saldo inicial</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalStockHistorial" class="stock-dialog" style="width:min(1080px,94vw)">
+    <div class="stock-dialog-head">
+      <div>
+        <p class="stock-eyebrow">TRAZABILIDAD</p>
+        <h2>Historial de movimientos</h2>
+      </div>
+      <button class="stock-close" type="button" data-close-hist>✕</button>
+    </div>
+    <div class="stock-dialog-body">
+      <div id="stockHistMaterial" class="stock-material"></div>
+      <div class="hist-table-wrap">
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Δ físico</th>
+              <th>Δ reservado</th>
+              <th>Físico resultante</th>
+              <th>Reservado</th>
+              <th>Disponible</th>
+              <th>Usuario</th>
+              <th>Referencia</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody id="stockHistBody"></tbody>
+        </table>
+      </div>
+      <div class="stock-dialog-actions">
+        <button type="button" class="stock-btn secondary" data-close-hist>Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+</section>
