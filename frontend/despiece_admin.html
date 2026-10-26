@@ -132,11 +132,36 @@
     .global-origin-row.head{background:#f7f8fa;font-weight:800;color:#5d6573}
     .global-talles{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
     .global-talle{padding:5px 7px;border-radius:7px;background:#f3f4f7;font-size:11px;font-weight:800}
+    .stock-dialog{width:min(1180px,94vw)}
+    .stock-body{padding:0 26px 26px}
+    .stock-intro{padding:12px 14px;border:1px solid #e0e4eb;border-radius:10px;background:#fafbfc;margin-bottom:14px;font-size:13px;color:#5f6876}
+    .stock-resumen{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+    .stock-card{border:1px solid #dfe3ea;border-radius:10px;padding:12px 14px;background:#fff}
+    .stock-card span{display:block;font-size:12px;color:#667085}
+    .stock-card strong{display:block;font-size:21px;margin-top:2px}
+    .stock-table-wrap{overflow:auto;border:1px solid #dfe3ea;border-radius:11px;background:#fff}
+    .stock-table{width:100%;border-collapse:collapse;min-width:980px}
+    .stock-table th,.stock-table td{padding:9px 10px;border-bottom:1px solid #e9ecf1;text-align:left;font-size:13px;vertical-align:middle}
+    .stock-table th{background:#f8f9fb;color:#525b69;font-size:12px}
+    .stock-table tr:last-child td{border-bottom:0}
+    .stock-table td.num{text-align:right;font-weight:800;white-space:nowrap}
+    .stock-status{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}
+    .stock-status.sin_registro{background:#eef0f4;color:#626a77}
+    .stock-status.cubierto{background:#e7f7ec;color:#176b38}
+    .stock-status.parcial{background:#fff4dc;color:#866000}
+    .stock-status.faltante{background:#ffe9e9;color:#b42318}
+    .stock-action{border:0;border-radius:7px;padding:6px 8px;background:#5e3df5;color:#fff;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+    .saldo-dialog{width:min(520px,92vw)}
+    .saldo-body{padding:0 26px 26px}
+    .saldo-material{padding:10px 12px;border:1px solid #e1e4ea;border-radius:9px;background:#fafbfc;margin-bottom:12px;font-size:13px}
+    .saldo-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    .saldo-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
+    .saldo-field input,.saldo-field textarea{font:inherit;font-weight:400;border:1px solid #ccd2dc;border-radius:8px;padding:9px 10px}
     .lote-actions{display:flex;gap:6px;flex-wrap:wrap}
     @media(max-width:900px){
       .despiece-resumen{grid-template-columns:1fr 1fr}
       .despiece-head{flex-direction:column}
-      .clasificacion-resumen,.clasificacion-ayuda{grid-template-columns:1fr}
+      .clasificacion-resumen,.clasificacion-ayuda,.stock-resumen{grid-template-columns:1fr}
     }
   </style>
 
@@ -290,7 +315,68 @@
 
       <div class="aptitud-foot">
         <div class="aptitud-foot-note">Necesidad técnica global del lote.</div>
-        <button type="button" class="despiece-btn secondary" data-close-global>Cerrar</button>
+        <div class="despiece-actions">
+          <button type="button" class="despiece-btn" id="btnCruzarStock">📦 Cruzar con Stock</button>
+          <button type="button" class="despiece-btn secondary" data-close-global>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalCruceStock" class="despiece-dialog stock-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">DISPONIBILIDAD DE DEPÓSITO</p>
+        <h2 id="stockCruceTitulo">Cruce contra Stock</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-stock>✕</button>
+    </div>
+    <div class="stock-body">
+      <div id="stockCruceResumen"></div>
+      <div class="stock-intro">
+        Stock disponible = stock físico − reservado. Hexaflow solo calcula faltante cuando existe un saldo registrado; “sin registro” no se interpreta como cero.
+      </div>
+      <div class="stock-table-wrap">
+        <table class="stock-table">
+          <thead>
+            <tr>
+              <th>Material</th><th>Detalle / color</th><th>U.M.</th>
+              <th>Necesidad</th><th>Físico</th><th>Reservado</th><th>Disponible</th><th>Faltante</th><th>Estado</th><th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="stockCruceBody"></tbody>
+        </table>
+      </div>
+      <div class="aptitud-foot">
+        <div class="aptitud-foot-note">Este cruce todavía no reserva material ni genera órdenes de compra.</div>
+        <button type="button" class="despiece-btn secondary" data-close-stock>Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalSaldoInicial" class="despiece-dialog saldo-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">STOCK</p>
+        <h2>Registrar saldo inicial</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-saldo>✕</button>
+    </div>
+    <div class="saldo-body">
+      <div id="saldoMaterialInfo" class="saldo-material"></div>
+      <div class="saldo-grid">
+        <label class="saldo-field">
+          <span id="saldoCantidadLabel">Cantidad inicial</span>
+          <input id="saldoCantidad" type="number" min="0" step="0.00000001" inputmode="decimal" placeholder="0">
+        </label>
+        <label class="saldo-field">
+          <span>Observación</span>
+          <textarea id="saldoObservacion" rows="3" placeholder="Ej: conteo físico inicial del depósito"></textarea>
+        </label>
+      </div>
+      <div class="despiece-dialog-actions">
+        <button type="button" class="despiece-btn secondary" data-close-saldo>Cancelar</button>
+        <button type="button" class="despiece-btn" id="btnGuardarSaldoInicial">Guardar saldo inicial</button>
       </div>
     </div>
   </dialog>
