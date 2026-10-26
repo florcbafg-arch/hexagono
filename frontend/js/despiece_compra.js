@@ -49,8 +49,11 @@ window.initDespieceCompra = function initDespieceCompra() {
     const resumen = data?.resumen || {}
     const ejecucion = data?.ejecucion || {}
     const filas = Array.isArray(data?.materiales) ? data.materiales : []
+    const cerrado = !!data?.documento_cerrado
 
-    $("compraTitulo").textContent = `Necesidad de compra · Despiece V${Number(ejecucion.version || 1)}`
+    $("compraTitulo").textContent = cerrado
+      ? `Necesidad de compra · CERRADA · Despiece V${Number(ejecucion.version || 1)}`
+      : `Necesidad de compra · Despiece V${Number(ejecucion.version || 1)}`
     $("compraResumen").innerHTML = `
       <div class="compra-resumen">
         <div class="compra-card"><span>Listos para compra</span><strong>${Number(resumen.requieren_compra || 0)}</strong></div>
@@ -74,7 +77,11 @@ window.initDespieceCompra = function initDespieceCompra() {
           <td class="num">${m.compra_minima === null || m.compra_minima === undefined ? "—" : `${fmt(m.compra_minima)} ${esc(unidadCompra)}`}</td>
           <td>${m.plazo_entrega_dias === null || m.plazo_entrega_dias === undefined ? "—" : `${Number(m.plazo_entrega_dias)} días`}</td>
           <td>${estadoCompra(m.estado_compra)}</td>
-          <td>${m.variante_id ? `<button type="button" class="stock-action" data-param-index="${index}">${p ? "Editar parámetros" : "Parametrizar"}</button>` : `<span class="explosion-chip">Sin variante</span>`}</td>
+          <td>${cerrado
+            ? '<span class="explosion-chip">Congelado</span>'
+            : m.variante_id
+              ? `<button type="button" class="stock-action" data-param-index="${index}">${p ? "Editar parámetros" : "Parametrizar"}</button>`
+              : '<span class="explosion-chip">Sin variante</span>'}</td>
         </tr>`
     }).join("") : `<tr><td colspan="11" class="despiece-empty">No hay materiales para evaluar.</td></tr>`
 
@@ -86,16 +93,19 @@ window.initDespieceCompra = function initDespieceCompra() {
     })
 
     const pendientes = Number(resumen.pendientes_stock || 0) + Number(resumen.pendientes_parametros || 0)
-    $("btnCerrarCompra").disabled = pendientes > 0
-    $("btnCerrarCompra").title = pendientes > 0
-      ? "Completá Stock y parámetros de compra antes de cerrar el Despiece."
-      : "Congelar esta versión para Compras."
+    $("btnCerrarCompra").disabled = cerrado || pendientes > 0
+    $("btnCerrarCompra").textContent = cerrado ? "✅ Cerrado para Compras" : "✅ Cerrar para Compras"
+    $("btnCerrarCompra").title = cerrado
+      ? "Esta versión ya está congelada para Compras."
+      : pendientes > 0
+        ? "Completá Stock y parámetros de compra antes de cerrar el Despiece."
+        : "Congelar esta versión para Compras."
 
     $("modalNecesidadCompra").showModal()
   }
 
   async function abrirNecesidad(loteId) {
-    const data = await api(`/api/despiece/lotes/${loteId}/necesidad-compra`)
+    const data = await api(`/api/despiece/lotes/${loteId}/informe-compra`)
     render(data)
   }
 
@@ -217,7 +227,7 @@ window.initDespieceCompra = function initDespieceCompra() {
                   <td class="num">${m.stock_disponible === null || m.stock_disponible === undefined ? "—" : fmt(m.stock_disponible)}</td>
                   <td class="num">${m.faltante === null || m.faltante === undefined ? "—" : fmt(m.faltante)}</td>
                   <td>${esc(uCompra || "—")}</td>
-                  <td class="num">${p?.factor_conversion ?? m.factor_conversion ? fmt(p?.factor_conversion ?? m.factor_conversion) : "—"}</td>
+                  <td class="num">${(p?.factor_conversion ?? m.factor_conversion) !== null && (p?.factor_conversion ?? m.factor_conversion) !== undefined ? fmt(p?.factor_conversion ?? m.factor_conversion) : "—"}</td>
                   <td class="num">${m.necesidad_compra === null || m.necesidad_compra === undefined ? "—" : fmt(m.necesidad_compra)}</td>
                   <td class="num">${m.compra_minima === null || m.compra_minima === undefined ? "—" : fmt(m.compra_minima)}</td>
                   <td>${m.plazo_entrega_dias === null || m.plazo_entrega_dias === undefined ? "—" : Number(m.plazo_entrega_dias) + " días"}</td>
