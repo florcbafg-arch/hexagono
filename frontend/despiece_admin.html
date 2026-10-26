@@ -115,6 +115,23 @@
     .explosion-chip.no_escalado{background:#eef1f5;color:#4d5664}
     .explosion-chip.escalado_alineado{background:#e9f7ee;color:#1f7040}
     .explosion-chip.escalado_desalineado{background:#fff4dc;color:#866000}
+    .global-dialog{width:min(1080px,92vw)}
+    .global-body{padding:0 26px 26px}
+    .global-intro{padding:12px 14px;border:1px solid #e0e4eb;border-radius:10px;background:#fafbfc;margin-bottom:14px;font-size:13px;color:#5f6876}
+    .global-section{border:1px solid #dfe3ea;border-radius:11px;overflow:hidden;margin-top:14px;background:#fff}
+    .global-section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 13px;background:#686b70;color:#fff;font-size:13px;font-weight:800}
+    .global-table{width:100%;border-collapse:collapse}
+    .global-table th,.global-table td{padding:9px 10px;border-bottom:1px solid #e9ecf1;text-align:left;font-size:13px;vertical-align:top}
+    .global-table th{background:#f8f9fb;color:#525b69;font-size:12px}
+    .global-table tr:last-child td{border-bottom:0}
+    .global-table td.num{text-align:right;font-weight:900;white-space:nowrap}
+    .global-origin summary{cursor:pointer;color:#5f3de2;font-size:12px;font-weight:800}
+    .global-origin-list{margin-top:7px;border:1px solid #e5e8ee;border-radius:7px;overflow:hidden}
+    .global-origin-row{display:grid;grid-template-columns:120px 1fr 1fr 110px;gap:8px;padding:6px 8px;border-bottom:1px solid #eceff3;font-size:12px}
+    .global-origin-row:last-child{border-bottom:0}
+    .global-origin-row.head{background:#f7f8fa;font-weight:800;color:#5d6573}
+    .global-talles{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+    .global-talle{padding:5px 7px;border-radius:7px;background:#f3f4f7;font-size:11px;font-weight:800}
     .lote-actions{display:flex;gap:6px;flex-wrap:wrap}
     @media(max-width:900px){
       .despiece-resumen{grid-template-columns:1fr 1fr}
@@ -247,7 +264,33 @@
 
       <div class="aptitud-foot">
         <div class="aptitud-foot-note">Necesidad técnica bruta. Todavía no descuenta Stock ni genera Compras.</div>
-        <button type="button" class="despiece-btn secondary" data-close-explosion>Cerrar</button>
+        <div class="despiece-actions">
+          <button type="button" class="despiece-btn" id="btnVerNecesidadGlobal">Σ Necesidad global</button>
+          <button type="button" class="despiece-btn secondary" data-close-explosion>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalNecesidadGlobal" class="despiece-dialog global-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">CONSOLIDACIÓN DEL LOTE</p>
+        <h2 id="globalTitulo">Necesidad global de materiales</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-global>✕</button>
+    </div>
+
+    <div class="global-body">
+      <div id="globalResumen"></div>
+      <div class="global-intro">
+        Los totales se obtienen desde la Explosión vigente del lote. Hexaflow suma líneas que usan el mismo material, especificación, color y U.M. sin perder su origen. Todavía no se descuenta Stock ni se genera Compra.
+      </div>
+      <div id="globalContenido"></div>
+
+      <div class="aptitud-foot">
+        <div class="aptitud-foot-note">Necesidad técnica global del lote.</div>
+        <button type="button" class="despiece-btn secondary" data-close-global>Cerrar</button>
       </div>
     </div>
   </dialog>
