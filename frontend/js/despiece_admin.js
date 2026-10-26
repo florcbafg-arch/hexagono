@@ -232,6 +232,9 @@ window.initDespiece = function initDespiece() {
   }
 
   let explosionActual = null
+  let necesidadGlobalActual = null
+  let stockCruceActual = null
+  let saldoInicialActual = null
   let filtroClasificacionExplosion = "todos"
 
   function etiquetaTipoEscalado(tipo) {
@@ -500,6 +503,7 @@ window.initDespiece = function initDespiece() {
   }
 
   function abrirNecesidadGlobal(data) {
+    necesidadGlobalActual = data
     const ejecucion = data?.ejecucion || {}
     const resumen = data?.resumen || {}
     const grupos = data?.grupos || {}
@@ -533,6 +537,130 @@ window.initDespiece = function initDespiece() {
       abrirNecesidadGlobal(data)
     } catch (err) {
       alert(err.message)
+    }
+  }
+
+  function etiquetaEstadoStock(estado) {
+    const mapa = {
+      sin_registro:["SIN REGISTRO","⚪"],
+      cubierto:["CUBIERTO","🟢"],
+      parcial:["PARCIAL","🟡"],
+      faltante:["FALTANTE","🔴"]
+    }
+    const [texto,punto] = mapa[estado] || [String(estado || "—").toUpperCase(),"⚪"]
+    return `<span class="stock-status ${esc(estado)}">${punto} ${esc(texto)}</span>`
+  }
+
+  function valorStock(v, um) {
+    if (v === null || v === undefined) return "—"
+    return `${fmtCantidad(v)} ${esc(um)}`
+  }
+
+  function renderCruceStock(data) {
+    stockCruceActual = data
+    const resumen = data?.resumen || {}
+    const ejecucion = data?.ejecucion || {}
+    const filas = Array.isArray(data?.materiales) ? data.materiales : []
+    const numero = lotes.find(l => Number(l.id) === Number(ejecucion.lote_id))?.numero || "—"
+
+    $("stockCruceTitulo").textContent = `Lote ${String(numero).padStart(3,"0")} · Necesidad vs Stock`
+    $("stockCruceResumen").innerHTML = `
+      <div class="stock-resumen">
+        <div class="stock-card"><span>Materiales</span><strong>${Number(resumen.materiales || 0)}</strong></div>
+        <div class="stock-card"><span>Cubiertos</span><strong>${Number(resumen.cubiertos || 0)}</strong></div>
+        <div class="stock-card"><span>Con faltante</span><strong>${Number(resumen.parciales || 0) + Number(resumen.faltantes || 0)}</strong></div>
+        <div class="stock-card"><span>Sin stock registrado</span><strong>${Number(resumen.sin_registro || 0)}</strong></div>
+      </div>
+    `
+
+    $("stockCruceBody").innerHTML = filas.length ? filas.map((m,index) => `
+      <tr>
+        <td><strong>${esc(m.material_nombre)}</strong></td>
+        <td>${esc([m.especificacion,m.color].filter(Boolean).join(" · ") || "—")}</td>
+        <td>${esc(m.um)}</td>
+        <td class="num">${fmtCantidad(m.necesidad_global)} ${esc(m.um)}</td>
+        <td class="num">${valorStock(m.stock_fisico,m.um)}</td>
+        <td class="num">${valorStock(m.stock_reservado,m.um)}</td>
+        <td class="num">${valorStock(m.stock_disponible,m.um)}</td>
+        <td class="num">${valorStock(m.faltante,m.um)}</td>
+        <td>${etiquetaEstadoStock(m.estado_stock)}</td>
+        <td>
+          ${!m.stock_registrado && m.variante_id
+            ? `<button type="button" class="stock-action" data-saldo-index="${index}">Cargar saldo inicial</button>`
+            : m.stock_registrado
+              ? '<span class="explosion-chip">Registrado</span>'
+              : '<span class="explosion-chip">Sin variante</span>'}
+        </td>
+      </tr>
+    `).join("") : '<tr><td colspan="10" class="despiece-empty">No hay materiales para cruzar con Stock.</td></tr>'
+
+    $("stockCruceBody").querySelectorAll("[data-saldo-index]").forEach(btn => {
+      btn.onclick = () => {
+        const fila = filas[Number(btn.dataset.saldoIndex)]
+        if (fila) abrirSaldoInicial(fila)
+      }
+    })
+
+    $("modalCruceStock").showModal()
+  }
+
+  async function verCruceStockLote(loteId) {
+    try {
+      const data = await api(`/api/despiece/lotes/${loteId}/cruce-stock`)
+      renderCruceStock(data)
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  function abrirSaldoInicial(fila) {
+    saldoInicialActual = fila
+    $("saldoMaterialInfo").innerHTML = `
+      <strong>${esc(fila.material_nombre)}</strong><br>
+      ${esc([fila.especificacion,fila.color].filter(Boolean).join(" · ") || "—")}
+      · ${esc(fila.um)}
+    `
+    $("saldoCantidadLabel").textContent = `Cantidad inicial (${fila.um})`
+    $("saldoCantidad").value = ""
+    $("saldoObservacion").value = ""
+    $("modalSaldoInicial").showModal()
+    setTimeout(() => $("saldoCantidad").focus(), 0)
+  }
+
+  async function guardarSaldoInicial() {
+    if (!saldoInicialActual?.variante_id) return
+
+    const cantidad = Number($("saldoCantidad").value)
+    if (!Number.isFinite(cantidad) || cantidad < 0) {
+      alert("Ingresá una cantidad válida. Puede ser 0 si confirmaste que no hay stock.")
+      return
+    }
+
+    const btn = $("btnGuardarSaldoInicial")
+    btn.disabled = true
+    btn.textContent = "Guardando…"
+
+    try {
+      await api(`/api/stock/variantes/${saldoInicialActual.variante_id}/saldo-inicial`, {
+        method:"POST",
+        body:JSON.stringify({
+          cantidad,
+          observacion:$("saldoObservacion").value.trim()
+        })
+      })
+
+      const loteId = Number(stockCruceActual?.ejecucion?.lote_id)
+      $("modalSaldoInicial").close()
+      saldoInicialActual = null
+      if (loteId) {
+        const actualizado = await api(`/api/despiece/lotes/${loteId}/cruce-stock`)
+        renderCruceStock(actualizado)
+      }
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = "Guardar saldo inicial"
     }
   }
 
@@ -665,6 +793,7 @@ window.initDespiece = function initDespiece() {
               ${explosion ? `
                 <button type="button" class="despiece-btn aptitud-action" data-ver-explosion-lote="${lote.id}">Ver Despiece</button>
                 <button type="button" class="despiece-btn secondary aptitud-action" data-ver-global-lote="${lote.id}">Necesidad global</button>
+                <button type="button" class="despiece-btn secondary aptitud-action" data-ver-stock-lote="${lote.id}">Cruce Stock</button>
               ` : ""}
             </div>
           </td>
@@ -682,6 +811,10 @@ window.initDespiece = function initDespiece() {
 
     body.querySelectorAll("[data-ver-global-lote]").forEach(btn => {
       btn.onclick = () => verNecesidadGlobalLote(Number(btn.dataset.verGlobalLote))
+    })
+
+    body.querySelectorAll("[data-ver-stock-lote]").forEach(btn => {
+      btn.onclick = () => verCruceStockLote(Number(btn.dataset.verStockLote))
     })
   }
   async function cargar() {
@@ -732,6 +865,23 @@ window.initDespiece = function initDespiece() {
   document.querySelectorAll("[data-close-global]").forEach(btn => {
     btn.onclick = () => $("modalNecesidadGlobal").close()
   })
+
+  document.querySelectorAll("[data-close-stock]").forEach(btn => {
+    btn.onclick = () => $("modalCruceStock").close()
+  })
+
+  document.querySelectorAll("[data-close-saldo]").forEach(btn => {
+    btn.onclick = () => $("modalSaldoInicial").close()
+  })
+
+  $("btnCruzarStock").onclick = () => {
+    const loteId = Number(necesidadGlobalActual?.ejecucion?.lote_id)
+    if (!loteId) return
+    $("modalNecesidadGlobal").close()
+    verCruceStockLote(loteId)
+  }
+
+  $("btnGuardarSaldoInicial").onclick = guardarSaldoInicial
 
   $("btnVerNecesidadGlobal").onclick = () => {
     const loteId = Number(explosionActual?.ejecucion?.lote_id)
