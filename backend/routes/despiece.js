@@ -1392,6 +1392,41 @@ router.get("/lotes/:loteId/informe-compra", async (req, res) => {
       .maybeSingle()
     if (de) throw de
 
+    if (documento) {
+      const { data: lineasCerradas, error: lce } = await supabaseAdmin
+        .from("despiece_compra_documento_lineas")
+        .select("id,material_id,variante_id,material_nombre,especificacion,color,unidad_consumo,necesidad_global,stock_fisico,stock_reservado,stock_disponible,faltante,unidad_compra,factor_conversion,necesidad_compra,compra_minima,plazo_entrega_dias,estado_compra")
+        .eq("empresa_id", empresaId)
+        .eq("documento_id", documento.id)
+        .order("id", { ascending:true })
+      if (lce) throw lce
+
+      return res.json({
+        lote,
+        ejecucion:necesidadCompra.ejecucion,
+        resumen:{
+          materiales:Number(documento.total_materiales || 0),
+          requieren_compra:Number(documento.total_requieren_compra || 0),
+          pendientes_parametros:0,
+          pendientes_stock:0,
+          no_requieren:Number(documento.total_no_requieren || 0)
+        },
+        materiales:(lineasCerradas || []).map(x => ({
+          ...x,
+          um:x.unidad_consumo,
+          parametros_compra:x.unidad_compra ? {
+            unidad_compra:x.unidad_compra,
+            factor_conversion:x.factor_conversion,
+            compra_minima:x.compra_minima,
+            plazo_entrega_dias:x.plazo_entrega_dias
+          } : null
+        })),
+        puede_cerrar:false,
+        bloqueos:[],
+        documento_cerrado:documento
+      })
+    }
+
     return res.json({
       lote,
       ejecucion:necesidadCompra.ejecucion,
@@ -1399,7 +1434,7 @@ router.get("/lotes/:loteId/informe-compra", async (req, res) => {
       materiales:necesidadCompra.materiales,
       puede_cerrar:bloqueos.length === 0,
       bloqueos,
-      documento_cerrado:documento || null
+      documento_cerrado:null
     })
   } catch (err) {
     console.error("Error preparando informe final de Despiece:", err)
