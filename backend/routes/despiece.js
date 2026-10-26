@@ -1350,6 +1350,160 @@ router.get("/lotes/:loteId/necesidad-compra", async (req, res) => {
   }
 })
 
+router.get("/lotes/:loteId/informe-compra", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const loteId = Number(req.params.loteId)
+    if (!loteId) return res.status(400).json({ error:"Lote inválido" })
+
+    const { data: lote, error: le } = await supabaseAdmin
+      .from("despiece_lotes")
+      .select("id,numero,estado,descripcion,observaciones,created_at")
+      .eq("empresa_id", empresaId)
+      .eq("id", loteId)
+      .maybeSingle()
+    if (le) throw le
+    if (!lote) return res.status(404).json({ error:"Lote no encontrado" })
+
+    const explosion = await obtenerExplosionVigente(loteId, empresaId)
+    if (!explosion) {
+      return res.status(404).json({ error:"Primero generá el Despiece del lote" })
+    }
+
+    const necesidadGlobal = consolidarNecesidadGlobal(explosion)
+    const cruceStock = await cruzarNecesidadConStock(necesidadGlobal, empresaId)
+    const necesidadCompra = await calcularNecesidadCompra(cruceStock, empresaId)
+
+    const bloqueos = []
+    if (necesidadCompra.resumen.pendientes_stock > 0) {
+      bloqueos.push(`${necesidadCompra.resumen.pendientes_stock} material(es) sin Stock registrado`)
+    }
+    if (necesidadCompra.resumen.pendientes_parametros > 0) {
+      bloqueos.push(`${necesidadCompra.resumen.pendientes_parametros} material(es) con parámetros de compra pendientes`)
+    }
+
+    const { data: documento, error: de } = await supabaseAdmin
+      .from("despiece_compra_documentos")
+      .select("id,lote_id,ejecucion_id,version_despiece,estado,total_materiales,total_requieren_compra,total_no_requieren,cerrado_por,cerrado_at")
+      .eq("empresa_id", empresaId)
+      .eq("ejecucion_id", Number(necesidadCompra.ejecucion.id))
+      .maybeSingle()
+    if (de) throw de
+
+    return res.json({
+      lote,
+      ejecucion:necesidadCompra.ejecucion,
+      resumen:necesidadCompra.resumen,
+      materiales:necesidadCompra.materiales,
+      puede_cerrar:bloqueos.length === 0,
+      bloqueos,
+      documento_cerrado:documento || null
+    })
+  } catch (err) {
+    console.error("Error preparando informe final de Despiece:", err)
+    return res.status(500).json({ error:err.message || "No se pudo preparar el informe final" })
+  }
+})
+
+router.post("/lotes/:loteId/cerrar-compra", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const loteId = Number(req.params.loteId)
+    if (!loteId) return res.status(400).json({ error:"Lote inválido" })
+
+    const explosion = await obtenerExplosionVigente(loteId, empresaId)
+    if (!explosion) {
+      return res.status(404).json({ error:"Primero generá el Despiece del lote" })
+    }
+
+    const necesidadGlobal = consolidarNecesidadGlobal(explosion)
+    const cruceStock = await cruzarNecesidadConStock(necesidadGlobal, empresaId)
+    const necesidadCompra = await calcularNecesidadCompra(cruceStock, empresaId)
+
+    if (necesidadCompra.resumen.pendientes_stock > 0 || necesidadCompra.resumen.pendientes_parametros > 0) {
+      return res.status(409).json({
+        error:"El Despiece todavía no puede cerrarse para Compras",
+        resumen:necesidadCompra.resumen
+      })
+    }
+
+    const { data: existente, error: ee } = await supabaseAdmin
+      .from("despiece_compra_documentos")
+      .select("id,lote_id,ejecucion_id,version_despiece,estado,total_materiales,total_requieren_compra,total_no_requieren,cerrado_por,cerrado_at")
+      .eq("empresa_id", empresaId)
+      .eq("ejecucion_id", Number(necesidadCompra.ejecucion.id))
+      .maybeSingle()
+    if (ee) throw ee
+    if (existente) {
+      return res.status(409).json({
+        error:"Esta versión del Despiece ya fue cerrada para Compras",
+        documento:existente
+      })
+    }
+
+    const { data: documentoId, error: ce } = await supabaseAdmin.rpc("cerrar_despiece_compra", {
+      p_empresa_id:empresaId,
+      p_lote_id:loteId,
+      p_ejecucion_id:Number(necesidadCompra.ejecucion.id),
+      p_version_despiece:Number(necesidadCompra.ejecucion.version || 1),
+      p_usuario_id:req.user?.id || null,
+      p_lineas:necesidadCompra.materiales
+    })
+    if (ce) throw ce
+
+    const { data: documento, error: de } = await supabaseAdmin
+      .from("despiece_compra_documentos")
+      .select("id,lote_id,ejecucion_id,version_despiece,estado,total_materiales,total_requieren_compra,total_no_requieren,cerrado_por,cerrado_at")
+      .eq("empresa_id", empresaId)
+      .eq("id", Number(documentoId))
+      .single()
+    if (de) throw de
+
+    return res.status(201).json({ ok:true, documento })
+  } catch (err) {
+    console.error("Error cerrando Despiece para Compras:", err)
+    return res.status(500).json({ error:err.message || "No se pudo cerrar el Despiece para Compras" })
+  }
+})
+
+router.get("/lotes/:loteId/informe-compra-cerrado", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const loteId = Number(req.params.loteId)
+    if (!loteId) return res.status(400).json({ error:"Lote inválido" })
+
+    const { data: documento, error: de } = await supabaseAdmin
+      .from("despiece_compra_documentos")
+      .select("id,lote_id,ejecucion_id,version_despiece,estado,total_materiales,total_requieren_compra,total_no_requieren,cerrado_por,cerrado_at")
+      .eq("empresa_id", empresaId)
+      .eq("lote_id", loteId)
+      .order("cerrado_at", { ascending:false })
+      .limit(1)
+      .maybeSingle()
+    if (de) throw de
+    if (!documento) return res.status(404).json({ error:"Este lote todavía no tiene un informe cerrado para Compras" })
+
+    const { data: lineas, error: le } = await supabaseAdmin
+      .from("despiece_compra_documento_lineas")
+      .select("*")
+      .eq("empresa_id", empresaId)
+      .eq("documento_id", documento.id)
+      .order("id", { ascending:true })
+    if (le) throw le
+
+    return res.json({ documento, materiales:lineas || [] })
+  } catch (err) {
+    console.error("Error consultando informe cerrado:", err)
+    return res.status(500).json({ error:err.message || "No se pudo consultar el informe cerrado" })
+  }
+})
+
 router.post("/lotes", async (req, res) => {
   const empresaId = empresa(req, res)
   if (!empresaId) return
