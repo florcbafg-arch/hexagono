@@ -157,11 +157,34 @@
     .saldo-grid{display:grid;grid-template-columns:1fr;gap:12px}
     .saldo-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
     .saldo-field input,.saldo-field textarea{font:inherit;font-weight:400;border:1px solid #ccd2dc;border-radius:8px;padding:9px 10px}
+    .compra-dialog{width:min(1180px,94vw)}
+    .compra-body{padding:0 26px 26px}
+    .compra-intro{padding:12px 14px;border:1px solid #e0e4eb;border-radius:10px;background:#fafbfc;margin-bottom:14px;font-size:13px;color:#5f6876;line-height:1.45}
+    .compra-resumen{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+    .compra-card{border:1px solid #dfe3ea;border-radius:10px;padding:12px 14px;background:#fff}
+    .compra-card span{display:block;font-size:12px;color:#667085}
+    .compra-card strong{display:block;font-size:21px;margin-top:2px}
+    .compra-table-wrap{overflow:auto;border:1px solid #dfe3ea;border-radius:11px;background:#fff}
+    .compra-table{width:100%;border-collapse:collapse;min-width:1120px}
+    .compra-table th,.compra-table td{padding:9px 10px;border-bottom:1px solid #e9ecf1;text-align:left;font-size:13px;vertical-align:middle}
+    .compra-table th{background:#f8f9fb;color:#525b69;font-size:12px}
+    .compra-table td.num{text-align:right;font-weight:800;white-space:nowrap}
+    .compra-status{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}
+    .compra-status.pendiente_stock{background:#eef0f4;color:#626a77}
+    .compra-status.pendiente_parametros{background:#fff4dc;color:#866000}
+    .compra-status.no_requiere{background:#e7f7ec;color:#176b38}
+    .compra-status.listo{background:#e9efff;color:#3155a6}
+    .param-dialog{width:min(600px,92vw)}
+    .param-body{padding:0 26px 26px}
+    .param-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .param-help{grid-column:1/-1;padding:10px 12px;border-radius:8px;background:#f7f5ff;color:#5b4a83;font-size:12px;line-height:1.45}
     .lote-actions{display:flex;gap:6px;flex-wrap:wrap}
     @media(max-width:900px){
       .despiece-resumen{grid-template-columns:1fr 1fr}
       .despiece-head{flex-direction:column}
-      .clasificacion-resumen,.clasificacion-ayuda,.stock-resumen{grid-template-columns:1fr}
+      .clasificacion-resumen,.clasificacion-ayuda,.stock-resumen,.compra-resumen{grid-template-columns:1fr}
+      .param-grid{grid-template-columns:1fr}
+      .param-help{grid-column:1}
     }
   </style>
 
@@ -349,7 +372,81 @@
       </div>
       <div class="aptitud-foot">
         <div class="aptitud-foot-note">Este cruce todavía no reserva material ni genera órdenes de compra.</div>
-        <button type="button" class="despiece-btn secondary" data-close-stock>Cerrar</button>
+        <div class="despiece-actions">
+          <button type="button" class="despiece-btn" id="btnVerNecesidadCompra">🛒 Necesidad de compra</button>
+          <button type="button" class="despiece-btn secondary" data-close-stock>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalNecesidadCompra" class="despiece-dialog compra-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">ABASTECIMIENTO</p>
+        <h2 id="compraTitulo">Necesidad de compra</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-compra>✕</button>
+    </div>
+    <div class="compra-body">
+      <div id="compraResumen"></div>
+      <div class="compra-intro">
+        Hexaflow toma únicamente faltantes confirmados por Stock. La unidad de compra y su factor de conversión son parámetros del material: <strong>1 unidad de compra = factor × unidad de consumo</strong>. Los materiales sin Stock registrado quedan bloqueados y no se convierten en compra.
+      </div>
+      <div class="compra-table-wrap">
+        <table class="compra-table">
+          <thead>
+            <tr>
+              <th>Material</th><th>Detalle / color</th><th>Faltante</th><th>U. consumo</th>
+              <th>U. compra</th><th>Factor</th><th>Necesidad compra</th><th>Compra mínima</th><th>Plazo</th><th>Estado</th><th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="compraBody"></tbody>
+        </table>
+      </div>
+      <div class="aptitud-foot">
+        <div class="aptitud-foot-note">Esto calcula qué hace falta comprar; todavía no crea una Orden de Compra.</div>
+        <button type="button" class="despiece-btn secondary" data-close-compra>Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="modalParametrosCompra" class="despiece-dialog param-dialog">
+    <div class="despiece-dialog-head" style="padding:24px 26px 0">
+      <div>
+        <p class="despiece-eyebrow">PARÁMETROS DE ABASTECIMIENTO</p>
+        <h2>Cómo se compra este material</h2>
+      </div>
+      <button type="button" class="despiece-close" data-close-param-compra>✕</button>
+    </div>
+    <div class="param-body">
+      <div id="paramCompraMaterialInfo" class="saldo-material"></div>
+      <div class="param-grid">
+        <label class="saldo-field">
+          <span>Unidad de consumo</span>
+          <input id="paramUnidadConsumo" disabled>
+        </label>
+        <label class="saldo-field">
+          <span>Unidad de compra</span>
+          <input id="paramUnidadCompra" maxlength="30" placeholder="Ej: ML, ROLLO, PLANCHA">
+        </label>
+        <label class="saldo-field">
+          <span>Factor de conversión</span>
+          <input id="paramFactorConversion" type="number" min="0.00000001" step="0.00000001" inputmode="decimal">
+        </label>
+        <label class="saldo-field">
+          <span>Compra mínima</span>
+          <input id="paramCompraMinima" type="number" min="0" step="0.00000001" inputmode="decimal">
+        </label>
+        <label class="saldo-field">
+          <span>Plazo de entrega (días)</span>
+          <input id="paramPlazoEntrega" type="number" min="0" step="1" inputmode="numeric" placeholder="Opcional">
+        </label>
+        <div class="param-help" id="paramCompraAyuda"></div>
+      </div>
+      <div class="despiece-dialog-actions">
+        <button type="button" class="despiece-btn secondary" data-close-param-compra>Cancelar</button>
+        <button type="button" class="despiece-btn" id="btnGuardarParametrosCompra">Guardar parámetros</button>
       </div>
     </div>
   </dialog>
