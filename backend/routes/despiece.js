@@ -849,6 +849,89 @@ async function cruzarNecesidadConStock(necesidadGlobal, empresaId) {
   }
 }
 
+async function calcularNecesidadCompra(cruceStock, empresaId) {
+  const materiales = Array.isArray(cruceStock?.materiales) ? cruceStock.materiales : []
+  const varianteIds = [...new Set(materiales.map(m => Number(m.variante_id)).filter(Boolean))]
+
+  let parametros = []
+  if (varianteIds.length) {
+    const { data, error } = await supabaseAdmin
+      .from("material_compra_parametros")
+      .select("id,variante_id,unidad_compra,factor_conversion,compra_minima,plazo_entrega_dias,activo")
+      .eq("empresa_id", empresaId)
+      .eq("activo", true)
+      .in("variante_id", varianteIds)
+    if (error) throw error
+    parametros = data || []
+  }
+
+  const paramMap = new Map(parametros.map(p => [Number(p.variante_id), p]))
+
+  const filas = materiales.map(m => {
+    const faltante = m.faltante === null || m.faltante === undefined ? null : n8(m.faltante)
+    const parametro = m.variante_id ? paramMap.get(Number(m.variante_id)) || null : null
+
+    if (!m.stock_registrado) {
+      return {
+        ...m,
+        parametros_compra:parametro,
+        necesidad_compra:null,
+        compra_minima:parametro ? Number(parametro.compra_minima || 0) : null,
+        plazo_entrega_dias:parametro?.plazo_entrega_dias ?? null,
+        estado_compra:"pendiente_stock"
+      }
+    }
+
+    if (!(faltante > 0)) {
+      return {
+        ...m,
+        parametros_compra:parametro,
+        necesidad_compra:0,
+        compra_minima:parametro ? Number(parametro.compra_minima || 0) : null,
+        plazo_entrega_dias:parametro?.plazo_entrega_dias ?? null,
+        estado_compra:"no_requiere"
+      }
+    }
+
+    if (!parametro) {
+      return {
+        ...m,
+        parametros_compra:null,
+        necesidad_compra:null,
+        compra_minima:null,
+        plazo_entrega_dias:null,
+        estado_compra:"pendiente_parametros"
+      }
+    }
+
+    const factor = Number(parametro.factor_conversion || 0)
+    const necesidadCompra = factor > 0 ? n8(faltante / factor) : null
+
+    return {
+      ...m,
+      parametros_compra:parametro,
+      unidad_compra:parametro.unidad_compra,
+      factor_conversion:factor,
+      necesidad_compra:necesidadCompra,
+      compra_minima:Number(parametro.compra_minima || 0),
+      plazo_entrega_dias:parametro.plazo_entrega_dias ?? null,
+      estado_compra:"listo"
+    }
+  })
+
+  return {
+    ejecucion:cruceStock.ejecucion,
+    resumen:{
+      materiales:filas.length,
+      requieren_compra:filas.filter(f => f.estado_compra === "listo").length,
+      pendientes_parametros:filas.filter(f => f.estado_compra === "pendiente_parametros").length,
+      pendientes_stock:filas.filter(f => f.estado_compra === "pendiente_stock").length,
+      no_requieren:filas.filter(f => f.estado_compra === "no_requiere").length
+    },
+    materiales:filas
+  }
+}
+
 async function cargarPendientes(empresaId) {
   const { data: pedidos, error: pe } = await supabase
     .from("pedidos")
@@ -1240,6 +1323,30 @@ router.get("/lotes/:loteId/cruce-stock", async (req, res) => {
   } catch (err) {
     console.error("Error cruzando Despiece contra Stock:", err)
     return res.status(500).json({ error:err.message || "No se pudo cruzar la necesidad contra Stock" })
+  }
+})
+
+router.get("/lotes/:loteId/necesidad-compra", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const loteId = Number(req.params.loteId)
+    if (!loteId) return res.status(400).json({ error:"Lote inválido" })
+
+    const explosion = await obtenerExplosionVigente(loteId, empresaId)
+    if (!explosion) {
+      return res.status(404).json({ error:"Primero generá el Despiece del lote" })
+    }
+
+    const necesidadGlobal = consolidarNecesidadGlobal(explosion)
+    const cruceStock = await cruzarNecesidadConStock(necesidadGlobal, empresaId)
+    const necesidadCompra = await calcularNecesidadCompra(cruceStock, empresaId)
+
+    return res.json(necesidadCompra)
+  } catch (err) {
+    console.error("Error calculando necesidad de compra:", err)
+    return res.status(500).json({ error:err.message || "No se pudo calcular la necesidad de compra" })
   }
 })
 
