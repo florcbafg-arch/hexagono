@@ -120,42 +120,132 @@ router.post("/variantes/:varianteId/saldo-inicial", async (req, res) => {
     if (ve) throw ve
     if (!variante) return res.status(404).json({ error:"Variante de material no encontrada" })
 
-    const { data: existente, error: ee } = await supabaseAdmin
-      .from("stock_movimientos")
-      .select("id,delta_fisico,created_at")
-      .eq("empresa_id", empresaId)
-      .eq("variante_id", varianteId)
-      .eq("tipo", "saldo_inicial")
-      .maybeSingle()
+    const { data: movimientoId, error: me } = await supabaseAdmin.rpc("registrar_movimiento_stock", {
+      p_empresa_id:empresaId,
+      p_variante_id:varianteId,
+      p_tipo:"saldo_inicial",
+      p_delta_fisico:n8(cantidad),
+      p_delta_reservado:0,
+      p_referencia_tipo:"carga_inicial",
+      p_referencia_id:null,
+      p_observacion:String(req.body?.observacion || "").trim() || null,
+      p_usuario_id:req.user?.id || null
+    })
 
-    if (ee) throw ee
-    if (existente) {
-      return res.status(409).json({
-        error:"Este material ya tiene saldo inicial. Los cambios posteriores deben registrarse como ajustes para conservar trazabilidad."
-      })
+    if (me) {
+      if (/saldo inicial|primer movimiento/i.test(me.message || "")) {
+        return res.status(409).json({
+          error:"Este material ya tiene movimientos. Los cambios posteriores deben registrarse como ajustes para conservar trazabilidad."
+        })
+      }
+      throw me
     }
 
-    const { data: movimiento, error: me } = await supabaseAdmin
-      .from("stock_movimientos")
-      .insert({
-        empresa_id:empresaId,
-        variante_id:varianteId,
-        tipo:"saldo_inicial",
-        delta_fisico:n8(cantidad),
-        delta_reservado:0,
-        referencia_tipo:"carga_inicial",
-        observacion:String(req.body?.observacion || "").trim() || null,
-        usuario_id:req.user?.id || null
-      })
-      .select("id,variante_id,tipo,delta_fisico,delta_reservado,created_at")
-      .single()
-
-    if (me) throw me
-
-    return res.status(201).json({ ok:true, movimiento })
+    return res.status(201).json({ ok:true, movimiento_id:Number(movimientoId) })
   } catch (err) {
     console.error("Error registrando saldo inicial:", err)
     return res.status(500).json({ error:err.message || "No se pudo registrar el saldo inicial" })
+  }
+})
+
+router.post("/variantes/:varianteId/movimientos", async (req, res) => {
+  const empresaId = empresa(req, res)
+  if (!empresaId) return
+
+  try {
+    const varianteId = Number(req.params.varianteId)
+    const tipoUi = String(req.body?.tipo || "").trim()
+    const cantidad = Number(req.body?.cantidad)
+    const observacion = String(req.body?.observacion || "").trim()
+    const referencia = String(req.body?.referencia || "").trim()
+
+    if (!varianteId) return res.status(400).json({ error:"Variante inválida" })
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      return res.status(400).json({ error:"La cantidad debe ser mayor que cero" })
+    }
+
+    const { data: variante, error: ve } = await supabaseAdmin
+      .from("material_variantes")
+      .select("id,um")
+      .eq("empresa_id", empresaId)
+      .eq("id", varianteId)
+      .eq("activo", true)
+      .maybeSingle()
+
+    if (ve) throw ve
+    if (!variante) return res.status(404).json({ error:"Variante de material no encontrada" })
+
+    let tipo
+    let deltaFisico = 0
+    let deltaReservado = 0
+    let referenciaTipo = "movimiento_manual"
+
+    if (tipoUi === "ingreso") {
+      tipo = "ingreso_compra"
+      deltaFisico = cantidad
+      referenciaTipo = "ingreso_manual"
+    } else if (tipoUi === "salida") {
+      tipo = "otro"
+      deltaFisico = -cantidad
+      referenciaTipo = "salida_manual"
+      if (!observacion) {
+        return res.status(400).json({ error:"Indicá el motivo de la salida manual" })
+      }
+    } else if (tipoUi === "ajuste_positivo") {
+      tipo = "ajuste"
+      deltaFisico = cantidad
+      referenciaTipo = "ajuste_inventario"
+      if (!observacion) {
+        return res.status(400).json({ error:"Indicá el motivo del ajuste" })
+      }
+    } else if (tipoUi === "ajuste_negativo") {
+      tipo = "ajuste"
+      deltaFisico = -cantidad
+      referenciaTipo = "ajuste_inventario"
+      if (!observacion) {
+        return res.status(400).json({ error:"Indicá el motivo del ajuste" })
+      }
+    } else if (tipoUi === "devolucion") {
+      tipo = "devolucion"
+      deltaFisico = cantidad
+      referenciaTipo = "devolucion_manual"
+      if (!observacion) {
+        return res.status(400).json({ error:"Indicá el motivo de la devolución" })
+      }
+    } else {
+      return res.status(400).json({ error:"Tipo de movimiento no permitido en carga manual" })
+    }
+
+    const { data: movimientoId, error: me } = await supabaseAdmin.rpc("registrar_movimiento_stock", {
+      p_empresa_id:empresaId,
+      p_variante_id:varianteId,
+      p_tipo:tipo,
+      p_delta_fisico:n8(deltaFisico),
+      p_delta_reservado:n8(deltaReservado),
+      p_referencia_tipo:referenciaTipo,
+      p_referencia_id:referencia || null,
+      p_observacion:observacion || null,
+      p_usuario_id:req.user?.id || null
+    })
+
+    if (me) {
+      const mensaje = me.message || "No se pudo registrar el movimiento"
+      if (/negativo|reservado|superar|movimiento no puede ser cero/i.test(mensaje)) {
+        return res.status(409).json({ error:mensaje })
+      }
+      throw me
+    }
+
+    return res.status(201).json({
+      ok:true,
+      movimiento_id:Number(movimientoId),
+      tipo,
+      delta_fisico:n8(deltaFisico),
+      delta_reservado:n8(deltaReservado)
+    })
+  } catch (err) {
+    console.error("Error registrando movimiento manual de Stock:", err)
+    return res.status(500).json({ error:err.message || "No se pudo registrar el movimiento" })
   }
 })
 
@@ -271,7 +361,36 @@ router.get("/variantes/:varianteId/movimientos", async (req, res) => {
       .order("id", { ascending:false })
 
     if (error) throw error
-    return res.json(data || [])
+
+    const usuarioIds = [...new Set((data || []).map(m => Number(m.usuario_id)).filter(Boolean))]
+    let usuariosMap = new Map()
+
+    if (usuarioIds.length) {
+      const { data: usuarios, error: ue } = await supabaseAdmin
+        .from("usuarios")
+        .select("id,nombre,email")
+        .eq("empresa_id", empresaId)
+        .in("id", usuarioIds)
+
+      if (ue) throw ue
+      usuariosMap = new Map((usuarios || []).map(u => [Number(u.id), u.nombre || u.email || `Usuario ${u.id}`]))
+    }
+
+    let saldoFisico = 0
+    let saldoReservado = 0
+    const cronologico = [...(data || [])].reverse().map(m => {
+      saldoFisico = n8(saldoFisico + Number(m.delta_fisico || 0))
+      saldoReservado = n8(saldoReservado + Number(m.delta_reservado || 0))
+      return {
+        ...m,
+        usuario_nombre:m.usuario_id ? (usuariosMap.get(Number(m.usuario_id)) || `Usuario ${m.usuario_id}`) : "Sistema",
+        saldo_fisico_resultante:saldoFisico,
+        saldo_reservado_resultante:saldoReservado,
+        saldo_disponible_resultante:n8(saldoFisico - saldoReservado)
+      }
+    })
+
+    return res.json(cronologico.reverse())
   } catch (err) {
     console.error("Error consultando movimientos de Stock:", err)
     return res.status(500).json({ error:"No se pudieron consultar los movimientos" })
